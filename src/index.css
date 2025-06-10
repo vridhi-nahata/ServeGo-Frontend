@@ -1,3 +1,15 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&family=Tagesschrift&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Override the autofill styles */
+input:-webkit-autofill {
+  box-shadow: 0 0 0px 1000px #333A5C inset !important;
+  -webkit-text-fill-color: white !important;
+}
+
+body{
+    font-family: "Nunito", sans-serif;
+}
