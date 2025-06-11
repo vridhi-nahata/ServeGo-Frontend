@@ -1,4 +1,6 @@
-import { createContext,useState } from "react";
+import { createContext,useState,useEffect } from "react";
+import { toast } from "react-toastify";
+import axios from "axios";
 
 export const AppContext = createContext();
 
@@ -7,11 +9,45 @@ export const AppContextProvider=(props)=>{
 
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [userData, setUserData] = useState(null);
+
+    const getAuthState=async()=>{
+        try{
+            const {data}=await axios.get(backendUrl + '/api/auth/is-auth',{
+                withCredentials: true,
+            });
+            if(data.success){
+                setIsLoggedIn(true);
+                getUserData();
+            }
+               
+        }
+        catch(error){
+            toast.error(error.message)
+        }
+    }
+
+    const getUserData=async()=>{
+        try{
+            const {data}=await axios.get(backendUrl + '/api/user/data',{
+                withCredentials: true,
+            });
+            data.success?setUserData(data.userData):toast.error(data.message);
+            }
+        catch(error){
+            toast.error(error.message)
+        }
+    }
+
+    useEffect(()=>{
+        // console.log("Use effect triggered");
+        getAuthState();
+    },[]) //dependency array
+
     const value={
         backendUrl,
         isLoggedIn, setIsLoggedIn,
-        userData, setUserData
-
+        userData, setUserData,
+        getUserData
     }
 
 

@@ -1,11 +1,109 @@
-import React from 'react'
+import React, { useContext, useEffect } from "react";
+import { assets } from "../assets/assets";
+import { useNavigate} from "react-router-dom";
+import { toast } from "react-toastify";
+import axios from "axios";
+import { AppContext } from "../context/AppContext";
 
 function EmailVerify() {
+  axios.defaults.withCredentials = true; // Ensure axios sends cookies with requests
+  const {backendUrl,isLoggedIn,userData,getUserData}=useContext(AppContext);
+  const navigate = useNavigate();
+  const inputRefs = React.useRef([]);
+
+  const handleInput = (e, index) => {
+    if (e.target.value.length === 1 && index < 5) {
+      inputRefs.current[index + 1].focus(); // Move to next input
+    }
+  };
+
+  const handlePaste = (e) => {
+    e.preventDefault(); // Prevent default paste behavior (paste only 1 character if length ≠ 6 )
+    const pastedData = e.clipboardData.getData("text").split("");
+    if (pastedData.length === 6) {
+      pastedData.forEach((char, index) => {
+        if (inputRefs.current[index]) {
+          inputRefs.current[index].value = char;
+          // Trigger change event so React knows the value changed
+          inputRefs.current[index].dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      });
+      // Move focus to the last input after pasting
+      inputRefs.current[5].focus();
+    }
+    // If length ≠ 6, nothing happens (no paste at all)
+  };
+
+  const handleKeyDown = (e, index) => {
+    if (e.key === "Backspace" && e.target.value === "" && index > 0) {
+      inputRefs.current[index - 1].focus(); // Move to previous input
+    }
+  };
+
+  const onSubmitHandler=async (e) => {
+    try{
+      e.preventDefault(); // Prevent default functionality of reload on form submission
+      const otp = inputRefs.current.map(e => e.value || '').join("");
+      if (otp.length !== 6) {
+        toast.error("Please enter a valid 6-digit OTP");
+        return;
+      }  
+      const {data}=await axios.post(backendUrl + "/api/auth/verify-account",
+        { otp }      
+      );
+      if(data.success){
+        toast.success(data.message);
+        getUserData(); // Fetch user data after successful verification
+        navigate("/");
+      } else {
+        toast.error(data.message);
+      }
+    }
+    catch(error){
+      console.log("Error in EmailVerify onSubmitHandler:", error);
+      toast.error(error.message);
+    }
+  }
+
+  useEffect(() => {
+    isLoggedIn && userData && userData.isAccountVerified && navigate("/") // Redirect to home if already logged in and verified     
+  }, [isLoggedIn, userData]);
+
   return (
-    <div>
-      <h1>Email Verify Page</h1>
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-200 to-purple-400">
+    
+      <form onSubmit={onSubmitHandler} className="bg-slate-900 p-8 rounded-lg shadow-lg w-96 text-sm">
+        <h1 className="text-gray-300 font-extrabold text-center text-2xl">
+          Email Verification OTP
+        </h1>
+        <p className="text-gray-500 text-center mb-6">
+          Enter the 6-digit code sent to your email
+        </p>
+        <div className="flex justify-between mb-8">
+          {Array(6)
+            .fill(0)
+            .map((_, index) => (
+              <input
+                key={index}
+                type="text"
+                maxLength="1"
+                className="w-12 h-12 text-center text-xl bg-[#333A5C] text-white border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-700"
+                ref={(e) => (inputRefs.current[index] = e)}
+                onChange={(e) => handleInput(e, index)} // Handle input change
+                onKeyDown={(e) => handleKeyDown(e, index)} // Handle backspace key
+                onPaste={handlePaste} // Handle paste event
+              />
+            ))}
+        </div>
+        <button
+          type="submit"
+          className="w-full bg-gradient-to-r from-indigo-500 to-indigo-900 text-white font-bold py-2 rounded"
+        >
+          Verify Email
+        </button>
+      </form>
     </div>
-  )
+  );
 }
 
-export default EmailVerify
+export default EmailVerify;

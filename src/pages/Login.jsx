@@ -1,4 +1,4 @@
-import React, { useState,useContext } from "react";
+import React, { useState, useContext } from "react";
 import { assets } from "../assets/assets";
 import { SERVICES } from "../constants/services";
 import { useNavigate } from "react-router-dom";
@@ -8,10 +8,9 @@ import axios from "axios";
 
 function Login() {
   const navigate = useNavigate();
+  const { backendUrl, setIsLoggedIn, setUserData } = useContext(AppContext);
 
-  const { backendUrl, setIsLoggedIn } = useContext(AppContext);
-
-  const [state, setState] = useState("Sign Up");
+  const [state, setState] = useState("Login"); // "Login" or "Sign Up"
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -22,12 +21,43 @@ function Login() {
   const [availability, setAvailability] = useState("");
   const [serviceDocs, setServiceDocs] = useState([]);
 
+  // Upload multiple files to Cloudinary
+  const uploadFilesToCloudinary = async (files) => {
+    const urls = [];
+
+    for (const file of files) {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", "unsigned_present");
+      formData.append("cloud_name", "dznigwrbk");
+
+      const response = await axios.post(
+        "https://api.cloudinary.com/v1_1/dznigwrbk/auto/upload",
+        formData,
+        {
+          withCredentials: false, // Fixes the CORS error
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      urls.push(response.data.secure_url); // Save Cloudinary URL
+    }
+
+    return urls;
+  };
+
   const handleSubmit = async (e) => {
+    e.preventDefault();
     try {
-      e.preventDefault();
-      axios.defaults.withCredentials = true; // Enable sending cookies with requests
+      // Only upload if provider & files are selected
       if (state === "Sign Up") {
-        const { data } = await axios.post(`${backendUrl}/api/auth/register`, {
+        let uploadedDocUrls = [];
+        if (role === "provider" && serviceDocs.length > 0) {
+          uploadedDocUrls = await uploadFilesToCloudinary(serviceDocs);
+        }
+        const payload = {
           name,
           email,
           phone,
@@ -36,8 +66,14 @@ function Login() {
           servicesOffered,
           experienceYears,
           availability,
-          serviceDocs,
-        });
+          serviceDocs: uploadedDocUrls, // Use uploaded URLs
+        };
+
+        const { data } = await axios.post(
+          `${backendUrl}/api/auth/register`,
+          payload,
+          { withCredentials: true }
+        );
 
         if (data.success) {
           setIsLoggedIn(true);
@@ -46,13 +82,23 @@ function Login() {
           toast.error(data.message);
         }
       } else {
-        const { data } = await axios.post(`${backendUrl}/api/auth/login`, {
-          email,
-          password,
-        });
+        const { data } = await axios.post(
+          `${backendUrl}/api/auth/login`,
+          {
+            email,
+            password,
+          },
+          { withCredentials: true }
+        );
 
         if (data.success) {
           setIsLoggedIn(true);
+          // Fetch user data after login
+          const userRes = await axios.get(`${backendUrl}/api/user/data`);
+          if (userRes.data.success) {
+            setUserData(userRes.data.userData);
+          }
+          toast.success(data.message);
           navigate("/");
         } else {
           toast.error(data.message);
@@ -64,15 +110,8 @@ function Login() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen px-4 sm:px-6 bg-gradient-to-br from-blue-200 to-purple-400 relative">
-      <img
-        onClick={() => navigate("/")}
-        src={assets.logo}
-        alt="logo"
-        className="absolute left-4 sm:left-8 top-4 w-10 sm:w-16 cursor-pointer"
-      />
-
-      <div className="bg-slate-900 w-full max-w-md p-6 sm:p-8 md:p-10 rounded-2xl shadow-lg flex flex-col items-center gap-5 text-indigo-300 text-sm sm:text-base">
+    <div className="flex items-center justify-center min-h-screen px-4 sm:px-6 bg-gradient-to-tl from-blue-100 to-purple-200 relative">
+      <div className="bg-slate-900 w-full max-w-md p-6 sm:p-8 md:p-10 rounded-2xl shadow-lg flex flex-col items-center gap-5 text-indigo-300 text-sm sm:text-base mt-8">
         <h2 className="text-xl xs:text-2xl md:text-3xl font-semibold text-white text-center mb-2">
           {state === "Sign Up" ? "Create Account" : "Login"}
         </h2>
@@ -89,7 +128,6 @@ function Login() {
               <input
                 type="text"
                 placeholder="Full Name"
-                required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="bg-transparent outline-none w-full text-white"
@@ -102,7 +140,6 @@ function Login() {
             <input
               type="email"
               placeholder="Email"
-              required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="bg-transparent outline-none w-full text-white"
@@ -115,7 +152,6 @@ function Login() {
               <input
                 type="tel"
                 placeholder="Phone"
-                required
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 className="bg-transparent outline-none w-full text-white"
@@ -128,7 +164,6 @@ function Login() {
             <input
               type="password"
               placeholder="Password"
-              required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="bg-transparent outline-none w-full text-white"
@@ -177,7 +212,7 @@ function Login() {
                             );
                           }
                         }}
-                        className="accent-green-400 bg-white"
+                        className="accent-green-400 cursor-pointer"
                       />
                       {service}
                     </label>

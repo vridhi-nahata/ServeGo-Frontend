@@ -7,6 +7,9 @@ export default {
       screens: {
         xs: '350px', // Extra small devices (phones, 350px and up)
       },
+      fontFamily: {
+        nosifer: ['Nosifer', 'sans-serif'],
+      },
     },
   },
   plugins: [],
