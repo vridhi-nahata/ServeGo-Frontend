@@ -1,13 +1,13 @@
 import React, { useContext, useEffect } from "react";
-import { assets } from "../assets/assets";
-import { useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import axios from "axios";
 import { AppContext } from "../context/AppContext";
 
 function EmailVerify() {
   axios.defaults.withCredentials = true; // Ensure axios sends cookies with requests
-  const {backendUrl,isLoggedIn,userData,getUserData}=useContext(AppContext);
+  const { backendUrl, isLoggedIn, userData, getUserData ,setIsLoggedIn} =
+    useContext(AppContext);
   const navigate = useNavigate();
   const inputRefs = React.useRef([]);
 
@@ -25,7 +25,9 @@ function EmailVerify() {
         if (inputRefs.current[index]) {
           inputRefs.current[index].value = char;
           // Trigger change event so React knows the value changed
-          inputRefs.current[index].dispatchEvent(new Event('input', { bubbles: true }));
+          inputRefs.current[index].dispatchEvent(
+            new Event("input", { bubbles: true })
+          );
         }
       });
       // Move focus to the last input after pasting
@@ -40,39 +42,62 @@ function EmailVerify() {
     }
   };
 
-  const onSubmitHandler=async (e) => {
-    try{
+  const handleOtpVerify = async (e) => {
       e.preventDefault(); // Prevent default functionality of reload on form submission
-      const otp = inputRefs.current.map(e => e.value || '').join("");
+      const tempUser = JSON.parse(localStorage.getItem("tempUserData"));
+
+      const otp = inputRefs.current.map((e) => e.value || "").join("");
       if (otp.length !== 6) {
-        toast.error("Please enter a valid 6-digit OTP");
+        toast.error("Enter 6-digit OTP");
         return;
-      }  
-      const {data}=await axios.post(backendUrl + "/api/auth/verify-account",
-        { otp }      
+      }
+      // const {data}=await axios.post(backendUrl + "/api/auth/verify-account",
+      //   { otp }
+      // );
+      // if(data.success){
+      //   setIsLoggedIn(true);
+
+      //   toast.success(data.message);
+      //   getUserData(); // Fetch user data after successful verification
+      //   navigate("/");
+      // }
+    try {
+
+      const { data } = await axios.post(
+        backendUrl + "/api/auth/register",
+        { email: tempUser.email, otp },
+        { withCredentials: true }
       );
-      if(data.success){
+      if (data.success) {
         toast.success(data.message);
-        getUserData(); // Fetch user data after successful verification
-        navigate("/");
+        localStorage.removeItem("tempUserData");
+        setIsLoggedIn(true);
+
+        // Wait a tick to ensure cookie is set before fetching user data
+        setTimeout(() => {
+          getUserData();
+          navigate("/");
+        }, 200);
+
+        
       } else {
         toast.error(data.message);
       }
-    }
-    catch(error){
-      console.log("Error in EmailVerify onSubmitHandler:", error);
+    } catch (error) {
       toast.error(error.message);
     }
-  }
+  };
 
   useEffect(() => {
-    isLoggedIn && userData && userData.isAccountVerified && navigate("/") // Redirect to home if already logged in and verified     
+    isLoggedIn && userData && userData.isAccountVerified && navigate("/"); // Redirect to home if already logged in and verified
   }, [isLoggedIn, userData]);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-200 to-purple-400">
-    
-      <form onSubmit={onSubmitHandler} className="bg-slate-900 p-8 rounded-lg shadow-lg w-96 text-sm">
+      <form
+        onSubmit={handleOtpVerify}
+        className="bg-slate-900 p-8 rounded-lg shadow-lg w-96 text-sm"
+      >
         <h1 className="text-gray-300 font-extrabold text-center text-2xl">
           Email Verification OTP
         </h1>

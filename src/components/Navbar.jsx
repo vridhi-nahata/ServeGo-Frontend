@@ -42,7 +42,7 @@ function Navbar() {
   }
 
   return (
-    <nav className="fixed top-0 left-0 w-full z-50 bg-gradient-to-r from-blue-100 to-purple-200 shadow-lg">
+    <nav className="fixed top-0 left-0 w-full z-50 bg-gradient-to-r from-blue-200 to-purple-300 shadow-lg">
       <div className="flex justify-between items-center px-4 py-3 max-w-7xl mx-auto">
         {/* 1. Logo + Title */}
         <div className="flex items-center gap-2">

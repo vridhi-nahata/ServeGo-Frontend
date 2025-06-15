@@ -1,5 +1,4 @@
 import React, { useState, useContext } from "react";
-import { assets } from "../assets/assets";
 import { SERVICES } from "../constants/services";
 import { useNavigate } from "react-router-dom";
 import { AppContext } from "../context/AppContext";
@@ -51,37 +50,68 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Only upload if provider & files are selected
       if (state === "Sign Up") {
         let uploadedDocUrls = [];
+        // Only upload if provider & files are selected
         if (role === "provider" && serviceDocs.length > 0) {
           uploadedDocUrls = await uploadFilesToCloudinary(serviceDocs);
         }
-        const payload = {
-          name,
-          email,
-          phone,
-          password,
-          role,
-          servicesOffered,
-          experienceYears,
-          availability,
-          serviceDocs: uploadedDocUrls, // Use uploaded URLs
-        };
+        // const payload = {
+        //   name,
+        //   email,
+        //   phone,
+        //   password,
+        //   role,
+        //   servicesOffered,
+        //   experienceYears,
+        //   availability,
+        //   serviceDocs: uploadedDocUrls, // Use uploaded URLs
+        // };
 
+        // Send registration data, get OTP
         const { data } = await axios.post(
-          `${backendUrl}/api/auth/register`,
-          payload,
+          `${backendUrl}/api/auth/send-verify-otp`,
+          {
+            name,
+            email,
+            phone,
+            password,
+            role,
+            ...(role === "provider" && {
+              servicesOffered,
+              experienceYears,
+              availability,
+              serviceDocs: uploadedDocUrls, // Use uploaded URLs
+            }),
+            
+          },
           { withCredentials: true }
         );
 
         if (data.success) {
+          toast.success("OTP sent to your email. Please verify.");
           setIsLoggedIn(true);
-          navigate("/");
+          // Temporarily store user data in localStorage to use during OTP verification
+          localStorage.setItem(
+            "tempUserData",
+            JSON.stringify({
+              name,
+              email,
+              phone,
+              password,
+              role,
+              servicesOffered,
+              experienceYears,
+              availability,
+              serviceDocs,
+            })
+          );
+          navigate("/email-verify"); // redirect to EmailVerify.jsx
         } else {
           toast.error(data.message);
         }
       } else {
+        // Login flow
         const { data } = await axios.post(
           `${backendUrl}/api/auth/login`,
           {
@@ -122,8 +152,26 @@ function Login() {
         </p>
 
         <form onSubmit={handleSubmit} className="w-full space-y-4">
+          {/* <div className="relative w-full">
+  <input
+    type="text"
+    id="fullName"
+    value={name}
+    onChange={(e) => setName(e.target.value)}
+    placeholder=" "
+    className="peer w-full px-4 pt-5 pb-2 text-sm text-white bg-[#333A5C] rounded-full outline-none focus:ring-2 focus:ring-blue-700"
+  />
+  <label
+    htmlFor="fullName"
+    className="absolute left-4 top-2 text-sm text-white transition-all peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-white"
+  >
+    Full Name <span className="text-red-500">*</span>
+  </label>
+</div>
+ */}
+
           {state === "Sign Up" && (
-            <div className="flex items-center gap-3 px-5 py-2.5 rounded-full bg-[#333A5C]">
+            <div className="flex items-center gap-3 px-5 py-2.5 rounded-full bg-[#333A5C] focus:outline-none focus-within:ring-2 focus-within:ring-blue-700">
               <i className="fas fa-user text-white text-md"></i>
               <input
                 type="text"
@@ -135,7 +183,7 @@ function Login() {
             </div>
           )}
 
-          <div className="flex items-center gap-3 px-5 py-2.5 rounded-full bg-[#333A5C]">
+          <div className="flex items-center gap-3 px-5 py-2.5 rounded-full bg-[#333A5C] focus:outline-none focus-within:ring-2 focus-within:ring-blue-700">
             <i className="fas fa-envelope text-white text-md"></i>
             <input
               type="email"
@@ -147,7 +195,7 @@ function Login() {
           </div>
 
           {state === "Sign Up" && (
-            <div className="flex items-center gap-3 px-5 py-2.5 rounded-full bg-[#333A5C]">
+            <div className="flex items-center gap-3 px-5 py-2.5 rounded-full bg-[#333A5C] focus:outline-none focus-within:ring-2 focus-within:ring-blue-700">
               <i className="fas fa-phone text-white text-md"></i>{" "}
               <input
                 type="tel"
@@ -159,7 +207,7 @@ function Login() {
             </div>
           )}
 
-          <div className="flex items-center gap-3 px-5 py-2.5 rounded-full bg-[#333A5C]">
+          <div className="flex items-center gap-3 px-5 py-2.5 rounded-full bg-[#333A5C] focus:outline-none focus-within:ring-2 focus-within:ring-blue-700">
             <i className="fas fa-lock text-white text-md"></i>{" "}
             <input
               type="password"
@@ -171,7 +219,7 @@ function Login() {
           </div>
 
           {state === "Sign Up" && (
-            <div className="flex items-center gap-3 w-full px-5 py-2.5 rounded-full bg-[#333A5C] text-white">
+            <div className="flex items-center gap-3 w-full px-5 py-2.5 rounded-full bg-[#333A5C] text-white focus:outline-none focus-within:ring-2 focus-within:ring-blue-700">
               <i className="fas fa-user-tag text-white text-md"></i>
               <select
                 value={role}
@@ -220,7 +268,7 @@ function Login() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 px-5 py-2.5 rounded-full bg-[#333A5C]">
+              <div className="flex items-center gap-3 px-5 py-2.5 rounded-full bg-[#333A5C] focus:outline-none focus-within:ring-2 focus-within:ring-blue-700">
                 <i className="fas fa-business-time text-white text-md"></i>
                 <input
                   type="number"
@@ -232,7 +280,7 @@ function Login() {
                 />
               </div>
 
-              <div className="flex items-center gap-3 px-5 py-2.5 rounded-full bg-[#333A5C]">
+              <div className="flex items-center gap-3 px-5 py-2.5 rounded-full bg-[#333A5C] focus:outline-none focus-within:ring-2 focus-within:ring-blue-700">
                 <i className="fas fa-calendar-check text-white text-md"></i>
                 <input
                   type="text"
@@ -243,7 +291,7 @@ function Login() {
                 />
               </div>
 
-              <div className="flex items-center gap-3 px-5 py-2.5 rounded-full bg-[#333A5C] text-white">
+              <div className="flex items-center gap-3 px-5 py-2.5 rounded-full bg-[#333A5C] text-white focus:outline-none focus-within:ring-2 focus-within:ring-blue-700">
                 <i className="fas fa-file-upload text-white text-md"></i>
                 <input
                   type="file"
