@@ -56,14 +56,14 @@ const WHY_CHOOSE = [
     title: "In-App Communication",
     desc: "Voice call, or video call with providers through the app. Get consultation, clarify details, and get quotes.",
     icon: (
-      <FaPhoneAlt className="text-3xl" style={{ color: "var(--secondary)" }} />
+      <FaPhoneAlt className="text-3xl" style={{ color: "var(--primary)" }} />
     ),
   },
   {
     title: "Transparent Pricing",
     desc: "See upfront pricing. No hidden charges—what you see is what you pay.",
     icon: (
-      <FaRupeeSign className="text-3xl" style={{ color: "var(--accent)" }} />
+      <FaRupeeSign className="text-3xl" style={{ color: "var(--primary)" }} />
     ),
   },
   {
@@ -72,7 +72,7 @@ const WHY_CHOOSE = [
     icon: (
       <FaMapMarkerAlt
         className="text-3xl"
-        style={{ color: "var(--primary-light)" }}
+        style={{ color: "var(--primary)" }}
       />
     ),
   },
@@ -80,10 +80,7 @@ const WHY_CHOOSE = [
     title: "Flexible Scheduling",
     desc: "Book services instantly or schedule for later. Choose the time that works best for your busy lifestyle.",
     icon: (
-      <FaCalendarAlt
-        className="text-3xl"
-        style={{ color: "var(--background-light)" }}
-      />
+      <FaCalendarAlt className="text-3xl" style={{ color: "var(--primary)" }} />
     ),
   },
   {
@@ -97,7 +94,7 @@ const WHY_CHOOSE = [
     icon: (
       <FaClipboardList
         className="text-3xl"
-        style={{ color: "var(--secondary)" }}
+        style={{ color: "var(--primary)" }}
       />
     ),
   },
@@ -107,7 +104,7 @@ const WHY_CHOOSE = [
     icon: (
       <FaHandHoldingUsd
         className="text-3xl"
-        style={{ color: "var(--accent)" }}
+        style={{ color: "var(--primary)" }}
       />
     ),
   },
@@ -115,10 +112,7 @@ const WHY_CHOOSE = [
     title: "Fast Support",
     desc: "Our team is available 24/7 for your help and support.",
     icon: (
-      <FaHeadset
-        className="text-3xl"
-        style={{ color: "var(--primary-light)" }}
-      />
+      <FaHeadset className="text-3xl" style={{ color: "var(--primary)" }} />
     ),
   },
 ];
@@ -126,45 +120,17 @@ const WHY_CHOOSE = [
 export default function Home() {
   return (
     <div
-      className="font-sans min-h-screen"
-      style={{
-        "--primary": "#1A237E", // Dark Blue
-        "--secondary": "#3949AB", // Medium Blue
-        "--accent": "#90CAF9", // Accent Blue
-        "--primary-light": "#E3F2FD", // Light Blue
-        "--background-light": "#F5F7FA", // Very Light Blue
-        "--background": "#E3F2FD", // Very Light Blue
-        background:
-          "linear-gradient(135deg, var(--background) 0%, var(--primary-light) 40%, var(--accent) 100%)",
-        color: "var(--primary)",
-      }}
+      className="min-h-screen"
     >
       {/* Hero Section */}
       <section
         className="py-28 px-6 text-center relative overflow-hidden shadow-lg"
         style={{
           background:
-            "linear-gradient(120deg, var(--primary) 0%, var(--primary-light) 60%, var(--accent) 100%)",
-          color: "#fff",
+            "linear-gradient(135deg, var(--secondary) 0%, var(--primary-light) 60%, var(--accent) 100%)",
+          color: "var(--white)",
         }}
       >
-        {/* Decorative Blobs */}
-        {/* <div
-          className="absolute top-0 left-0 w-60 h-60 rounded-full opacity-20 blur-2xl -z-10"
-          style={{
-            background: "var(--background)",
-            top: "-5rem",
-            left: "-5rem",
-          }}
-        />
-        <div
-          className="absolute bottom-0 right-0 w-80 h-80 rounded-full opacity-20 blur-2xl -z-10"
-          style={{
-            background: "var(--secondary)",
-            bottom: "-7rem",
-            right: "-7rem",
-          }}
-        /> */}
         <h1 className="text-5xl md:text-6xl font-extrabold mb-8 leading-tight drop-shadow-lg tracking-tight">
           One Platform,{" "}
           <span style={{ color: "var(--background-light)" }}>
@@ -183,44 +149,77 @@ export default function Home() {
         </p>
         <div className="flex flex-col sm:flex-row justify-center gap-6 mb-8">
           <Link
+  to="/services"
+  className="font-bold px-10 py-4 rounded-full shadow-lg transition text-lg"
+  style={{
+    background: "linear-gradient(to right, var(--accent), var(--secondary))",
+    color: "var(--white)",
+  }}
+  onMouseOver={(e) => {
+    e.currentTarget.style.background = "var(--ternary)";
+  }}
+  onMouseOut={(e) => {
+    e.currentTarget.style.background =
+      "linear-gradient(to right, var(--accent), var(--secondary))";
+  }}
+>
+  <span className="inline-flex items-center gap-2">
+    <FaSearch /> Explore Services
+  </span>
+</Link>
+<Link
+  to="/services"
+  className="font-bold px-10 py-4 rounded-full shadow-lg transition text-lg"
+  style={{
+    background: "linear-gradient(to right, var(--accent), var(--secondary))",
+    color: "var(--white)",
+  }}
+  onMouseOver={(e) => {
+    e.currentTarget.style.background = "var(--ternary)";
+  }}
+  onMouseOut={(e) => {
+    e.currentTarget.style.background =
+      "linear-gradient(to right, var(--accent), var(--secondary))";
+  }}
+>
+  <span className="inline-flex items-center gap-2">
+    <FaUserCheck /> Become a Provider
+  </span>
+</Link>
+
+
+          {/* <Link
             to="/services"
             className="font-bold px-10 py-4 rounded-full shadow-lg transition text-lg border-2"
             style={{
-              background: "var(--background-light)",
-              color: "var(--primary)",
-              borderColor: "var(--secondary)",
-              boxShadow: "0 4px 24px 0 rgba(88,87,87,0.12)",
+              background:
+                "linear-gradient(to right, var(--accent),var(--secondary))",
+              color: "var(--primary-light)",
             }}
             onMouseOver={(e) =>
-              (e.currentTarget.style.background = "var(--primary-light)")
+              (e.currentTarget.style.background = "var(--primary)")
             }
             onMouseOut={(e) =>
-              (e.currentTarget.style.background = "var(--background-light)")
+              (e.currentTarget.style.background = "var(--primary)")
             }
+            // style={{
+            //   background: "var(--ternary)",
+            //   color: "var(--primary)",
+            //   // borderColor: "var(--secondary)",
+            //   boxShadow: "0 4px 24px 0 rgba(88,87,87,0.12)",
+            // }}
+            // onMouseOver={(e) =>
+            //   (e.currentTarget.style.background = "var(--primary)")
+            // }
+            // onMouseOut={(e) =>
+            //   (e.currentTarget.style.background = "var(--primary-light)")
+            // }
           >
             <span className="inline-flex items-center gap-2">
               <FaSearch /> Explore Services
             </span>
-          </Link>
-          <Link
-            to="/register"
-            className="font-bold px-10 py-4 rounded-full border-2 transition text-lg"
-            style={{
-              borderColor: "var(--background-light)",
-              color: "var(--background-light)",
-              background: "transparent",
-            }}
-            onMouseOver={(e) =>
-              (e.currentTarget.style.background = "var(--background-light)")
-            }
-            onMouseOut={(e) =>
-              (e.currentTarget.style.background = "transparent")
-            }
-          >
-            <span className="inline-flex items-center gap-2">
-              <FaUserCheck /> Become a Provider
-            </span>
-          </Link>
+          </Link> 
+          */}
         </div>
       </section>
 
@@ -229,7 +228,7 @@ export default function Home() {
         className="py-20 px-6"
         style={{
           background:
-            "linear-gradient(90deg, var(--background) 0%, var(--secondary) 100%)",
+            "linear-gradient(120deg, var(--primary-light) 0%, var(--white) 100%)",
         }}
       >
         <h2
@@ -244,9 +243,11 @@ export default function Home() {
               key={i}
               className="min-w-[180px] p-7 rounded-2xl shadow-lg hover:shadow-2xl text-center cursor-pointer transition-transform duration-200 hover:-translate-y-2 border-t-4"
               style={{
-                background: "#fff",
+                background: "var(--white)",
                 borderColor: "var(--primary)",
               }}
+                      // onClick={() => navigate(`/services/${encodeURIComponent(cat)}`)}
+
             >
               <FaTools
                 className="mx-auto text-3xl mb-3"
@@ -259,7 +260,7 @@ export default function Home() {
       </section>
 
       {/* How It Works */}
-      <section className="bg-white py-20 px-6">
+      <section className="py-20 px-6" style={{ background: "var(--white)" }}>
         <motion.h2
           className="text-4xl font-bold text-center mb-10 tracking-tight"
           style={{ color: "var(--primary)" }}
@@ -270,18 +271,17 @@ export default function Home() {
           How It Works
         </motion.h2>
         <motion.p
-          className="text-lg text-gray-500 text-center mb-14 max-w-2xl mx-auto"
-          style={{ color: "var(--primary)" }}
+          className="text-lg text-center mb-14 max-w-2xl mx-auto"
+          style={{ color: "var(--secondary)" }}
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          Book services in just a few simple steps and get the help — when you
-          need it.
+          Book services in few simple steps and get the help — when you need it.
         </motion.p>
         <motion.div
           className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-12 max-w-6xl mx-auto text-center"
-          style={{ color: "var(--primary)" }}
+          style={{ color: "var(--secondary)" }}
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -289,10 +289,10 @@ export default function Home() {
           <div className="hover:scale-105 transition-transform duration-300">
             <FaSearch
               className="mx-auto text-4xl mb-4"
-              style={{ color: "var(--primary)" }}
+              style={{ color: "var(--secondary)" }}
             />
             <h3 className="font-semibold text-lg mb-2">1. Browse Services</h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm" style={{ color: "var(--gray)" }}>
               Explore a wide range of services.
             </p>
           </div>
@@ -302,17 +302,17 @@ export default function Home() {
               style={{ color: "var(--secondary)" }}
             />
             <h3 className="font-semibold text-lg mb-2">2. Select Service</h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm" style={{ color: "var(--gray)" }}>
               Choose the type of service you want to book.
             </p>
           </div>
           <div className="hover:scale-105 transition-transform duration-300">
             <FaUserCheck
               className="mx-auto text-4xl mb-4"
-              style={{ color: "var(--primary-light)" }}
+              style={{ color: "var(--secondary)" }}
             />
             <h3 className="font-semibold text-lg mb-2">3. Choose Provider</h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm" style={{ color: "var(--gray)" }}>
               Pick your preferred provider, date, and time — based on reviews
               and pricing.
             </p>
@@ -320,20 +320,20 @@ export default function Home() {
           <div className="hover:scale-105 transition-transform duration-300">
             <FaRupeeSign
               className="mx-auto text-4xl mb-4"
-              style={{ color: "var(--accent)" }}
+              style={{ color: "var(--secondary)" }}
             />
             <h3 className="font-semibold text-lg mb-2">4. Pay & Book</h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm" style={{ color: "var(--gray)" }}>
               Pay securely via UPI, wallet, or card and confirm your booking.
             </p>
           </div>
           <div className="hover:scale-105 transition-transform duration-300">
             <FaCogs
               className="mx-auto text-4xl mb-4"
-              style={{ color: "var(--primary)" }}
+              style={{ color: "var(--secondary)" }}
             />
             <h3 className="font-semibold text-lg mb-2">5. Get the Service</h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm" style={{ color: "var(--gray)" }}>
               Relax while a verified professional delivers your service.
             </p>
           </div>
@@ -343,7 +343,7 @@ export default function Home() {
               style={{ color: "var(--secondary)" }}
             />
             <h3 className="font-semibold text-lg mb-2">6. Give Feedback</h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm" style={{ color: "var(--gray)" }}>
               Rate your experience and help others by leaving a review.
             </p>
           </div>
@@ -355,7 +355,7 @@ export default function Home() {
         className="py-20 px-6"
         style={{
           background:
-            "linear-gradient(90deg, var(--background) 0%, var(--secondary) 100%)",
+            "linear-gradient(120deg, var(--primary-light) 0%, var(--white) 100%)",
         }}
       >
         <motion.h2
@@ -381,12 +381,16 @@ export default function Home() {
                 <div
                   className="absolute inset-0 rounded-2xl shadow-lg p-6 flex flex-col items-center justify-center [backface-visibility:hidden] border-b-4"
                   style={{
-                    background: "#fff",
+                    background:
+                      "linear-gradient(to right, var(--accent),var(--background-light))",
                     borderColor: "var(--primary)",
                   }}
                 >
                   <div className="mb-4">{item.icon}</div>
-                  <h3 className="text-xl font-semibold text-gray-800 text-center">
+                  <h3
+                    className="text-xl font-semibold text-center"
+                    style={{ color: "var(--primary)" }}
+                  >
                     {item.title}
                   </h3>
                 </div>
@@ -394,8 +398,9 @@ export default function Home() {
                 <div
                   className="absolute inset-0 rounded-2xl shadow-lg p-8 transform rotate-y-180 flex flex-col items-center justify-center [backface-visibility:hidden]"
                   style={{
-                    background: "var(--background-light)",
-                    color: "var(--primary)",
+                    background:
+                      "linear-gradient(to right, var(--background-light),var(--accent))",
+                    color: "var(--secondary)",
                   }}
                 >
                   <div className="flex items-start justify-start px-15 gap-3 mb-5">
@@ -416,11 +421,11 @@ export default function Home() {
       <section
         className="py-14 text-center"
         style={{
-          background: "var(--primary)",
-          color: "#fff",
+          background: "var(--secondary)",
+          color: "var(--white)",
         }}
       >
-        <h2 className="text-3xl font-semibold mb-4">
+        <h2 className="text-3xl font-semibold mb-10">
           Join 1,000+ users finding professionals every day.
         </h2>
         <Link
@@ -430,6 +435,13 @@ export default function Home() {
             background: "var(--background-light)",
             color: "var(--primary)",
           }}
+          onMouseOver={(e) => {
+    e.currentTarget.style.background = "var(--primary-light)";
+  }}
+  onMouseOut={(e) => {
+    e.currentTarget.style.background =
+      "var(--background-light)";
+  }}
         >
           Get Started
         </Link>
@@ -437,8 +449,8 @@ export default function Home() {
 
       {/* Footer */}
       <footer
-        className="text-white text-sm text-center py-6"
-        style={{ background: "var(--primary)" }}
+        className="text-sm text-center py-6"
+        style={{ background: "var(--primary)", color: "var(--white)" }}
       >
         <p>&copy; {new Date().getFullYear()} ServeGo. All rights reserved.</p>
       </footer>

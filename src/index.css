@@ -1,29 +1,50 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&family=Tagesschrift&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Override the autofill styles */
-input:-webkit-autofill {
-  box-shadow: 0 0 0px 1000px #333A5C inset !important;
-  -webkit-text-fill-color: white !important;
+/* Colors */
+:root {
+  /* --primary: #081F5C; */
+  --primary: #050329;
+  --secondary: #081f5c;
+  --ternary: #333a5c;
+  --accent: #7096d1;
+  --primary-light: #b6c7e0;
+  --background-light: #e3f2fd;
+  --white: #fff;
+  --black: #000000;
+  --gray: #4b5067;
 }
 
-body{
-    font-family: "Nunito", sans-serif;
+/* Font family */
+body {
+  font-family: "Lucida Sans", "Lucida Sans Regular", "Lucida Grande",
+    "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
+}
+
+h1,h2,h3,h4,h5,h6 {
+  font-family: Verdana, sans-serif;
+}
+
+/* Override the autofill styles */
+input:-webkit-autofill {
+  box-shadow: 0 0 0px 1000px #333a5c inset !important;
+  -webkit-text-fill-color: white !important;
 }
 
 /* Flip card helpers */
 .backface-hidden {
   backface-visibility: hidden;
 }
+
 .perspective-\[1000px\] {
   perspective: 1000px;
 }
+
 .transform-style-preserve-3d {
   transform-style: preserve-3d;
 }
+
 .rotate-y-180 {
   transform: rotateY(180deg);
 }

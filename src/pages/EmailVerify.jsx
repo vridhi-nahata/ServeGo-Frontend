@@ -6,7 +6,7 @@ import { AppContext } from "../context/AppContext";
 
 function EmailVerify() {
   axios.defaults.withCredentials = true; // Ensure axios sends cookies with requests
-  const { backendUrl, isLoggedIn, userData, getUserData ,setIsLoggedIn} =
+  const { backendUrl, isLoggedIn, userData, getUserData, setIsLoggedIn } =
     useContext(AppContext);
   const navigate = useNavigate();
   const inputRefs = React.useRef([]);
@@ -43,26 +43,15 @@ function EmailVerify() {
   };
 
   const handleOtpVerify = async (e) => {
-      e.preventDefault(); // Prevent default functionality of reload on form submission
-      const tempUser = JSON.parse(localStorage.getItem("tempUserData"));
+    e.preventDefault(); // Prevent default functionality of reload on form submission
+    const tempUser = JSON.parse(localStorage.getItem("tempUserData"));
 
-      const otp = inputRefs.current.map((e) => e.value || "").join("");
-      if (otp.length !== 6) {
-        toast.error("Enter 6-digit OTP");
-        return;
-      }
-      // const {data}=await axios.post(backendUrl + "/api/auth/verify-account",
-      //   { otp }
-      // );
-      // if(data.success){
-      //   setIsLoggedIn(true);
-
-      //   toast.success(data.message);
-      //   getUserData(); // Fetch user data after successful verification
-      //   navigate("/");
-      // }
+    const otp = inputRefs.current.map((e) => e.value || "").join("");
+    if (otp.length !== 6) {
+      toast.error("Enter 6-digit OTP");
+      return;
+    }
     try {
-
       const { data } = await axios.post(
         backendUrl + "/api/auth/register",
         { email: tempUser.email, otp },
@@ -78,8 +67,6 @@ function EmailVerify() {
           getUserData();
           navigate("/");
         }, 200);
-
-        
       } else {
         toast.error(data.message);
       }
@@ -93,15 +80,31 @@ function EmailVerify() {
   }, [isLoggedIn, userData]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-200 to-purple-400">
+    <div
+      className="flex items-center justify-center min-h-screen"
+      style={{
+        background:
+          "linear-gradient(135deg, var(--background-light) 0%, var(--primary-light) 60%, var(--accent) 100%)",
+      }}
+    >
       <form
         onSubmit={handleOtpVerify}
-        className="bg-slate-900 p-8 rounded-lg shadow-lg w-96 text-sm"
+        className="p-8 rounded-lg shadow-lg w-96 text-sm"
+        style={{
+          background: "var(--primary)",
+          color: "var(--accent)",
+        }}
       >
-        <h1 className="text-gray-300 font-extrabold text-center text-2xl">
+        <h1
+          className="font-extrabold text-center text-2xl pb-4"
+          style={{ color: "var(--white)" }}
+        >
           Email Verification OTP
         </h1>
-        <p className="text-gray-500 text-center mb-6">
+        <p
+          className="text-center mb-6"
+          style={{ color: "var(--primary-light)" }}
+        >
           Enter the 6-digit code sent to your email
         </p>
         <div className="flex justify-between mb-8">
@@ -112,7 +115,14 @@ function EmailVerify() {
                 key={index}
                 type="text"
                 maxLength="1"
-                className="w-12 h-12 text-center text-xl bg-[#333A5C] text-white border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-700"
+                className="w-12 h-12 text-center text-xl rounded-md outline-none focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                style={{
+                  background: "var(--ternary)",
+                  color: "var(--white)",
+                  borderColor: "var(--primary-light)",
+                  outline: "none",
+                    boxShadow: "none",
+                }}
                 ref={(e) => (inputRefs.current[index] = e)}
                 onChange={(e) => handleInput(e, index)} // Handle input change
                 onKeyDown={(e) => handleKeyDown(e, index)} // Handle backspace key
@@ -122,7 +132,12 @@ function EmailVerify() {
         </div>
         <button
           type="submit"
-          className="w-full bg-gradient-to-r from-indigo-500 to-indigo-900 text-white font-bold py-2 rounded"
+          className="w-full font-bold py-2 rounded"
+          style={{
+            background:
+              "linear-gradient(130deg, var(--secondary) 0%, var(--accent) 100%)",
+            color: "var(--white)",
+          }}
         >
           Verify Email
         </button>

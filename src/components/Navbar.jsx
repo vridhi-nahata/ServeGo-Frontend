@@ -42,7 +42,12 @@ function Navbar() {
   }
 
   return (
-    <nav className="fixed top-0 left-0 w-full z-50 bg-gradient-to-r from-blue-200 to-purple-300 shadow-lg">
+    <nav
+      className="fixed top-0 left-0 w-full z-50 shadow-lg"
+      style={{
+        background: "linear-gradient(90deg, var(--background-light) 0%, var(--primary-light) 60%, var(--accent) 100%)"
+      }}
+    >
       <div className="flex justify-between items-center px-4 py-3 max-w-7xl mx-auto">
         {/* 1. Logo + Title */}
         <div className="flex items-center gap-2">
@@ -52,7 +57,7 @@ function Navbar() {
             alt="logo"
             className="w-8 cursor-pointer"
           />
-          <p className="font-nosifer text-blue-800 text-lg sm:text-xl hidden xs:block">
+          <p className="font-nosifer text-lg sm:text-xl hidden xs:block font-extrabold" style={{ color: "var(--primary)" }}>
             ServeGo
           </p>
         </div>
@@ -61,27 +66,33 @@ function Navbar() {
         <div className="flex md:hidden">
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="text-indigo-800 text-xl focus:outline-none"
+            className="text-xl focus:outline-none"
+            style={{ color: "var(--primary)" }}
           >
             <i className="fas fa-bars"></i>
           </button>
         </div>
 
         {/* 3. Desktop Nav + Login/User */}
-        <div className="hidden md:flex items-center gap-6 text-md text-indigo-600">
-          <Link to="/" className="hover:text-indigo-800 hover:font-semibold focus:outline-none">Home</Link>
-          <Link to="/services" className="hover:text-indigo-800 hover:font-semibold focus:outline-none">Services</Link>
-          <Link to="/aboutus" className="hover:text-indigo-800 hover:font-semibold focus:outline-none">About Us</Link>
+        <div className="hidden md:flex items-center gap-6 text-md"
+          style={{ color: "var(--ternary)" }}>
+          <Link to="/" className="hover:text-[color:var(--primary)] font-medium hover:font-extrabold focus:outline-none">Home</Link>
+          <Link to="/services" className="hover:text-[color:var(--primary)] font-medium hover:font-extrabold focus:outline-none">Services</Link>
+          <Link to="/aboutus" className="hover:text-[color:var(--primary)] font-medium hover:font-extrabold focus:outline-none">About Us</Link>
         </div>
 
         {/* 4. Login / User  */}
         <div className="flex items-center gap-3">
           {userData ? (
             <div className="relative group">
-              <div className="w-8 h-8 flex justify-center items-center text-white bg-indigo-900 rounded-full cursor-pointer">
+              <div
+                className="w-8 h-8 flex justify-center items-center text-[color:var(--white)] rounded-full cursor-pointer"
+                style={{ background: "var(--primary)" }}
+              >
                 {userData.name.charAt(0).toUpperCase()}
               </div>
-              <div className="absolute top-8.5 right-0 w-40 rounded-lg p-2 hidden group-hover:block bg-white shadow-md text-black z-10">
+              <div className="absolute top-8.5 right-0 w-40 rounded-lg p-2 hidden group-hover:block shadow-md text-[color:var(--black)] z-10"
+                style={{ background: "var(--white)" }}>
                 <ul className="text-sm space-y-1">
                   {!userData.isAccountVerified && (
                     <li
@@ -103,10 +114,14 @@ function Navbar() {
           ) : (
             <button
               onClick={() => navigate("/login")}
-              className="flex items-center gap-2 px-3 py-1.5 outline-none hover:bg-blue-900 transition-all rounded-lg bg-blue-800 text-white"
+              className="flex items-center gap-2 px-3 py-1.5 outline-none transition-all rounded-lg"
+              style={{
+                background: "var(--primary)",
+                color: "var(--white)"
+              }}
             >
               <p className="hidden xs:block text-sm sm:text-md">Login</p>
-              <i className="fas fa-right-to-bracket text-white text-xs sm:text-sm"></i>
+              <i className="fas fa-right-to-bracket text-xs sm:text-sm" style={{ color: "var(--white)" }}></i>
             </button>
           )}
         </div>
@@ -114,13 +129,17 @@ function Navbar() {
 
       {/* Mobile Menu Dropdown */}
       {isMobileMenuOpen && (
-        <div className="md:hidden px-4 py-2 space-y-2 text-sm text-indigo-600 bg-white shadow-lg">
-          <Link to="/" className="block hover:text-indigo-800 hover:font-semibold focus:outline-none" onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
-          <Link to="/services" className="block hover:text-indigo-800 hover:font-semibold focus:outline-none" onClick={() => setIsMobileMenuOpen(false)}>Services</Link>
-          <Link to="/aboutus" className="block hover:text-indigo-800 hover:font-semibold focus:outline-none" onClick={() => setIsMobileMenuOpen(false)}>About Us</Link>
+        <div
+          className="md:hidden px-4 py-2 space-y-2 text-sm shadow-lg"
+          style={{ color: "var(--ternary)", background: "var(--white)" }}
+        >
+          <Link to="/" className="font-medium block hover:text-[color:var(--primary)] hover:font-extrabold focus:outline-none" onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
+          <Link to="/services" className="font-medium block hover:text-[color:var(--primary)] hover:font-extrabold focus:outline-none" onClick={() => setIsMobileMenuOpen(false)}>Services</Link>
+          <Link to="/aboutus" className="font-medium block hover:text-[color:var(--primary)] hover:font-extrabold focus:outline-none" onClick={() => setIsMobileMenuOpen(false)}>About Us</Link>
         </div>
       )}
     </nav>
   );
+
 }
 export default Navbar;
