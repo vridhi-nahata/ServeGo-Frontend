@@ -1,6 +1,6 @@
-import React, { useContext,useState } from "react";
+import React, { useContext, useState } from "react";
 import { assets } from "../assets/assets";
-import { useNavigate,Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { AppContext } from "../context/AppContext";
 import { toast } from "react-toastify";
 import axios from "axios";
@@ -9,15 +9,16 @@ function Navbar() {
   const navigate = useNavigate();
   const { userData, backendUrl, setUserData, setIsLoggedIn } =
     useContext(AppContext);
-      const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const sendVerificationOtp = async () => {
     try {
       axios.defaults.withCredentials = true;
-      const { data } = await axios.post(backendUrl + '/api/auth/send-verify-otp');
+      const { data } = await axios.post(
+        backendUrl + "/api/auth/send-verify-otp"
+      );
       if (data.success) {
-        navigate('email-verify')
+        navigate("email-verify");
         toast.success(data.message);
       } else {
         toast.error(data.message);
@@ -25,27 +26,27 @@ function Navbar() {
     } catch (error) {
       toast.error(error.message);
     }
-  }
+  };
 
-  const logout= async () => {
-    try{
-      axios.defaults.withCredentials= true;
-      const {data} = await axios.post(backendUrl + '/api/auth/logout');
+  const logout = async () => {
+    try {
+      axios.defaults.withCredentials = true;
+      const { data } = await axios.post(backendUrl + "/api/auth/logout");
       data.success && setIsLoggedIn(false);
       data.success && setUserData(false);
       navigate("/");
       toast.success(data.message);
-    }
-    catch(error){
+    } catch (error) {
       toast.error(error.message);
     }
-  }
+  };
 
   return (
     <nav
       className="fixed top-0 left-0 w-full z-50 shadow-lg"
       style={{
-        background: "linear-gradient(90deg, var(--background-light) 0%, var(--primary-light) 60%, var(--accent) 100%)"
+        background:
+          "linear-gradient(90deg, var(--background-light) 0%, var(--primary-light) 60%, var(--accent) 100%)",
       }}
     >
       <div className="flex justify-between items-center px-4 py-3 max-w-7xl mx-auto">
@@ -57,7 +58,10 @@ function Navbar() {
             alt="logo"
             className="w-8 cursor-pointer"
           />
-          <p className="font-nosifer text-lg sm:text-xl hidden xs:block font-extrabold" style={{ color: "var(--primary)" }}>
+          <p
+            className="font-nosifer text-lg sm:text-xl hidden xs:block font-extrabold"
+            style={{ color: "var(--primary)" }}
+          >
             ServeGo
           </p>
         </div>
@@ -74,11 +78,28 @@ function Navbar() {
         </div>
 
         {/* 3. Desktop Nav + Login/User */}
-        <div className="hidden md:flex items-center gap-6 text-md"
-          style={{ color: "var(--ternary)" }}>
-          <Link to="/" className="hover:text-[color:var(--primary)] font-medium hover:font-extrabold focus:outline-none">Home</Link>
-          <Link to="/services" className="hover:text-[color:var(--primary)] font-medium hover:font-extrabold focus:outline-none">Services</Link>
-          <Link to="/aboutus" className="hover:text-[color:var(--primary)] font-medium hover:font-extrabold focus:outline-none">About Us</Link>
+        <div
+          className="hidden md:flex items-center gap-6 text-md"
+          style={{ color: "var(--ternary)" }}
+        >
+          <Link
+            to="/"
+            className="hover:text-[color:var(--primary)] font-medium hover:font-extrabold focus:outline-none"
+          >
+            Home
+          </Link>
+          <Link
+            to="/services"
+            className="hover:text-[color:var(--primary)] font-medium hover:font-extrabold focus:outline-none"
+          >
+            Services
+          </Link>
+          <Link
+            to="/aboutus"
+            className="hover:text-[color:var(--primary)] font-medium hover:font-extrabold focus:outline-none"
+          >
+            About Us
+          </Link>
         </div>
 
         {/* 4. Login / User  */}
@@ -91,8 +112,10 @@ function Navbar() {
               >
                 {userData.name.charAt(0).toUpperCase()}
               </div>
-              <div className="absolute top-8.5 right-0 w-40 rounded-lg p-2 hidden group-hover:block shadow-md text-[color:var(--black)] z-10"
-                style={{ background: "var(--white)" }}>
+              <div
+                className="absolute top-8.5 right-0 w-40 rounded-lg p-2 hidden group-hover:block shadow-md text-[color:var(--black)] z-10"
+                style={{ background: "var(--white)" }}
+              >
                 <ul className="text-sm space-y-1">
                   {!userData.isAccountVerified && (
                     <li
@@ -117,11 +140,14 @@ function Navbar() {
               className="flex items-center gap-2 px-3 py-1.5 outline-none transition-all rounded-lg"
               style={{
                 background: "var(--primary)",
-                color: "var(--white)"
+                color: "var(--white)",
               }}
             >
               <p className="hidden xs:block text-sm sm:text-md">Login</p>
-              <i className="fas fa-right-to-bracket text-xs sm:text-sm" style={{ color: "var(--white)" }}></i>
+              <i
+                className="fas fa-right-to-bracket text-xs sm:text-sm"
+                style={{ color: "var(--white)" }}
+              ></i>
             </button>
           )}
         </div>
@@ -133,13 +159,30 @@ function Navbar() {
           className="md:hidden px-4 py-2 space-y-2 text-sm shadow-lg"
           style={{ color: "var(--ternary)", background: "var(--white)" }}
         >
-          <Link to="/" className="font-medium block hover:text-[color:var(--primary)] hover:font-extrabold focus:outline-none" onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
-          <Link to="/services" className="font-medium block hover:text-[color:var(--primary)] hover:font-extrabold focus:outline-none" onClick={() => setIsMobileMenuOpen(false)}>Services</Link>
-          <Link to="/aboutus" className="font-medium block hover:text-[color:var(--primary)] hover:font-extrabold focus:outline-none" onClick={() => setIsMobileMenuOpen(false)}>About Us</Link>
+          <Link
+            to="/"
+            className="font-medium block hover:text-[color:var(--primary)] hover:font-extrabold focus:outline-none"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            Home
+          </Link>
+          <Link
+            to="/services"
+            className="font-medium block hover:text-[color:var(--primary)] hover:font-extrabold focus:outline-none"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            Services
+          </Link>
+          <Link
+            to="/aboutus"
+            className="font-medium block hover:text-[color:var(--primary)] hover:font-extrabold focus:outline-none"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            About Us
+          </Link>
         </div>
       )}
     </nav>
   );
-
 }
 export default Navbar;

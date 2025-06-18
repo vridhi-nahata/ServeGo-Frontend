@@ -1,5 +1,6 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import ServicesSection from "../components/ServicesSection";
 import { motion } from "framer-motion";
 import {
   FaTools,
@@ -18,31 +19,6 @@ import {
   FaPhoneAlt,
   FaGift,
 } from "react-icons/fa";
-
-const POPULAR_SERVICES = [
-  "Home Cleaning",
-  "Physiotherapy",
-  "Massage",
-  "MakeUp",
-  "Hairstyle",
-  "Cooking",
-  "Pest Control",
-  "Painting",
-  "Waterproofing",
-  "AC Repair",
-  "Electrician",
-  "Plumber",
-  "Carpenter",
-  "Smart Device Repair",
-  "IT Support",
-  "Medical Lab Tests",
-  "Nutritionist",
-  "Photography",
-  "Car Cleaning",
-  "Tutoring",
-  "Mounting",
-  "Lifting",
-];
 
 const WHY_CHOOSE = [
   {
@@ -118,10 +94,9 @@ const WHY_CHOOSE = [
 ];
 
 export default function Home() {
+  const navigate = useNavigate();
   return (
-    <div
-      className="min-h-screen"
-    >
+    <div className="min-h-screen">
       {/* Hero Section */}
       <section
         className="py-28 px-6 text-center relative overflow-hidden shadow-lg"
@@ -149,115 +124,50 @@ export default function Home() {
         </p>
         <div className="flex flex-col sm:flex-row justify-center gap-6 mb-8">
           <Link
-  to="/services"
-  className="font-bold px-10 py-4 rounded-full shadow-lg transition text-lg"
-  style={{
-    background: "linear-gradient(to right, var(--accent), var(--secondary))",
-    color: "var(--white)",
-  }}
-  onMouseOver={(e) => {
-    e.currentTarget.style.background = "var(--ternary)";
-  }}
-  onMouseOut={(e) => {
-    e.currentTarget.style.background =
-      "linear-gradient(to right, var(--accent), var(--secondary))";
-  }}
->
-  <span className="inline-flex items-center gap-2">
-    <FaSearch /> Explore Services
-  </span>
-</Link>
-<Link
-  to="/services"
-  className="font-bold px-10 py-4 rounded-full shadow-lg transition text-lg"
-  style={{
-    background: "linear-gradient(to right, var(--accent), var(--secondary))",
-    color: "var(--white)",
-  }}
-  onMouseOver={(e) => {
-    e.currentTarget.style.background = "var(--ternary)";
-  }}
-  onMouseOut={(e) => {
-    e.currentTarget.style.background =
-      "linear-gradient(to right, var(--accent), var(--secondary))";
-  }}
->
-  <span className="inline-flex items-center gap-2">
-    <FaUserCheck /> Become a Provider
-  </span>
-</Link>
-
-
-          {/* <Link
             to="/services"
-            className="font-bold px-10 py-4 rounded-full shadow-lg transition text-lg border-2"
+            className="font-bold px-10 py-4 rounded-full shadow-lg transition text-lg"
             style={{
               background:
-                "linear-gradient(to right, var(--accent),var(--secondary))",
-              color: "var(--primary-light)",
+                "linear-gradient(to right, var(--accent), var(--secondary))",
+              color: "var(--white)",
             }}
-            onMouseOver={(e) =>
-              (e.currentTarget.style.background = "var(--primary)")
-            }
-            onMouseOut={(e) =>
-              (e.currentTarget.style.background = "var(--primary)")
-            }
-            // style={{
-            //   background: "var(--ternary)",
-            //   color: "var(--primary)",
-            //   // borderColor: "var(--secondary)",
-            //   boxShadow: "0 4px 24px 0 rgba(88,87,87,0.12)",
-            // }}
-            // onMouseOver={(e) =>
-            //   (e.currentTarget.style.background = "var(--primary)")
-            // }
-            // onMouseOut={(e) =>
-            //   (e.currentTarget.style.background = "var(--primary-light)")
-            // }
+            onMouseOver={(e) => {
+              e.currentTarget.style.background = "var(--ternary)";
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.background =
+                "linear-gradient(to right, var(--accent), var(--secondary))";
+            }}
           >
             <span className="inline-flex items-center gap-2">
               <FaSearch /> Explore Services
             </span>
-          </Link> 
-          */}
+          </Link>
+          <Link
+            to="/services"
+            className="font-bold px-10 py-4 rounded-full shadow-lg transition text-lg"
+            style={{
+              background:
+                "linear-gradient(to right, var(--accent), var(--secondary))",
+              color: "var(--white)",
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.background = "var(--ternary)";
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.background =
+                "linear-gradient(to right, var(--accent), var(--secondary))";
+            }}
+          >
+            <span className="inline-flex items-center gap-2">
+              <FaUserCheck /> Become a Provider
+            </span>
+          </Link>
         </div>
       </section>
 
-      {/* Popular Services */}
-      <section
-        className="py-20 px-6"
-        style={{
-          background:
-            "linear-gradient(120deg, var(--primary-light) 0%, var(--white) 100%)",
-        }}
-      >
-        <h2
-          className="text-4xl font-bold text-center mb-14 tracking-tight"
-          style={{ color: "var(--primary)" }}
-        >
-          Popular Services
-        </h2>
-        <div className="flex overflow-x-auto gap-8 pb-4 max-w-6xl mx-auto">
-          {POPULAR_SERVICES.map((cat, i) => (
-            <div
-              key={i}
-              className="min-w-[180px] p-7 rounded-2xl shadow-lg hover:shadow-2xl text-center cursor-pointer transition-transform duration-200 hover:-translate-y-2 border-t-4"
-              style={{
-                background: "var(--white)",
-                borderColor: "var(--primary)",
-              }}
-                      // onClick={() => navigate(`/services/${encodeURIComponent(cat)}`)}
-
-            >
-              <FaTools
-                className="mx-auto text-3xl mb-3"
-                style={{ color: "var(--primary)" }}
-              />
-              <p className="font-medium text-lg">{cat}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      {/* Popular services */}
+      <ServicesSection />
 
       {/* How It Works */}
       <section className="py-20 px-6" style={{ background: "var(--white)" }}>
@@ -268,7 +178,7 @@ export default function Home() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          How It Works
+          How ServeGo Works
         </motion.h2>
         <motion.p
           className="text-lg text-center mb-14 max-w-2xl mx-auto"
@@ -436,12 +346,11 @@ export default function Home() {
             color: "var(--primary)",
           }}
           onMouseOver={(e) => {
-    e.currentTarget.style.background = "var(--primary-light)";
-  }}
-  onMouseOut={(e) => {
-    e.currentTarget.style.background =
-      "var(--background-light)";
-  }}
+            e.currentTarget.style.background = "var(--primary-light)";
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.background = "var(--background-light)";
+          }}
         >
           Get Started
         </Link>
