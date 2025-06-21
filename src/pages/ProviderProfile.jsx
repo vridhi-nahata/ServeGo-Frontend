@@ -1,44 +1,187 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import { AppContext } from "../context/AppContext";
+import StarRating from "../components/StarRating";
+import { assets } from "../assets/assets";
+import { toast } from "react-toastify";
 
 export default function ProviderProfile() {
   const { providerId } = useParams();
+  const { onBook } = useContext(AppContext);
   const [provider, setProvider] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     axios
-      .get(`http://localhost:5000/api/user/provider-profile?id=${providerId}`, { withCredentials: true })
+      .get(`http://localhost:5000/api/user/provider-profile?id=${providerId}`, {
+        withCredentials: true,
+      })
       .then((res) => {
         setProvider(res.data.provider);
+        setLoading(false);
+      })
+      .catch((err) => {
+        toast.error("Error loading provider details");
         setLoading(false);
       });
   }, [providerId]);
 
-  if (loading) return <div className="text-center py-20">Loading...</div>;
-  if (!provider) return <div className="text-center py-20 text-gray-500">Provider not found.</div>;
+  if (loading) {
+    return <div className="text-center mt-20 text-lg">Loading...</div>;
+  }
+
+  if (!provider) {
+    return (
+      <div className="text-center mt-20 text-red-500">Provider not found.</div>
+    );
+  }
 
   return (
-    <div className="min-h-screen py-16 px-4 bg-gradient-to-br from-[var(--primary-light)] to-[var(--white)] flex flex-col items-center">
-      <div className="bg-white rounded-3xl shadow-2xl p-10 max-w-xl w-full flex flex-col items-center">
-        <div className="w-32 h-32 rounded-full bg-gradient-to-tr from-[var(--primary-light)] to-[var(--accent)] flex items-center justify-center text-5xl font-bold text-white shadow-lg mb-6 border-4 border-[var(--primary)]">
-          {provider.avatarUrl ? (
-            <img src={provider.avatarUrl} alt={provider.name} className="w-full h-full object-cover rounded-full" />
-          ) : (
-            provider.name?.[0]?.toUpperCase() || "P"
-          )}
+    <div className="min-h-screen py-20 px-6 bg-gradient-to-br from-[var(--primary-light)] to-[var(--white)]">
+      <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-2xl p-8">
+        <div className="flex flex-col sm:flex-row items-center gap-4">
+          
+          {/* Avatar */}
+          <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-gradient-to-tr from-[var(--primary-light)] to-[var(--accent)] flex items-center justify-center text-5xl font-bold text-white shadow-lg mb-2 border-4 border-[var(--primary)]">
+            {provider.avatarUrl ? (
+              <img
+                src={provider.avatarUrl}
+                alt={provider.name}
+                className="w-full h-full object-cover rounded-full"
+              />
+            ) : (
+              provider.name?.[0]?.toUpperCase() || "P"
+            )}
+          </div>
+
+          {/* Basic Info */}
+          <div className="sm:pl-10 pt-2 pb-6 flex flex-col gap-2 items-center sm:items-start">
+            {/* Name */}
+            <h2 className="text-2xl font-bold text-[var(--primary)] leading-tight">
+              {provider.name}
+            </h2>
+
+            {/* Role */}
+            <p className="text-[var(--gray)] text-md">Service Provider</p>
+
+            {/* Verification Badge */}
+            <span
+              className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium w-fit ${
+                provider.isAccountVerified
+                  ? "bg-green-100 text-green-700"
+                  : "bg-red-100 text-red-700"
+              }`}
+            >
+              {provider.isAccountVerified ? "Verified" : "Not Verified"}
+            </span>
+
+            {/* Rating */}
+            <div className="pt-1">
+              <StarRating rating={provider.rating || 0} />
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex justify-center sm:justify-start gap-6 pt-5">
+              <button title="Voice Call" className="group">
+                <img
+                  src={assets.voice_call}
+                  alt="Voice Call"
+                  className="w-7 h-7 transition-transform duration-200 group-hover:scale-125"
+                />
+              </button>
+              <button title="Video Call" className="group">
+                <img
+                  src={assets.video_call}
+                  alt="Video Call"
+                  className="w-7 h-7 transition-transform duration-200 group-hover:scale-125"
+                />
+              </button>
+              <button title="Book Now" onClick={onBook} className="group">
+                <img
+                  src={assets.booking}
+                  alt="Book Now"
+                  className="w-7 h-7 transition-transform duration-200 group-hover:scale-125"
+                />
+              </button>
+            </div>
+          </div>
         </div>
-        <h2 className="text-3xl font-bold text-[var(--primary)] mb-2">{provider.name}</h2>
-        <p className="text-gray-500 mb-2">{provider.email}</p>
-        <span className="inline-block bg-green-100 text-green-700 text-xs px-3 py-1 rounded-full mb-4">
-          {provider.isAccountVerified ? "Verified" : "Not Verified"}
-        </span>
-        <div className="flex flex-col gap-2 text-gray-700 text-base w-full">
-          <span><b>Experience:</b> {provider.experienceYears || 0} years</span>
-          <span><b>Availability:</b> {provider.availability || "N/A"}</span>
-          <span><b>Services Offered:</b> {provider.servicesOffered?.join(", ")}</span>
-          {/* Add more fields as needed */}
+
+        {/* Details */}
+        <div className="mt-6 grid gap-4 grid-cols-1 sm:grid-cols-2 text-[var(--secondary)] text-sm sm:text-base">
+          <p>
+            <strong>Email:</strong> {provider.email}
+          </p>
+          {/* <p>
+            <strong>Phone:</strong> {provider.phone}
+          </p> */}
+          <p>
+            <strong>Experience:</strong> {provider.experienceYears || 0} years
+          </p>
+          <p>
+            <strong>Availability:</strong> {provider.availability || "N/A"}
+          </p>
+          {/* <p>
+            <strong>Location:</strong> {provider.location || "Not specified"}
+          </p> */}
+          <p>
+            <strong>Services Offered:</strong>{" "}
+            {provider.servicesOffered?.join(", ")}
+          </p>
+        </div>
+
+        {/* Documents section */}
+        <div>
+          {provider.serviceDocs?.length > 0 && (
+            <div className="w-full mt-6">
+              <h3 className="text-xl font-semibold text-[var(--primary)] mb-3">
+                Documents
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                {provider.serviceDocs.map((docUrl, index) => {
+                  // Uses a regex to check if the file is an image (based on its file extension)
+                  const isImage = /\.(jpg|jpeg|png|gif)$/i.test(docUrl);
+
+                  return (
+                    <div
+                      key={index}
+                      className="border p-3 rounded-lg shadow hover:shadow-md transition text-center"
+                    >
+                      {isImage ? (
+                        <a
+                          href={docUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block"
+                        >
+                          <img
+                            src={docUrl}
+                            alt={`Document ${index + 1}`}
+                            className="w-full h-40 object-contain rounded mb-2"
+                          />
+                        </a>
+                      ) : (
+                        <div className="flex flex-col items-center text-[var(--primary)]">
+                          <i className="fas fa-file-alt text-4xl mb-2"></i>
+                          <a
+                            href={`https://docs.google.com/viewer?url=${encodeURIComponent(
+                              docUrl
+                            )}&embedded=true`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm underline break-all truncate w-full inline-block" // Tailwind’s truncate utility - limiting file name length in display to avoid layout issues
+                          >
+                            {decodeURIComponent(docUrl.split("/").pop())}
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

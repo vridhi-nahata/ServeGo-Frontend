@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState,useContext } from "react";
+import { AppContext } from "../context/AppContext";
 import { useParams, useNavigate } from "react-router-dom";
 import { assets } from "../assets/assets";
 import ProviderCard from "../components/ProviderCard";
@@ -7,6 +8,7 @@ import { SERVICES } from "../constants/services";
 
 export default function ServiceDetail() {
   const { serviceName } = useParams();
+  const { userData } = useContext(AppContext); 
   const service = SERVICES.find((s) => s.name === serviceName);
   const [providers, setProviders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,9 +29,9 @@ export default function ServiceDetail() {
   }, [serviceName]);
 
   return (
-    <div className="min-h-screen py-12 px-4 bg-gradient-to-br from-[var(--primary-light)] to-[var(--white)]">
+    <div className="min-h-screen py-20 px-4 bg-gradient-to-br from-[var(--primary-light)] to-[var(--white)]">
       {/* About service section */}
-      <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg p-8 mb-10 flex flex-col items-center">
+      <div className="max-w-3xl mx-auto bg-[var(--white)] rounded-2xl shadow-lg p-8 mb-10 flex flex-col items-center">
         <img
           src={service?.image}
           alt={service?.name}
@@ -38,37 +40,37 @@ export default function ServiceDetail() {
         <h2 className="text-3xl font-bold mb-2 text-[var(--primary)]">
           {service?.name}
         </h2>
-        <p className="text-gray-700 text-lg text-center">
+        <p className="text-[var(--gray)] text-lg text-center">
           {service?.desc || "Service details coming soon."}
         </p>
       </div>
 
       {/* Available providers list */}
-      <h3 className="text-2xl font-bold mb-6 text-[var(--primary)] text-center">
+      <h3 className="text-2xl sm:text-3xl font-bold mb-6 text-[var(--primary)] text-center">
         Available Providers
       </h3>
 
       {loading ? (
         <div className="text-center">Loading...</div>
       ) : providers.length === 0 ? (
-        <div className="text-center text-gray-500">
+        <div className="text-center text-[var(--gray)]">
           No providers found for this service.
         </div>
       ) : (
-
-      <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-3 max-w-6xl mx-auto">
-        {providers.map((provider) => (
-          <ProviderCard
-            key={provider._id}
-            provider={provider}
-            onProfileClick={() => navigate(`/provider/${provider._id}`)}
-            onBook={() => {
-              //booking logic here
-              alert("Booking for " + provider.name);
-            }}
-          />
-        ))}
-      </div>
+        <div className="grid gap-y-4  gap-x-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 max-w-6xl">
+          {providers.map((provider) => (
+            <ProviderCard
+              key={provider._id}
+              provider={provider}
+              isWishlisted={userData?.wishlist?.includes(provider._id)}
+              onProfileClick={() => navigate(`/provider/${provider._id}`)}
+              onBook={() => {
+                //booking logic here
+                alert("Booking for " + provider.name);
+              }}
+            />
+          ))}
+        </div>
       )}
     </div>
   );

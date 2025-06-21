@@ -214,7 +214,7 @@ function ResetPassword() {
           >
             Enter the 6-digit code sent to your email
           </p>
-          <div className="flex justify-between mb-8 ">
+          <div className="flex justify-between mb-8">
             {Array(6)
               .fill(0)
               .map((_, index) => (
@@ -290,7 +290,7 @@ function ResetPassword() {
             className="flex items-center gap-3 px-5 py-2.5 rounded-full mb-4"
             style={{ background: "var(--ternary)" }}
           >
-            <i className="fas fa-lock-open text-md" style={{ color: "var(--white)" }}></i>
+            <i className="fas fa-lock text-md" style={{ color: "var(--white)" }}></i>
             <input
               type="password"
               placeholder="Confirm New Password"

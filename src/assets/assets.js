@@ -27,6 +27,7 @@ import lifting from './lifting.png'
 import voice_call from './voice_call.png'
 import video_call from './video_call.png'
 import user from './user.png'
+import booking from './booking.png'
 
 
 export const assets = {
@@ -57,4 +58,5 @@ export const assets = {
   voice_call,
   video_call,
   user,
+  booking,
 };

@@ -1,341 +1,3 @@
-// import React, { useState, useContext } from "react";
-// import { SERVICES } from "../constants/services";
-// import { useNavigate } from "react-router-dom";
-// import { AppContext } from "../context/AppContext";
-// import { toast } from "react-toastify";
-// import axios from "axios";
-
-// function Login() {
-//   const navigate = useNavigate();
-//   const { backendUrl, setIsLoggedIn, setUserData } = useContext(AppContext);
-
-//   const [state, setState] = useState("Login"); // "Login" or "Sign Up"
-//   const [name, setName] = useState("");
-//   const [email, setEmail] = useState("");
-//   const [phone, setPhone] = useState("");
-//   const [password, setPassword] = useState("");
-//   const [role, setRole] = useState("");
-//   const [servicesOffered, setServicesOffered] = useState([]);
-//   const [experienceYears, setExperienceYears] = useState("");
-//   const [availability, setAvailability] = useState("");
-//   const [serviceDocs, setServiceDocs] = useState([]);
-
-//   // Upload multiple files to Cloudinary
-//   const uploadFilesToCloudinary = async (files) => {
-//     const urls = [];
-
-//     for (const file of files) {
-//       const formData = new FormData();
-//       formData.append("file", file);
-//       formData.append("upload_preset", "unsigned_present");
-//       formData.append("cloud_name", "dznigwrbk");
-
-//       const response = await axios.post(
-//         "https://api.cloudinary.com/v1_1/dznigwrbk/auto/upload",
-//         formData,
-//         {
-//           withCredentials: false, // Fixes the CORS error
-//           headers: {
-//             "Content-Type": "multipart/form-data",
-//           },
-//         }
-//       );
-
-//       urls.push(response.data.secure_url); // Save Cloudinary URL
-//     }
-
-//     return urls;
-//   };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     try {
-//       if (state === "Sign Up") {
-//         let uploadedDocUrls = [];
-//         // Only upload if provider & files are selected
-//         if (role === "provider" && serviceDocs.length > 0) {
-//           uploadedDocUrls = await uploadFilesToCloudinary(serviceDocs);
-//         }
-
-//         // Send registration data, get OTP
-//         const { data } = await axios.post(
-//           `${backendUrl}/api/auth/send-verify-otp`,
-//           {
-//             name,
-//             email,
-//             phone,
-//             password,
-//             role,
-//             ...(role === "provider" && {
-//               servicesOffered,
-//               experienceYears,
-//               availability,
-//               serviceDocs: uploadedDocUrls, // Use uploaded URLs
-//             }),
-//           },
-//           { withCredentials: true }
-//         );
-
-//         if (data.success) {
-//           toast.success("OTP sent to your email. Please verify.");
-//           setIsLoggedIn(true);
-//           // Temporarily store user data in localStorage to use during OTP verification
-//           localStorage.setItem(
-//             "tempUserData",
-//             JSON.stringify({
-//               name,
-//               email,
-//               phone,
-//               password,
-//               role,
-//               servicesOffered,
-//               experienceYears,
-//               availability,
-//               serviceDocs,
-//             })
-//           );
-//           navigate("/email-verify"); // redirect to EmailVerify.jsx
-//         } else {
-//           toast.error(data.message);
-//         }
-//       } else {
-//         // Login flow
-//         const { data } = await axios.post(
-//           `${backendUrl}/api/auth/login`,
-//           {
-//             email,
-//             password,
-//           },
-//           { withCredentials: true }
-//         );
-
-//         if (data.success) {
-//           setIsLoggedIn(true);
-//           // Fetch user data after login
-//           const userRes = await axios.get(`${backendUrl}/api/user/data`);
-//           if (userRes.data.success) {
-//             setUserData(userRes.data.userData);
-//           }
-//           toast.success(data.message);
-//           navigate("/");
-//         } else {
-//           toast.error(data.message);
-//         }
-//       }
-//     } catch (error) {
-//       toast.error(error.message);
-//     }
-//   };
-
-//   return (
-//     <div className="flex items-center justify-center min-h-screen px-4 sm:px-6 bg-gradient-to-tl from-blue-100 to-purple-200 relative">
-//       <div className="bg-slate-900 w-full max-w-md p-6 sm:p-8 md:p-10 rounded-2xl shadow-lg flex flex-col items-center gap-5 text-indigo-300 text-sm sm:text-base mt-8">
-//         <h2 className="text-xl xs:text-2xl md:text-3xl font-semibold text-white text-center mb-2">
-//           {state === "Sign Up" ? "Create Account" : "Login"}
-//         </h2>
-//         <p className="text-center text-sm mb-2">
-//           {state === "Sign Up"
-//             ? "Create your account"
-//             : "Login to your account"}
-//         </p>
-
-//         <form onSubmit={handleSubmit} className="w-full space-y-4">
-//           {/* <div className="relative w-full">
-//   <input
-//     type="text"
-//     id="fullName"
-//     value={name}
-//     onChange={(e) => setName(e.target.value)}
-//     placeholder=" "
-//     className="peer w-full px-4 pt-5 pb-2 text-sm text-white bg-[#333A5C] rounded-full outline-none focus:ring-2 focus:ring-blue-700"
-//   />
-//   <label
-//     htmlFor="fullName"
-//     className="absolute left-4 top-2 text-sm text-white transition-all peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-white"
-//   >
-//     Full Name <span className="text-red-500">*</span>
-//   </label>
-// </div>
-//  */}
-
-//           {state === "Sign Up" && (
-//             <div className="flex items-center gap-3 px-5 py-2.5 rounded-full bg-[#333A5C] focus:outline-none focus-within:ring-2 focus-within:ring-blue-700">
-//               <i className="fas fa-user text-white text-md"></i>
-//               <input
-//                 type="text"
-//                 placeholder="Full Name"
-//                 value={name}
-//                 onChange={(e) => setName(e.target.value)}
-//                 className="bg-transparent outline-none w-full text-white"
-//               />
-//             </div>
-//           )}
-
-//           <div className="flex items-center gap-3 px-5 py-2.5 rounded-full bg-[#333A5C] focus:outline-none focus-within:ring-2 focus-within:ring-blue-700">
-//             <i className="fas fa-envelope text-white text-md"></i>
-//             <input
-//               type="email"
-//               placeholder="Email"
-//               value={email}
-//               onChange={(e) => setEmail(e.target.value)}
-//               className="bg-transparent outline-none w-full text-white"
-//             />
-//           </div>
-
-//           {state === "Sign Up" && (
-//             <div className="flex items-center gap-3 px-5 py-2.5 rounded-full bg-[#333A5C] focus:outline-none focus-within:ring-2 focus-within:ring-blue-700">
-//               <i className="fas fa-phone text-white text-md"></i>{" "}
-//               <input
-//                 type="tel"
-//                 placeholder="Phone"
-//                 value={phone}
-//                 onChange={(e) => setPhone(e.target.value)}
-//                 className="bg-transparent outline-none w-full text-white"
-//               />
-//             </div>
-//           )}
-
-//           <div className="flex items-center gap-3 px-5 py-2.5 rounded-full bg-[#333A5C] focus:outline-none focus-within:ring-2 focus-within:ring-blue-700">
-//             <i className="fas fa-lock text-white text-md"></i>{" "}
-//             <input
-//               type="password"
-//               placeholder="Password"
-//               value={password}
-//               onChange={(e) => setPassword(e.target.value)}
-//               className="bg-transparent outline-none w-full text-white"
-//             />
-//           </div>
-
-//           {state === "Sign Up" && (
-//             <div className="flex items-center gap-3 w-full px-5 py-2.5 rounded-full bg-[#333A5C] text-white focus:outline-none focus-within:ring-2 focus-within:ring-blue-700">
-//               <i className="fas fa-user-tag text-white text-md"></i>
-//               <select
-//                 value={role}
-//                 onChange={(e) => setRole(e.target.value)}
-//                 className="w-full bg-[#333A5C] text-white outline-none cursor-pointer"
-//               >
-//                 <option value="" disabled>
-//                   -- Select Role --
-//                 </option>
-//                 <option value="customer">Customer</option>
-//                 <option value="provider">Provider</option>
-//                 <option value="admin">Admin</option>
-//               </select>
-//             </div>
-//           )}
-
-//           {state === "Sign Up" && role === "provider" && (
-//             <>
-//               <div className="w-full px-5 py-2.5 rounded-2xl bg-[#333A5C] text-white">
-//                 <div className="flex items-center gap-3">
-//                   <i className="fas fa-clipboard-list text-white text-md mb-2"></i>
-//                   <label className="block text-sm mb-1">Services Offered</label>
-//                 </div>
-
-//                 <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-2 max-h-32 overflow-y-auto text-xs">
-//                   {SERVICES.map((service) => (
-//                     <label key={service} className="flex items-center gap-1">
-//                       <input
-//                         type="checkbox"
-//                         value={service}
-//                         checked={servicesOffered.includes(service)}
-//                         onChange={(e) => {
-//                           if (e.target.checked) {
-//                             setServicesOffered([...servicesOffered, service]);
-//                           } else {
-//                             setServicesOffered(
-//                               servicesOffered.filter((s) => s !== service)
-//                             );
-//                           }
-//                         }}
-//                         className="accent-green-400 cursor-pointer"
-//                       />
-//                       {service}
-//                     </label>
-//                   ))}
-//                 </div>
-//               </div>
-
-//               <div className="flex items-center gap-3 px-5 py-2.5 rounded-full bg-[#333A5C] focus:outline-none focus-within:ring-2 focus-within:ring-blue-700">
-//                 <i className="fas fa-business-time text-white text-md"></i>
-//                 <input
-//                   type="number"
-//                   placeholder="Years of Experience"
-//                   min="0"
-//                   value={experienceYears}
-//                   onChange={(e) => setExperienceYears(e.target.value)}
-//                   className="bg-transparent outline-none text-white w-full"
-//                 />
-//               </div>
-
-//               <div className="flex items-center gap-3 px-5 py-2.5 rounded-full bg-[#333A5C] focus:outline-none focus-within:ring-2 focus-within:ring-blue-700">
-//                 <i className="fas fa-calendar-check text-white text-md"></i>
-//                 <input
-//                   type="text"
-//                   placeholder="Availability (e.g. Mon–Fri, 9am–6pm)"
-//                   value={availability}
-//                   onChange={(e) => setAvailability(e.target.value)}
-//                   className="bg-transparent outline-none text-white w-full"
-//                 />
-//               </div>
-
-//               <div className="flex items-center gap-3 px-5 py-2.5 rounded-full bg-[#333A5C] text-white focus:outline-none focus-within:ring-2 focus-within:ring-blue-700">
-//                 <i className="fas fa-file-upload text-white text-md"></i>
-//                 <input
-//                   type="file"
-//                   multiple
-//                   onChange={(e) => setServiceDocs(Array.from(e.target.files))}
-//                   className="bg-transparent outline-none text-sm w-full file:text-white file:bg-indigo-400 file:px-2 file:py-1 file:rounded-full file:border-0 file:cursor-pointer file:hover:bg-indigo-600 file:transition-all file:duration-200"
-//                 />
-//               </div>
-//             </>
-//           )}
-
-//           {state === "Login" && (
-//             <p
-//               onClick={() => navigate("/reset-password")}
-//               className="text-indigo-400 text-right text-sm cursor-pointer"
-//             >
-//               Forgot Password?
-//             </p>
-//           )}
-
-//           <button className="w-full py-2.5 rounded-full bg-gradient-to-r from-indigo-500 to-indigo-900 text-white font-medium mt-2">
-//             {state}
-//           </button>
-//         </form>
-
-//         <p className="text-gray-400 text-center text-sm mt-2">
-//           {state === "Sign Up" ? (
-//             <>
-//               Already have an account?{" "}
-//               <span
-//                 onClick={() => setState("Login")}
-//                 className="text-blue-400 cursor-pointer underline"
-//               >
-//                 Login
-//               </span>
-//             </>
-//           ) : (
-//             <>
-//               Don't have an account?{" "}
-//               <span
-//                 onClick={() => setState("Sign Up")}
-//                 className="text-blue-400 cursor-pointer underline"
-//               >
-//                 Sign Up
-//               </span>
-//             </>
-//           )}
-//         </p>
-//       </div>
-//     </div>
-//   );
-// }
-
-// export default Login;
-
-
 import React, { useState, useContext } from "react";
 import { SERVICES } from "../constants/services";
 import { useNavigate } from "react-router-dom";
@@ -357,8 +19,9 @@ function Login() {
   const [experienceYears, setExperienceYears] = useState("");
   const [availability, setAvailability] = useState("");
   const [serviceDocs, setServiceDocs] = useState([]);
+  const [avatar, setAvatar] = useState(null);
 
-  // Upload multiple files to Cloudinary
+  // Upload files to Cloudinary
   const uploadFilesToCloudinary = async (files) => {
     const urls = [];
 
@@ -368,21 +31,52 @@ function Login() {
       formData.append("upload_preset", "unsigned_present");
       formData.append("cloud_name", "dznigwrbk");
 
-      const response = await axios.post(
-        "https://api.cloudinary.com/v1_1/dznigwrbk/auto/upload",
-        formData,
-        {
-          withCredentials: false, // Fixes the CORS error
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      // Detect if it's an image or not
+      const isImage = file.type.startsWith("image/");
+      // const endpoint = "https://api.cloudinary.com/v1_1/dznigwrbk/image/upload";
+      const endpoint = isImage
+        ? "https://api.cloudinary.com/v1_1/dznigwrbk/image/upload"
+        : "https://api.cloudinary.com/v1_1/dznigwrbk/raw/upload";
 
-      urls.push(response.data.secure_url); // Save Cloudinary URL
+      try {
+        const res = await axios.post(endpoint, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+          withCredentials: false,
+        });
+
+        let fileUrl = res.data.secure_url;
+
+        // Only modify raw files to force inline preview
+        if (!isImage) {
+          fileUrl = fileUrl.replace("/upload/", "/upload/fl_attachment:false/");
+        }
+
+        urls.push(fileUrl);
+      } catch (err) {
+        console.error("Cloudinary upload failed:", err);
+      }
     }
 
     return urls;
+  };
+
+  //Upload Avatar to Cloudinary
+  const uploadAvatarToCloudinary = async (file) => {
+    if (!file) return "";
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "unsigned_present");
+    formData.append("cloud_name", "dznigwrbk");
+
+    const response = await axios.post(
+      "https://api.cloudinary.com/v1_1/dznigwrbk/image/upload",
+      formData,
+      {
+        withCredentials: false,
+        headers: { "Content-Type": "multipart/form-data" },
+      }
+    );
+    return response.data.secure_url;
   };
 
   const handleSubmit = async (e) => {
@@ -390,9 +84,14 @@ function Login() {
     try {
       if (state === "Sign Up") {
         let uploadedDocUrls = [];
+        let avatarUrl = "";
         // Only upload if provider & files are selected
         if (role === "provider" && serviceDocs.length > 0) {
           uploadedDocUrls = await uploadFilesToCloudinary(serviceDocs);
+        }
+        // Upload avatar if selected
+        if (role === "provider" && avatar) {
+          avatarUrl = await uploadAvatarToCloudinary(avatar);
         }
 
         // Send registration data, get OTP
@@ -409,6 +108,7 @@ function Login() {
               experienceYears,
               availability,
               serviceDocs: uploadedDocUrls, // Use uploaded URLs
+              avatarUrl, //Image Url
             }),
           },
           { withCredentials: true }
@@ -429,7 +129,8 @@ function Login() {
               servicesOffered,
               experienceYears,
               availability,
-              serviceDocs,
+              serviceDocs: uploadedDocUrls,
+              avatarUrl,
             })
           );
           navigate("/email-verify"); // redirect to EmailVerify.jsx
@@ -486,13 +187,17 @@ function Login() {
         >
           {state === "Sign Up" ? "Create Account" : "Login"}
         </h2>
-        <p className="text-center text-sm mb-2" style={{ color: "var(--primary-light)" }}>
+        <p
+          className="text-center text-sm mb-2"
+          style={{ color: "var(--primary-light)" }}
+        >
           {state === "Sign Up"
             ? "Create your account"
             : "Login to your account"}
         </p>
 
         <form onSubmit={handleSubmit} className="w-full space-y-4">
+          {/* Name */}
           {state === "Sign Up" && (
             <div
               className="flex items-center gap-3 px-5 py-2.5 rounded-full focus:outline-none focus-within:ring-2"
@@ -500,7 +205,10 @@ function Login() {
                 background: "var(--ternary)",
               }}
             >
-              <i className="fas fa-user text-md" style={{color:"var(--white)"}}></i>
+              <i
+                className="fas fa-user text-md"
+                style={{ color: "var(--white)" }}
+              ></i>
               <input
                 type="text"
                 placeholder="Full Name"
@@ -512,13 +220,17 @@ function Login() {
             </div>
           )}
 
+          {/* Email */}
           <div
             className="flex items-center gap-3 px-5 py-2.5 rounded-full focus:outline-none focus-within:ring-2"
             style={{
               background: "var(--ternary)",
             }}
           >
-            <i className="fas fa-envelope text-md" style={{color:"var(--white)"}}></i>
+            <i
+              className="fas fa-envelope text-md"
+              style={{ color: "var(--white)" }}
+            ></i>
             <input
               type="email"
               placeholder="Email"
@@ -529,6 +241,7 @@ function Login() {
             />
           </div>
 
+          {/* Phone */}
           {state === "Sign Up" && (
             <div
               className="flex items-center gap-3 px-5 py-2.5 rounded-full focus:outline-none focus-within:ring-2"
@@ -536,7 +249,10 @@ function Login() {
                 background: "var(--ternary)",
               }}
             >
-              <i className="fas fa-phone text-md" style={{color:"var(--white)"}}></i>
+              <i
+                className="fas fa-phone text-md"
+                style={{ color: "var(--white)" }}
+              ></i>
               <input
                 type="tel"
                 placeholder="Phone"
@@ -548,13 +264,17 @@ function Login() {
             </div>
           )}
 
+          {/* Password */}
           <div
             className="flex items-center gap-3 px-5 py-2.5 rounded-full focus:outline-none focus-within:ring-2"
             style={{
               background: "var(--ternary)",
             }}
           >
-            <i className="fas fa-lock text-md" style={{color:"var(--white)"}}></i>
+            <i
+              className="fas fa-lock text-md"
+              style={{ color: "var(--white)" }}
+            ></i>
             <input
               type="password"
               placeholder="Password"
@@ -565,20 +285,24 @@ function Login() {
             />
           </div>
 
+          {/* Role */}
           {state === "Sign Up" && (
             <div
               className="flex items-center gap-3 w-full px-5 py-2.5 rounded-full focus:outline-none focus-within:ring-2"
               style={{
                 background: "var(--ternary)",
-                color:"var(--white)"
+                color: "var(--white)",
               }}
             >
-              <i className="fas fa-user-tag text-md" style={{color:"var(--white)"}}></i>
+              <i
+                className="fas fa-user-tag text-md"
+                style={{ color: "var(--white)" }}
+              ></i>
               <select
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
                 className="w-full bg-transparent outline-none cursor-pointer"
-                style={{ color: "var(--white)",background:"var(--ternary)" }}
+                style={{ color: "var(--white)", background: "var(--ternary)" }}
               >
                 <option value="" disabled>
                   -- Select Role --
@@ -590,6 +314,8 @@ function Login() {
             </div>
           )}
 
+          {/* Provider specific fields */}
+          {/* Services */}
           {state === "Sign Up" && role === "provider" && (
             <>
               <div
@@ -606,35 +332,45 @@ function Login() {
 
                 <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-2 max-h-32 overflow-y-auto text-xs">
                   {SERVICES.map((service) => (
-                    <label key={service} className="flex items-center gap-1">
+                    <label
+                      key={service.name}
+                      className="flex items-center gap-1"
+                    >
                       <input
                         type="checkbox"
-                        value={service}
-                        checked={servicesOffered.includes(service)}
+                        value={service.name}
+                        checked={servicesOffered.includes(service.name)}
                         onChange={(e) => {
                           if (e.target.checked) {
-                            setServicesOffered([...servicesOffered, service]);
+                            setServicesOffered([
+                              ...servicesOffered,
+                              service.name,
+                            ]);
                           } else {
                             setServicesOffered(
-                              servicesOffered.filter((s) => s !== service)
+                              servicesOffered.filter((s) => s !== service.name)
                             );
                           }
                         }}
                         className="accent-green-400 cursor-pointer"
                       />
-                      {service}
+                      {service.name}
                     </label>
                   ))}
                 </div>
               </div>
 
+              {/* Experience */}
               <div
                 className="flex items-center gap-3 px-5 py-2.5 rounded-full focus:outline-none focus-within:ring-2"
                 style={{
                   background: "var(--ternary)",
                 }}
               >
-                <i className="fas fa-business-time text-md" style={{color:"var(--white)"}}></i>
+                <i
+                  className="fas fa-business-time text-md"
+                  style={{ color: "var(--white)" }}
+                ></i>
                 <input
                   type="number"
                   placeholder="Years of Experience"
@@ -646,13 +382,17 @@ function Login() {
                 />
               </div>
 
+              {/* Availability */}
               <div
                 className="flex items-center gap-3 px-5 py-2.5 rounded-full focus:outline-none focus-within:ring-2"
                 style={{
                   background: "var(--ternary)",
                 }}
               >
-                <i className="fas fa-calendar-check text-md" style={{color:"var(--white)"}}></i>
+                <i
+                  className="fas fa-calendar-check text-md"
+                  style={{ color: "var(--white)" }}
+                ></i>
                 <input
                   type="text"
                   placeholder="Availability (e.g. Mon–Fri, 9am–6pm)"
@@ -663,20 +403,115 @@ function Login() {
                 />
               </div>
 
+              {/* Document Upload */}
               <div
-                className="flex items-center gap-3 px-5 py-2.5 rounded-full focus:outline-none focus-within:ring-2"
+                className="flex flex-col gap-2 px-5 py-2.5 rounded-3xl focus:outline-none"
+                style={{ background: "var(--ternary)", color: "var(--white)" }}
+              >
+                {/* Upload Button + Info */}
+                <div className="flex items-center gap-4 flex-wrap">
+                  <i className="fas fa-file-upload text-md text-white"></i>
+
+                  {/* Choose Files Button */}
+                  <label
+                    className="text-xs bg-[var(--primary-light)] px-3 py-1 rounded-full cursor-pointer hover:bg-[var(--accent)] transition-all"
+                    style={{ color: "var(--white)" }}
+                  >
+                    Choose Files
+                    <input
+                      type="file"
+                      multiple
+                      onChange={(e) =>
+                        setServiceDocs((prev) => [
+                          ...prev,
+                          ...Array.from(e.target.files),
+                        ])
+                      }
+                      className="hidden"
+                    />
+                  </label>
+
+                  {/* Info label */}
+                  <span className="text-xs">
+                    {serviceDocs.length > 0
+                      ? `${serviceDocs.length} file(s) selected`
+                      : "Document / Certificate"}
+                  </span>
+                </div>
+
+                {/* File List */}
+                {serviceDocs.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {serviceDocs.map((file, index) => (
+                      <div
+                        key={index}
+                        className="text-white text-xs flex gap-1 items-center"
+                      >
+                        <span
+                          className="truncate max-w-[2550px] pl-7"
+                          title={file.name}
+                        >
+                          {file.name}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = [...serviceDocs];
+                            updated.splice(index, 1);
+                            setServiceDocs(updated);
+                          }}
+                          className="text-red-300 hover:text-red-500 ml-1"
+                        >
+                          &times;
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Profile Picture */}
+              <div
+                className="flex items-center justify-between gap-3 px-5 py-2.5 rounded-full focus:outline-none focus-within:ring-2"
                 style={{
                   background: "var(--ternary)",
-                  color:"var(--white)"
+                  color: "var(--white)",
                 }}
               >
-                <i className="fas fa-file-upload text-md" style={{color:"var(--white)"}}></i>
-                <input
-                  type="file"
-                  multiple
-                  onChange={(e) => setServiceDocs(Array.from(e.target.files))}
-                  className="bg-transparent outline-none text-sm w-full file:text-white file:bg-[var(--primary-light)] file:px-2 file:py-1 file:rounded-full file:border-0 file:cursor-pointer file:hover:bg-[var(--accent)] file:transition-all file:duration-200"
-                />
+                <i
+                  className="fas fa-image text-md"
+                  style={{ color: "var(--white)" }}
+                ></i>
+
+                {/* Actual Upload Button */}
+                <label className="relative inline-block">
+                  <span className="text-white text-xs bg-[var(--primary-light)] px-3 py-1 rounded-full cursor-pointer hover:bg-[var(--accent)] transition-all">
+                    Browse
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setAvatar(e.target.files[0])}
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                  />
+                </label>
+
+                {/* File name & remove icon */}
+                <div className="flex items-center gap-2 w-full justify-between">
+                  <span className="text-xs truncate" title={avatar?.name}>
+                    {avatar ? avatar.name : "Upload Profile Picture"}
+                  </span>
+                  {avatar && (
+                    <button
+                      type="button"
+                      onClick={() => setAvatar(null)}
+                      className="text-red-300 hover:text-red-500 text-sm"
+                      title="Remove"
+                    >
+                      &times;
+                    </button>
+                  )}
+                </div>
               </div>
             </>
           )}
@@ -694,7 +529,8 @@ function Login() {
           <button
             className="w-full py-2.5 rounded-full font-medium mt-2"
             style={{
-              background: "linear-gradient(130deg, var(--secondary) 0%,var(--accent) 100%)",
+              background:
+                "linear-gradient(130deg, var(--secondary) 0%,var(--accent) 100%)",
               color: "var(--white)",
             }}
           >
@@ -702,7 +538,10 @@ function Login() {
           </button>
         </form>
 
-        <p className="text-center text-sm mt-2" style={{ color: "var(--primary-light)" }}>
+        <p
+          className="text-center text-sm mt-2"
+          style={{ color: "var(--primary-light)" }}
+        >
           {state === "Sign Up" ? (
             <>
               Already have an account?{" "}

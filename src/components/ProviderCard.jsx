@@ -1,28 +1,63 @@
 import StarRating from "./StarRating";
 import { assets } from "../assets/assets.js";
+import { useEffect,useState, useContext } from "react";
 import { FaHeart } from "react-icons/fa";
+import axios from "axios";
+import { AppContext } from "../context/AppContext.jsx";
+import { toast } from "react-toastify";
 
 export default function ProviderCard({
   provider,
+  isWishlisted: initialWishlisted,
   onProfileClick,
   onBook = () => {},
 }) {
+  const [isWishlisted, setIsWishlisted] = useState(initialWishlisted);
+  const {backendUrl}=useContext(AppContext);
+  useEffect(() => {
+    setIsWishlisted(initialWishlisted);
+  }, [initialWishlisted]);
+  const handleWishlist = async () => {
+    try {
+      const { data } = await axios.post(
+        `${backendUrl}/api/user/wishlist`,
+        { providerId: provider._id },
+        { withCredentials: true }
+      );
+      if (data.success) {
+        setIsWishlisted(data.action === "added");
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
   return (
-    <div className="w-full max-w-xs bg-white rounded-2xl shadow-lg hover:shadow-2xl transition overflow-hidden flex flex-col">
-      <div className="relative mt-6 mb-4">
+    <div className="w-full max-w-md sm:max-w-xs bg-white rounded-2xl shadow-lg hover:shadow-2xl transition overflow-hidden flex flex-col">
+      <div className="relative mt-6">
         {provider.avatarUrl ? (
           <img
             src={provider.avatarUrl}
             alt={provider.name}
-            className="w-full h-32 object-cover border-4 border-[var(--primary)] shadow"
+            className="w-24 h-24 rounded-full object-cover border-4 border-[var(--primary)] shadow-lg mx-auto transition-transform duration-200 hover:scale-125"
           />
         ) : (
-          <div className="w-full h-32 bg-[var(--primary-light)] flex items-center justify-center text-4xl font-bold text-[var(--primary)] border-4 border-[var(--primary)] shadow">
-            {provider.name?.[0]?.toUpperCase() || "P"}
+          <div className="w-24 h-24 rounded-full bg-[var(--primary-light)] flex items-center justify-center text-4xl font-bold text-[var(--primary)] border-4 border-[var(--primary)] shadow-lg mx-auto">
+            {provider.name?.[0]?.toUpperCase()}
           </div>
         )}
-        <button className="absolute top-2 right-2 bg-white/80 rounded-full p-2 shadow hover:bg-red-100 transition">
-          <FaHeart className="text-red-500" />
+
+        {/* Wishlist button */}
+        <button
+          className="absolute top-1 right-4 rounded-full p-2 transition"
+          onClick={handleWishlist}
+          title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
+        >
+          <FaHeart
+            className={`transition duration-200 cursor-pointer ${
+              isWishlisted ? "text-red-500" : "text-gray-400"
+            } hover:transition-transform duration-200 hover:scale-125`}
+          />
         </button>
       </div>
       <div className="p-5 flex-1 flex flex-col">
