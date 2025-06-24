@@ -13,6 +13,8 @@ function ResetPassword() {
   const [email, setEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isEmailSent, setIsEmailSent] = useState(false);
   const [otp, setOtp] = useState(""); // State to hold the OTP input value
   const [isOtpSubmitted, setIsOtpSubmitted] = useState(false); // State to track if OTP has been sent
@@ -135,7 +137,7 @@ function ResetPassword() {
     }
   };
 
- return (
+  return (
     <div
       className="flex items-center justify-center min-h-screen"
       style={{
@@ -169,7 +171,10 @@ function ResetPassword() {
             className="flex items-center gap-3 px-5 py-2.5 rounded-full"
             style={{ background: "var(--ternary)" }}
           >
-            <i className="fas fa-envelope text-md" style={{ color: "var(--white)" }}></i>
+            <i
+              className="fas fa-envelope text-md"
+              style={{ color: "var(--white)" }}
+            ></i>
             <input
               type="email"
               placeholder="Email"
@@ -183,7 +188,8 @@ function ResetPassword() {
             type="submit"
             className="w-full font-bold py-2 rounded mt-6"
             style={{
-              background: "linear-gradient(130deg, var(--secondary) 0%, var(--accent) 100%)",
+              background:
+                "linear-gradient(130deg, var(--secondary) 0%, var(--accent) 100%)",
               color: "var(--white)",
             }}
           >
@@ -240,7 +246,8 @@ function ResetPassword() {
             type="submit"
             className="w-full font-bold py-2 rounded"
             style={{
-              background: "linear-gradient(130deg, var(--secondary) 0%, var(--accent) 100%)",
+              background:
+                "linear-gradient(130deg, var(--secondary) 0%, var(--accent) 100%)",
               color: "var(--white)",
             }}
           >
@@ -275,13 +282,23 @@ function ResetPassword() {
             className="flex items-center gap-3 px-5 py-2.5 rounded-full mb-4"
             style={{ background: "var(--ternary)" }}
           >
-            <i className="fas fa-lock text-md" style={{ color: "var(--white)" }}></i>
+            <i
+              className="fas fa-lock text-md"
+              style={{ color: "var(--white)" }}
+            ></i>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               placeholder="New Password"
               className="bg-transparent outline-none w-full"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
+              style={{ color: "var(--white)" }}
+            />
+            <i
+              onClick={() => setShowPassword(!showPassword)}
+              className={`fas ${
+                showPassword ? "fa-eye-slash" : "fa-eye"
+              } cursor-pointer`}
               style={{ color: "var(--white)" }}
             />
           </div>
@@ -290,13 +307,23 @@ function ResetPassword() {
             className="flex items-center gap-3 px-5 py-2.5 rounded-full mb-4"
             style={{ background: "var(--ternary)" }}
           >
-            <i className="fas fa-lock text-md" style={{ color: "var(--white)" }}></i>
+            <i
+              className="fas fa-lock text-md"
+              style={{ color: "var(--white)" }}
+            ></i>
             <input
-              type="password"
+              type={showConfirmPassword ? "text" : "password"}
               placeholder="Confirm New Password"
               className="bg-transparent outline-none w-full"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
+              style={{ color: "var(--white)" }}
+            />
+            <i
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className={`fas ${
+                showConfirmPassword ? "fa-eye-slash" : "fa-eye"
+              } cursor-pointer`}
               style={{ color: "var(--white)" }}
             />
           </div>
@@ -305,7 +332,8 @@ function ResetPassword() {
             type="submit"
             className="w-full font-bold py-2 rounded"
             style={{
-              background: "linear-gradient(130deg, var(--secondary) 0%, var(--accent) 100%)",
+              background:
+                "linear-gradient(130deg, var(--secondary) 0%, var(--accent) 100%)",
               color: "var(--white)",
             }}
           >

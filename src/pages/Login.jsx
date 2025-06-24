@@ -15,6 +15,7 @@ function Login() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState("");
   const [servicesOffered, setServicesOffered] = useState([]);
   const [experienceYears, setExperienceYears] = useState("");
@@ -282,11 +283,18 @@ function Login() {
               style={{ color: "var(--white)" }}
             ></i>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="bg-transparent outline-none w-full"
+              style={{ color: "var(--white)" }}
+            />
+            <i
+              onClick={() => setShowPassword(!showPassword)}
+              className={`fas ${
+                showPassword ? "fa-eye-slash" : "fa-eye"
+              } cursor-pointer`}
               style={{ color: "var(--white)" }}
             />
           </div>
@@ -346,7 +354,7 @@ function Login() {
                     setServicesOffered(selected.map((opt) => opt.value))
                   }
                   className="text-black text-sm"
-                  placeholder="Select or search services..."
+                  placeholder="Select or search services"
                 />
               </div>
 
