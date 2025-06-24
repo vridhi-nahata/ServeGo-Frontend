@@ -5,7 +5,6 @@ import { AppContext } from "../context/AppContext";
 import { toast } from "react-toastify";
 import axios from "axios";
 import Select from "react-select";
-// changes
 
 function Login() {
   const navigate = useNavigate();
@@ -23,11 +22,10 @@ function Login() {
   const [serviceDocs, setServiceDocs] = useState([]);
   const [avatar, setAvatar] = useState(null);
 
-const serviceOptions = SERVICES.map((service) => ({
-  label: service.name,
-  value: service.name,
-}));
-
+  const serviceOptions = SERVICES.map((service) => ({
+    label: service.name,
+    value: service.name,
+  }));
 
   // Upload files to Cloudinary
   const uploadFilesToCloudinary = async (files) => {
@@ -323,9 +321,9 @@ const serviceOptions = SERVICES.map((service) => ({
           )}
 
           {/* Provider specific fields */}
-          {/* Services */}
-           {state === "Sign Up" && role === "provider" && (
+          {state === "Sign Up" && role === "provider" && (
             <>
+              {/* Services */}
               <div
                 className="w-full px-5 py-2.5 rounded-2xl"
                 style={{
@@ -333,40 +331,24 @@ const serviceOptions = SERVICES.map((service) => ({
                   color: "var(--white)",
                 }}
               >
-                <div className="flex items-center gap-3">
-                  <i className="fas fa-clipboard-list text-md mb-2"></i>
-                  <label className="block text-sm mb-1">Services Offered</label>
+                <div className="flex items-center gap-3 mb-2">
+                  <i className="fas fa-clipboard-list text-md"></i>
+                  <label className="block text-sm">Services Offered</label>
                 </div>
 
-                <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-2 max-h-32 overflow-y-auto text-xs">
-                  {SERVICES.map((service) => (
-                    <label
-                      key={service.name}
-                      className="flex items-center gap-1"
-                    >
-                      <input
-                        type="checkbox"
-                        value={service.name}
-                        checked={servicesOffered.includes(service.name)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setServicesOffered([
-                              ...servicesOffered,
-                              service.name,
-                            ]);
-                          } else {
-                            setServicesOffered(
-                              servicesOffered.filter((s) => s !== service.name)
-                            );
-                          }
-                        }}
-                        className="accent-green-400 cursor-pointer"
-                      />
-                      {service.name}
-                    </label>
-                  ))}
-                </div>
-              </div> 
+                <Select
+                  isMulti
+                  options={serviceOptions}
+                  value={serviceOptions.filter((opt) =>
+                    servicesOffered.includes(opt.value)
+                  )}
+                  onChange={(selected) =>
+                    setServicesOffered(selected.map((opt) => opt.value))
+                  }
+                  className="text-black text-sm"
+                  placeholder="Select or search services..."
+                />
+              </div>
 
               {/* Experience */}
               <div
@@ -521,8 +503,6 @@ const serviceOptions = SERVICES.map((service) => ({
                   )}
                 </div>
               </div>
-
-              
             </>
           )}
 
