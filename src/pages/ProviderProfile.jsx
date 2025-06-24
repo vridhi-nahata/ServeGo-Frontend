@@ -1,16 +1,18 @@
 import React, { useEffect, useState, useContext } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import { AppContext } from "../context/AppContext";
 import StarRating from "../components/StarRating";
 import { assets } from "../assets/assets";
 import { toast } from "react-toastify";
+import BookingForm from "../components/BookingForm";
 
 export default function ProviderProfile() {
   const { providerId } = useParams();
-  const { onBook } = useContext(AppContext);
   const [provider, setProvider] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showBookingForm, setShowBookingForm] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(""); // 👈 new
+  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
     axios
@@ -40,8 +42,18 @@ export default function ProviderProfile() {
   return (
     <div className="min-h-screen py-20 px-6 bg-gradient-to-br from-[var(--primary-light)] to-[var(--white)]">
       <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-2xl p-8">
+        {/* Inline Error/Success Messages */}
+        {errorMessage && (
+          <div className="bg-red-100 text-red-700 px-4 py-2 rounded text-sm mb-4 text-center">
+            {errorMessage}
+          </div>
+        )}
+        {successMessage && (
+          <div className="bg-green-100 text-green-700 px-4 py-2 rounded text-sm mb-4 text-center">
+            {successMessage}
+          </div>
+        )}
         <div className="flex flex-col sm:flex-row items-center gap-4">
-          
           {/* Avatar */}
           <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-gradient-to-tr from-[var(--primary-light)] to-[var(--accent)] flex items-center justify-center text-5xl font-bold text-white shadow-lg mb-2 border-4 border-[var(--primary)]">
             {provider.avatarUrl ? (
@@ -97,7 +109,11 @@ export default function ProviderProfile() {
                   className="w-7 h-7 transition-transform duration-200 group-hover:scale-125"
                 />
               </button>
-              <button title="Book Now" onClick={onBook} className="group">
+              <button
+                title="Book Now"
+                onClick={() => setShowBookingForm(true)}
+                className="group"
+              >
                 <img
                   src={assets.booking}
                   alt="Book Now"
@@ -184,6 +200,52 @@ export default function ProviderProfile() {
           )}
         </div>
       </div>
+
+      {/* Booking Form Modal */}
+      {showBookingForm && (
+        <BookingForm
+          provider={provider}
+          serviceName={provider.servicesOffered?.[0] || "Service"}
+          onClose={() => {
+            setShowBookingForm(false);
+            setErrorMessage("");
+            setSuccessMessage("");
+          }}
+          onSubmit={async ({ date, time }) => {
+            try {
+              const bookingData = {
+                provider: provider._id,
+                serviceName: provider.servicesOffered?.[0] || "Service",
+                date,
+                timeSlot: time,
+                notes: "",
+              };
+
+              const res = await axios.post(
+                "http://localhost:5000/api/bookings",
+                bookingData,
+                { withCredentials: true }
+              );
+
+              if (res.data.success) {
+                setSuccessMessage("Booking confirmed!");
+                setErrorMessage("");
+                setShowBookingForm(false); // Optional: auto-close on success
+              } else {
+                setErrorMessage(res.data.message || "Booking failed.");
+                setSuccessMessage("");
+              }
+            } catch (err) {
+              const msg =
+                err.response?.data?.message ||
+                err.message ||
+                "Something went wrong";
+              setErrorMessage(msg);
+              setSuccessMessage("");
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

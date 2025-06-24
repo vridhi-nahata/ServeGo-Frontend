@@ -1,6 +1,7 @@
 import StarRating from "./StarRating";
 import { assets } from "../assets/assets.js";
-import { useEffect,useState, useContext } from "react";
+import { useEffect, useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import { FaHeart } from "react-icons/fa";
 import axios from "axios";
 import { AppContext } from "../context/AppContext.jsx";
@@ -12,8 +13,11 @@ export default function ProviderCard({
   onProfileClick,
   onBook = () => {},
 }) {
+  const navigate = useNavigate();
+  const [authMessage, setAuthMessage] = useState("");
+
   const [isWishlisted, setIsWishlisted] = useState(initialWishlisted);
-  const {backendUrl}=useContext(AppContext);
+  const { backendUrl } = useContext(AppContext);
   useEffect(() => {
     setIsWishlisted(initialWishlisted);
   }, [initialWishlisted]);
@@ -24,11 +28,31 @@ export default function ProviderCard({
         { providerId: provider._id },
         { withCredentials: true }
       );
+      //  check if user is not authenticated from response body
+      if (
+        !data.success &&
+        data.message?.toLowerCase().includes("unauthorized")
+      ) {
+        setAuthMessage("Please log in to manage your wishlist.");
+        setTimeout(() => {
+          setAuthMessage("");
+          navigate("/login");
+        }, 3000);
+        return;
+      }
       if (data.success) {
         setIsWishlisted(data.action === "added");
       }
     } catch (error) {
-      toast.error(error.message);
+      if (error.response?.status === 401) {
+        setAuthMessage("Please log in to manage your wishlist.");
+        setTimeout(() => {
+          setAuthMessage(""); //clear message after 2s
+          navigate("/login");
+        }, 2000); // redirect after 2 seconds
+      } else {
+        toast.error(error.message || "Something went wrong");
+      }
     }
   };
 
@@ -60,6 +84,14 @@ export default function ProviderCard({
           />
         </button>
       </div>
+      {authMessage && (
+        <div className="mt-3 flex justify-center">
+          <span className="text-sm text-red-700 bg-red-100 px-3 py-1 rounded-md">
+            {authMessage}
+          </span>
+        </div>
+      )}
+
       <div className="p-5 flex-1 flex flex-col">
         <div className="flex items-center justify-between mb-2">
           <h3 className="font-bold text-lg text-[var(--primary)]">

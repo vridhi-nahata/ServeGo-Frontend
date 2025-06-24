@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { AppContext } from "../context/AppContext";
 import { toast } from "react-toastify";
 import axios from "axios";
+import Select from "react-select";
+// changes
 
 function Login() {
   const navigate = useNavigate();
@@ -20,6 +22,12 @@ function Login() {
   const [availability, setAvailability] = useState("");
   const [serviceDocs, setServiceDocs] = useState([]);
   const [avatar, setAvatar] = useState(null);
+
+const serviceOptions = SERVICES.map((service) => ({
+  label: service.name,
+  value: service.name,
+}));
+
 
   // Upload files to Cloudinary
   const uploadFilesToCloudinary = async (files) => {
@@ -316,7 +324,7 @@ function Login() {
 
           {/* Provider specific fields */}
           {/* Services */}
-          {state === "Sign Up" && role === "provider" && (
+           {state === "Sign Up" && role === "provider" && (
             <>
               <div
                 className="w-full px-5 py-2.5 rounded-2xl"
@@ -358,7 +366,7 @@ function Login() {
                     </label>
                   ))}
                 </div>
-              </div>
+              </div> 
 
               {/* Experience */}
               <div
@@ -513,6 +521,8 @@ function Login() {
                   )}
                 </div>
               </div>
+
+              
             </>
           )}
 

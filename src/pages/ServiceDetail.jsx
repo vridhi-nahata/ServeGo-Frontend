@@ -1,17 +1,19 @@
-import React, { useEffect, useState,useContext } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { AppContext } from "../context/AppContext";
 import { useParams, useNavigate } from "react-router-dom";
-import { assets } from "../assets/assets";
 import ProviderCard from "../components/ProviderCard";
+import BookingForm from "../components/BookingForm";
 import axios from "axios";
 import { SERVICES } from "../constants/services";
 
 export default function ServiceDetail() {
   const { serviceName } = useParams();
-  const { userData } = useContext(AppContext); 
+  const { userData } = useContext(AppContext);
   const service = SERVICES.find((s) => s.name === serviceName);
   const [providers, setProviders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedProvider, setSelectedProvider] = useState(null); // track booking state
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -66,11 +68,44 @@ export default function ServiceDetail() {
               onProfileClick={() => navigate(`/provider/${provider._id}`)}
               onBook={() => {
                 //booking logic here
-                alert("Booking for " + provider.name);
+                setSelectedProvider(provider);
               }}
             />
           ))}
         </div>
+      )}
+
+      {/* Booking Form */}
+      {selectedProvider && (
+        <BookingForm
+          provider={selectedProvider}
+          serviceName={serviceName}
+          onClose={() => setSelectedProvider(null)}
+          onSubmit={async ({ date, time }) => {
+            const bookingData = {
+              provider: selectedProvider._id,
+              serviceName,
+              date,
+              timeSlot: time,
+              notes: "",
+            };
+            try {
+              const res = await axios.post(
+                "http://localhost:5000/api/bookings",
+                bookingData,
+                {
+                  withCredentials: true,
+                }
+              );
+              return res.data;
+            } catch (err) {
+              return {
+                success: false,
+                message: err.response?.data?.message || err.message,
+              };
+            }
+          }}
+        />
       )}
     </div>
   );
