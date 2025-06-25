@@ -39,7 +39,6 @@ export const AppContextProvider=(props)=>{
     }
 
     useEffect(()=>{
-        // console.log("Use effect triggered");
         getAuthState();
     },[]) //dependency array
 
@@ -49,7 +48,6 @@ export const AppContextProvider=(props)=>{
         userData, setUserData,
         getUserData
     }
-
 
     return (
         <AppContext.Provider value={value}>

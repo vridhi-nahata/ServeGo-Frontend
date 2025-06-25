@@ -1,8 +1,7 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { SERVICES } from "../constants/services";
 import { useNavigate } from "react-router-dom";
 import { AppContext } from "../context/AppContext";
-import { toast } from "react-toastify";
 import axios from "axios";
 import Select from "react-select";
 
@@ -22,6 +21,8 @@ function Login() {
   const [availability, setAvailability] = useState("");
   const [serviceDocs, setServiceDocs] = useState([]);
   const [avatar, setAvatar] = useState(null);
+  const [formError, setFormError] = useState("");
+  const [formSuccess, setFormSuccess] = useState("");
 
   const serviceOptions = SERVICES.map((service) => ({
     label: service.name,
@@ -59,8 +60,8 @@ function Login() {
         }
 
         urls.push(fileUrl);
-      } catch (err) {
-        console.error("Cloudinary upload failed:", err);
+      } catch (error) {
+        console.error("Cloudinary upload failed:", error);
       }
     }
 
@@ -86,10 +87,30 @@ function Login() {
     return response.data.secure_url;
   };
 
+  // Clear Error or Success message automatically after 2 sec
+  useEffect(() => {
+    if (formSuccess || formError) {
+      const timer = setTimeout(() => {
+        setFormSuccess("");
+        setFormError("");
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [formSuccess, formError]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setFormError("");
+    setFormSuccess("");
+
     try {
       if (state === "Sign Up") {
+        // Atleast 1 service
+        if (role === "provider" && servicesOffered.length === 0) {
+          setFormError("Please select at least one service");
+          return;
+        }
+
         let uploadedDocUrls = [];
         let avatarUrl = "";
         // Only upload if provider & files are selected
@@ -122,8 +143,10 @@ function Login() {
         );
 
         if (data.success) {
-          toast.success("OTP sent to your email. Please verify.");
           setIsLoggedIn(true);
+          setFormSuccess("OTP sent to your email");
+          // Wait for 1 second, then navigate
+          setTimeout(() => {}, 1000); // 1000 ms = 1 second
           // Temporarily store user data in localStorage to use during OTP verification
           localStorage.setItem(
             "tempUserData",
@@ -142,7 +165,7 @@ function Login() {
           );
           navigate("/email-verify"); // redirect to EmailVerify.jsx
         } else {
-          toast.error(data.message);
+          setFormError(data.message);
         }
       } else {
         // Login flow
@@ -157,19 +180,27 @@ function Login() {
 
         if (data.success) {
           setIsLoggedIn(true);
+
           // Fetch user data after login
           const userRes = await axios.get(`${backendUrl}/api/user/data`);
           if (userRes.data.success) {
             setUserData(userRes.data.userData);
           }
-          toast.success(data.message);
-          navigate("/");
+          setFormSuccess(data.message);
+          // Wait for 1 second, then navigate
+          setTimeout(() => {
+            navigate("/");
+          }, 1000); // 1000 ms = 1 second
         } else {
-          toast.error(data.message);
+          setFormError(data.message);
         }
       }
     } catch (error) {
-      toast.error(error.message);
+      setFormError(
+        error.response?.data?.message ||
+          error.message ||
+          "Something went wrong."
+      );
     }
   };
 
@@ -522,6 +553,22 @@ function Login() {
             >
               Forgot Password?
             </p>
+          )}
+
+          {/* Inline Error Message */}
+          {formError && (
+            <div className="text-sm text-red-400 text-center flex items-center justify-center gap-2">
+              <i className="fas fa-exclamation-circle"></i>
+              {formError}
+            </div>
+          )}
+
+          {/* Inline Success Message */}
+          {formSuccess && (
+            <div className="text-sm text-green-300 text-center flex items-center justify-center gap-2">
+              <i className="fas fa-check-circle"></i>
+              {formSuccess}
+            </div>
           )}
 
           <button

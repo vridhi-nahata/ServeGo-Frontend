@@ -1,9 +1,7 @@
-import React, { useContext, useState } from "react";
-import { assets } from "../assets/assets";
+import React, { useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppContext } from "../context/AppContext";
 import axios from "axios";
-import { toast } from "react-toastify";
 
 function ResetPassword() {
   const { backendUrl } = useContext(AppContext);
@@ -18,8 +16,21 @@ function ResetPassword() {
   const [isEmailSent, setIsEmailSent] = useState(false);
   const [otp, setOtp] = useState(""); // State to hold the OTP input value
   const [isOtpSubmitted, setIsOtpSubmitted] = useState(false); // State to track if OTP has been sent
+  const [formError, setFormError] = useState("");
+  const [formSuccess, setFormSuccess] = useState("");
 
   const inputRefs = React.useRef([]);
+
+  // Clear Error or Success message automatically after 2 sec
+  useEffect(() => {
+    if (formSuccess || formError) {
+      const timer = setTimeout(() => {
+        setFormSuccess("");
+        setFormError("");
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [formSuccess, formError]);
 
   // Function to handle input change and move focus to next input
   const handleInput = (e, index) => {
@@ -58,19 +69,24 @@ function ResetPassword() {
   // Function to handle email submission
   const onSubmitEmailHandler = async (e) => {
     e.preventDefault(); // Prevent default functionality of reload on form submission
+    setFormError("");
+    setFormSuccess("");
     try {
       const { data } = await axios.post(
         backendUrl + "/api/auth/send-reset-otp",
         { email }
       );
       if (data.success) {
-        setIsEmailSent(true);
-        toast.success(data.message);
+        setFormSuccess(data.message);
+        // Wait for 1 second, then navigate
+        setTimeout(() => {
+          setIsEmailSent(true);
+        }, 1000); // 1000 ms = 1 second
       } else {
-        toast.error(data.message);
+        setFormError(data.message);
       }
     } catch (error) {
-      toast.error(error.message);
+      setFormError(error.message);
     }
   };
 
@@ -91,13 +107,16 @@ function ResetPassword() {
       );
 
       if (data.success) {
-        toast.success(data.message);
-        setIsOtpSubmitted(true); // Move to next form only if OTP is correct
+        setFormSuccess(data.message);
+        // Wait for 1 second, then navigate
+        setTimeout(() => {
+          setIsOtpSubmitted(true); // Move to next form only if OTP is correct
+        }, 1000); // 1000 ms = 1 second
       } else {
-        toast.error(data.message); // Show error and stay on OTP screen
+        setFormError(data.message); // Show error and stay on OTP screen
       }
     } catch (error) {
-      toast.error(error.message);
+      setFormError(error.message);
     }
   };
 
@@ -107,17 +126,17 @@ function ResetPassword() {
 
     // Basic validation
     if (!newPassword || !confirmPassword) {
-      toast.error("Please fill in both fields");
+      setFormError("Please fill in both fields");
       return;
     }
 
     if (newPassword.length < 6) {
-      toast.error("Password must be at least 6 characters");
+      setFormError("Password must be at least 6 characters");
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      toast.error("Passwords do not match");
+      setFormError("Passwords do not match");
       return;
     }
 
@@ -127,13 +146,20 @@ function ResetPassword() {
         { email, otp, newPassword }
       );
       if (data.success) {
-        toast.success(data.message);
-        navigate("/login");
+        setFormSuccess(data.message);
+        // Wait for 1 second, then navigate
+        setTimeout(() => {
+          navigate("/login");
+        }, 1000); // 1000 ms = 1 second
       } else {
-        toast.error(data.message);
+        setFormError(data.message);
       }
     } catch (error) {
-      toast.error(error.message);
+      setFormError(
+        error.response?.data?.message ||
+          error.message ||
+          "Something went wrong."
+      );
     }
   };
 
@@ -184,9 +210,24 @@ function ResetPassword() {
               style={{ color: "var(--white)" }}
             />
           </div>
+          {/* Inline Error Message */}
+          {formError && (
+            <div className="pt-3 text-sm text-red-400 text-center flex items-center justify-center gap-2">
+              <i className="fas fa-exclamation-circle"></i>
+              {formError}
+            </div>
+          )}
+
+          {/* Inline Success Message */}
+          {formSuccess && (
+            <div className="pt-3 text-sm text-green-300 text-center flex items-center justify-center gap-2">
+              <i className="fas fa-check-circle"></i>
+              {formSuccess}
+            </div>
+          )}
           <button
             type="submit"
-            className="w-full font-bold py-2 rounded mt-6"
+            className="w-full font-bold py-2 rounded mt-4"
             style={{
               background:
                 "linear-gradient(130deg, var(--secondary) 0%, var(--accent) 100%)",
@@ -215,12 +256,12 @@ function ResetPassword() {
             Enter OTP
           </h1>
           <p
-            className="text-center mb-6"
+            className="text-center mb-4"
             style={{ color: "var(--primary-light)" }}
           >
             Enter the 6-digit code sent to your email
           </p>
-          <div className="flex justify-between mb-8">
+          <div className="flex justify-between mb-4">
             {Array(6)
               .fill(0)
               .map((_, index) => (
@@ -228,7 +269,7 @@ function ResetPassword() {
                   key={index}
                   type="text"
                   maxLength="1"
-                  className="w-12 h-12 text-center text-xl border rounded-md outline-none focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                  className="w-12 h-12 text-center text-xl rounded-md outline-none focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                   style={{
                     background: "var(--ternary)",
                     color: "var(--white)",
@@ -242,6 +283,23 @@ function ResetPassword() {
                 />
               ))}
           </div>
+
+          {/* Inline Error Message */}
+          {formError && (
+            <div className="pt-1 pb-3 text-sm text-red-400 text-center flex items-center justify-center gap-2">
+              <i className="fas fa-exclamation-circle"></i>
+              {formError}
+            </div>
+          )}
+
+          {/* Inline Success Message */}
+          {formSuccess && (
+            <div className="pt-1 pb-3 text-sm text-green-300 text-center flex items-center justify-center gap-2">
+              <i className="fas fa-check-circle"></i>
+              {formSuccess}
+            </div>
+          )}
+
           <button
             type="submit"
             className="w-full font-bold py-2 rounded"
@@ -304,7 +362,7 @@ function ResetPassword() {
           </div>
 
           <div
-            className="flex items-center gap-3 px-5 py-2.5 rounded-full mb-4"
+            className="flex items-center gap-3 px-5 py-2 rounded-full mb-4"
             style={{ background: "var(--ternary)" }}
           >
             <i
@@ -328,6 +386,21 @@ function ResetPassword() {
             />
           </div>
 
+          {/* Inline Error Message */}
+          {formError && (
+            <div className="pb-3 text-sm text-red-400 text-center flex items-center justify-center gap-2">
+              <i className="fas fa-exclamation-circle"></i>
+              {formError}
+            </div>
+          )}
+
+          {/* Inline Success Message */}
+          {formSuccess && (
+            <div className="pb-3 text-sm text-green-300 text-center flex items-center justify-center gap-2">
+              <i className="fas fa-check-circle"></i>
+              {formSuccess}
+            </div>
+          )}
           <button
             type="submit"
             className="w-full font-bold py-2 rounded"

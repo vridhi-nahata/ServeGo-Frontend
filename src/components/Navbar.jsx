@@ -2,31 +2,32 @@ import React, { useContext, useState } from "react";
 import { assets } from "../assets/assets";
 import { useNavigate, Link } from "react-router-dom";
 import { AppContext } from "../context/AppContext";
-import { toast } from "react-toastify";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 function Navbar() {
+
   const navigate = useNavigate();
   const { userData, backendUrl, setUserData, setIsLoggedIn } =
     useContext(AppContext);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const sendVerificationOtp = async () => {
-    try {
-      axios.defaults.withCredentials = true;
-      const { data } = await axios.post(
-        backendUrl + "/api/auth/send-verify-otp"
-      );
-      if (data.success) {
-        navigate("email-verify");
-        toast.success(data.message);
-      } else {
-        toast.error(data.message);
-      }
-    } catch (error) {
-      toast.error(error.message);
-    }
-  };
+  // const sendVerificationOtp = async () => {
+  //   try {
+  //     axios.defaults.withCredentials = true;
+  //     const { data } = await axios.post(
+  //       backendUrl + "/api/auth/send-verify-otp"
+  //     );
+  //     if (data.success) {
+  //       navigate("email-verify");
+  //       setSuccess(data.message);
+  //     } else {
+  //       setError(data.message);
+  //     }
+  //   } catch (error) {
+  //     setError(error.message);
+  //   }
+  // };
 
   const logout = async () => {
     try {
@@ -35,7 +36,6 @@ function Navbar() {
       data.success && setIsLoggedIn(false);
       data.success && setUserData(false);
       navigate("/");
-      toast.success(data.message);
     } catch (error) {
       toast.error(error.message);
     }

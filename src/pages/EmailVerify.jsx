@@ -1,15 +1,28 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
 import axios from "axios";
 import { AppContext } from "../context/AppContext";
 
 function EmailVerify() {
+  const [formError, setFormError] = useState("");
+  const [formSuccess, setFormSuccess] = useState("");
+
   axios.defaults.withCredentials = true; // Ensure axios sends cookies with requests
   const { backendUrl, isLoggedIn, userData, getUserData, setIsLoggedIn } =
     useContext(AppContext);
   const navigate = useNavigate();
   const inputRefs = React.useRef([]);
+
+  // Clear Error or Success message automatically after 2 sec
+  useEffect(() => {
+    if (formSuccess || formError) {
+      const timer = setTimeout(() => {
+        setFormSuccess("");
+        setFormError("");
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [formSuccess, formError]);
 
   const handleInput = (e, index) => {
     if (e.target.value.length === 1 && index < 5) {
@@ -44,11 +57,14 @@ function EmailVerify() {
 
   const handleOtpVerify = async (e) => {
     e.preventDefault(); // Prevent default functionality of reload on form submission
+    setFormError("");
+    setFormSuccess("");
+
     const tempUser = JSON.parse(localStorage.getItem("tempUserData"));
 
     const otp = inputRefs.current.map((e) => e.value || "").join("");
     if (otp.length !== 6) {
-      toast.error("Enter 6-digit OTP");
+      setFormError("Enter 6 digit OTP");
       return;
     }
     try {
@@ -58,7 +74,7 @@ function EmailVerify() {
         { withCredentials: true }
       );
       if (data.success) {
-        toast.success(data.message);
+        setFormSuccess(data.message);
         localStorage.removeItem("tempUserData");
         setIsLoggedIn(true);
 
@@ -66,12 +82,16 @@ function EmailVerify() {
         setTimeout(() => {
           getUserData();
           navigate("/");
-        }, 200);
+        }, 1000);
       } else {
-        toast.error(data.message);
+        setFormError(data.message);
       }
     } catch (error) {
-      toast.error(error.message);
+      setFormError(
+        error.response?.data?.message ||
+          error.message ||
+          "Something went wrong."
+      );
     }
   };
 
@@ -102,12 +122,13 @@ function EmailVerify() {
           Email Verification OTP
         </h1>
         <p
-          className="text-center mb-6"
+          className="text-center mb-4"
           style={{ color: "var(--primary-light)" }}
         >
           Enter the 6-digit code sent to your email
         </p>
-        <div className="flex justify-between mb-8">
+
+        <div className="flex justify-between mb-4">
           {Array(6)
             .fill(0)
             .map((_, index) => (
@@ -121,7 +142,7 @@ function EmailVerify() {
                   color: "var(--white)",
                   borderColor: "var(--primary-light)",
                   outline: "none",
-                    boxShadow: "none",
+                  boxShadow: "none",
                 }}
                 ref={(e) => (inputRefs.current[index] = e)}
                 onChange={(e) => handleInput(e, index)} // Handle input change
@@ -130,6 +151,20 @@ function EmailVerify() {
               />
             ))}
         </div>
+        {/* Inline Error Message */}
+        {formError && (
+          <div className="text-sm text-red-400 text-center flex items-center justify-center gap-2 mb-2">
+            <i className="fas fa-exclamation-circle"></i>
+            {formError}
+          </div>
+        )}
+        {/* Inline Success Message */}
+        {formSuccess && (
+          <div className="text-sm text-green-300 text-center flex items-center justify-center gap-2 mb-2">
+            <i className="fas fa-check-circle"></i>
+            {formSuccess}
+          </div>
+        )}
         <button
           type="submit"
           className="w-full font-bold py-2 rounded"

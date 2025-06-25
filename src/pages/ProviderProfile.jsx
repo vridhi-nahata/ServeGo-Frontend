@@ -3,7 +3,6 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import StarRating from "../components/StarRating";
 import { assets } from "../assets/assets";
-import { toast } from "react-toastify";
 import BookingForm from "../components/BookingForm";
 
 export default function ProviderProfile() {
@@ -11,7 +10,7 @@ export default function ProviderProfile() {
   const [provider, setProvider] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showBookingForm, setShowBookingForm] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(""); // 👈 new
+  const [errorMessage, setErrorMessage] = useState(""); 
   const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
@@ -24,7 +23,7 @@ export default function ProviderProfile() {
         setLoading(false);
       })
       .catch((err) => {
-        toast.error("Error loading provider details");
+        setErrorMessage("Error loading provider details");
         setLoading(false);
       });
   }, [providerId]);
@@ -44,14 +43,16 @@ export default function ProviderProfile() {
       <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-2xl p-8">
         {/* Inline Error/Success Messages */}
         {errorMessage && (
-          <div className="bg-red-100 text-red-700 px-4 py-2 rounded text-sm mb-4 text-center">
-            {errorMessage}
-          </div>
+          <div className="mt-3 flex items-center justify-center text-red-500">
+          <i className="fas fa-exclamation-circle"></i>
+          <span className="text-sm px-2 py-1 rounded-md">{errorMessage}</span>
+        </div>
         )}
         {successMessage && (
-          <div className="bg-green-100 text-green-700 px-4 py-2 rounded text-sm mb-4 text-center">
-            {successMessage}
-          </div>
+          <div className="mt-3 flex items-center justify-center text-red-500">
+          <i className="fas fa-check-circle"></i>
+          <span className="text-sm px-2 py-1 rounded-md">{successMessage}</span>
+        </div>
         )}
         <div className="flex flex-col sm:flex-row items-center gap-4">
           {/* Avatar */}
@@ -230,7 +231,7 @@ export default function ProviderProfile() {
               if (res.data.success) {
                 setSuccessMessage("Booking confirmed!");
                 setErrorMessage("");
-                setShowBookingForm(false); // Optional: auto-close on success
+                setShowBookingForm(false); 
               } else {
                 setErrorMessage(res.data.message || "Booking failed.");
                 setSuccessMessage("");

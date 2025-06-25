@@ -46,14 +46,14 @@ export default function BookingForm({
     const today = new Date();
 
     if (!date || !time) {
-      setError("Please fill all required fields");
+      setError("Missing required fields");
       setLoading(false);
       return;
     }
 
     // Date check
     if (selectedDate < today.setHours(0, 0, 0, 0)) {
-      setError("Please choose a valid future date");
+      setError("Choose a valid future date");
       setLoading(false);
       return;
     }
@@ -65,7 +65,7 @@ export default function BookingForm({
       selectedTime.setHours(hours, minutes, 0, 0);
 
       if (selectedTime <= today) {
-        setError("Please choose a future time today");
+        setError("Choose a future time today");
         setLoading(false);
         return;
       }
@@ -84,7 +84,7 @@ export default function BookingForm({
         setDate("");
         setTime("");
       } else {
-        setError(response?.message || "Please login first to book service");
+        setError(response?.message);
       }
     } catch (err) {
       const message =
@@ -117,15 +117,17 @@ export default function BookingForm({
 
         {/* Inline Error */}
         {error && (
-          <div className="bg-red-100 text-red-700 px-4 py-2 rounded text-sm mb-4">
-            {error}
+          <div className="flex items-center justify-center text-red-500">
+            <i className="fas fa-exclamation-circle"></i>
+            <span className="text-sm px-2 rounded-md">{error}</span>
           </div>
         )}
 
         {/* Inline Success */}
         {success && (
-          <div className="bg-green-100 text-green-700 px-4 py-2 rounded text-sm mb-4">
-            {success}
+          <div className="flex items-center justify-center text-green-700">
+            <i className="fas fa-check-circle"></i>
+            <span className="text-sm px-2 rounded-md">{success}</span>
           </div>
         )}
 
@@ -133,13 +135,13 @@ export default function BookingForm({
           {/* Date */}
           <div>
             <label className="block text-sm font-medium text-[var(--secondary)] mb-1">
-              Select Date <span className="text-red-700">*</span>
+              Select Date <span className="text-red-500">*</span>
             </label>
             <input
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              // min={todayStr}
+              min={todayStr}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[var(--primary)] focus:outline-none"
             />
           </div>
@@ -147,7 +149,7 @@ export default function BookingForm({
           {/* Time */}
           <div>
             <label className="block text-sm font-medium text-[var(--secondary)] mb-1">
-              Select Time <span className="text-red-700">*</span>
+              Select Time <span className="text-red-500">*</span>
             </label>
             <input
               type="time"

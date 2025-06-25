@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import { FaHeart } from "react-icons/fa";
 import axios from "axios";
 import { AppContext } from "../context/AppContext.jsx";
-import { toast } from "react-toastify";
 
 export default function ProviderCard({
   provider,
@@ -36,23 +35,14 @@ export default function ProviderCard({
         setAuthMessage("Please log in to manage your wishlist.");
         setTimeout(() => {
           setAuthMessage("");
-          navigate("/login");
-        }, 3000);
+        }, 2000);
         return;
       }
       if (data.success) {
         setIsWishlisted(data.action === "added");
       }
     } catch (error) {
-      if (error.response?.status === 401) {
-        setAuthMessage("Please log in to manage your wishlist.");
-        setTimeout(() => {
-          setAuthMessage(""); //clear message after 2s
-          navigate("/login");
-        }, 2000); // redirect after 2 seconds
-      } else {
-        toast.error(error.message || "Something went wrong");
-      }
+      setAuthMessage(error.message || "Something went wrong");
     }
   };
 
@@ -84,11 +74,12 @@ export default function ProviderCard({
           />
         </button>
       </div>
+
+      {/* Inline Error Message */}
       {authMessage && (
-        <div className="mt-3 flex justify-center">
-          <span className="text-sm text-red-700 bg-red-100 px-3 py-1 rounded-md">
-            {authMessage}
-          </span>
+        <div className="mt-3 flex items-center justify-center text-red-500">
+          <i className="fas fa-exclamation-circle"></i>
+          <span className="text-sm px-2 py-1 rounded-md">{authMessage}</span>
         </div>
       )}
 
