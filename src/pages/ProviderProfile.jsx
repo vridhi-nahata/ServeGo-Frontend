@@ -10,7 +10,7 @@ export default function ProviderProfile() {
   const [provider, setProvider] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showBookingForm, setShowBookingForm] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(""); 
+  const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
@@ -44,15 +44,17 @@ export default function ProviderProfile() {
         {/* Inline Error/Success Messages */}
         {errorMessage && (
           <div className="mt-3 flex items-center justify-center text-red-500">
-          <i className="fas fa-exclamation-circle"></i>
-          <span className="text-sm px-2 py-1 rounded-md">{errorMessage}</span>
-        </div>
+            <i className="fas fa-exclamation-circle"></i>
+            <span className="text-sm px-2 py-1 rounded-md">{errorMessage}</span>
+          </div>
         )}
         {successMessage && (
           <div className="mt-3 flex items-center justify-center text-red-500">
-          <i className="fas fa-check-circle"></i>
-          <span className="text-sm px-2 py-1 rounded-md">{successMessage}</span>
-        </div>
+            <i className="fas fa-check-circle"></i>
+            <span className="text-sm px-2 py-1 rounded-md">
+              {successMessage}
+            </span>
+          </div>
         )}
         <div className="flex flex-col sm:flex-row items-center gap-4">
           {/* Avatar */}
@@ -127,15 +129,13 @@ export default function ProviderProfile() {
 
         {/* Details */}
         <div className="mt-6 grid gap-4 grid-cols-1 sm:grid-cols-2 text-[var(--secondary)] text-sm sm:text-base">
-          <p>
+          {/* <p>
             <strong>Email:</strong> {provider.email}
-          </p>
+          </p> */}
           {/* <p>
             <strong>Phone:</strong> {provider.phone}
           </p> */}
-          <p>
-            <strong>Experience:</strong> {provider.experienceYears || 0} years
-          </p>
+
           <p>
             <strong>Availability:</strong> {provider.availability || "N/A"}
           </p>
@@ -146,6 +146,25 @@ export default function ProviderProfile() {
             <strong>Services Offered:</strong>{" "}
             {provider.servicesOffered?.join(", ")}
           </p>
+          {provider.experiencePerService && (
+            <div className="sm:col-span-2">
+              <strong>Experience Per Service:</strong>
+              <ul className="list-disc list-inside pl-4 mt-1 text-[var(--secondary)]">
+                {Object.entries(provider.experiencePerService).map(
+                  ([service, years]) => (
+                    <li key={service}>
+                      {service}:{" "}
+                      <strong>
+                        {typeof years === "number"
+                          ? `${years} ${years === 1 ? "year" : "years"}`
+                          : "N/A"}
+                      </strong>
+                    </li>
+                  )
+                )}
+              </ul>
+            </div>
+          )}
         </div>
 
         {/* Documents section */}
@@ -231,7 +250,7 @@ export default function ProviderProfile() {
               if (res.data.success) {
                 setSuccessMessage("Booking confirmed!");
                 setErrorMessage("");
-                setShowBookingForm(false); 
+                setShowBookingForm(false);
               } else {
                 setErrorMessage(res.data.message || "Booking failed.");
                 setSuccessMessage("");

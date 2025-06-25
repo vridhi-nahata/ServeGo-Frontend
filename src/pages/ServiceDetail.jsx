@@ -64,10 +64,10 @@ export default function ServiceDetail() {
             <ProviderCard
               key={provider._id}
               provider={provider}
+              serviceName={serviceName}
               isWishlisted={userData?.wishlist?.includes(provider._id)}
               onProfileClick={() => navigate(`/provider/${provider._id}`)}
               onBook={() => {
-                //booking logic here
                 setSelectedProvider(provider);
               }}
             />

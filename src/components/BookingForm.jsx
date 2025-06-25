@@ -44,16 +44,10 @@ export default function BookingForm({
 
     const selectedDate = new Date(date);
     const today = new Date();
+    // today.setHours(0, 0, 0, 0);
 
     if (!date || !time) {
       setError("Missing required fields");
-      setLoading(false);
-      return;
-    }
-
-    // Date check
-    if (selectedDate < today.setHours(0, 0, 0, 0)) {
-      setError("Choose a valid future date");
       setLoading(false);
       return;
     }

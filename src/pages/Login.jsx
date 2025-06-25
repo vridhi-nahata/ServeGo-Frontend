@@ -17,7 +17,7 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState("");
   const [servicesOffered, setServicesOffered] = useState([]);
-  const [experienceYears, setExperienceYears] = useState("");
+  const [experiencePerService, setExperiencePerService] = useState({});
   const [availability, setAvailability] = useState("");
   const [serviceDocs, setServiceDocs] = useState([]);
   const [avatar, setAvatar] = useState(null);
@@ -133,7 +133,7 @@ function Login() {
             role,
             ...(role === "provider" && {
               servicesOffered,
-              experienceYears,
+              experiencePerService,
               availability,
               serviceDocs: uploadedDocUrls, // Use uploaded URLs
               avatarUrl, //Image Url
@@ -157,7 +157,7 @@ function Login() {
               password,
               role,
               servicesOffered,
-              experienceYears,
+              experiencePerService,
               availability,
               serviceDocs: uploadedDocUrls,
               avatarUrl,
@@ -381,35 +381,51 @@ function Login() {
                   value={serviceOptions.filter((opt) =>
                     servicesOffered.includes(opt.value)
                   )}
-                  onChange={(selected) =>
-                    setServicesOffered(selected.map((opt) => opt.value))
-                  }
+                  onChange={(selected) => {
+                    const selectedValues = selected.map((opt) => opt.value);
+                    setServicesOffered(selectedValues);
+                    setExperiencePerService((prev) => {
+                      const updated = {};
+                      selectedValues.forEach((service) => {
+                        updated[service] = prev[service] || "";
+                      });
+                      return updated;
+                    });
+                  }}
                   className="text-black text-sm"
                   placeholder="Select or search services"
                 />
               </div>
 
-              {/* Experience */}
-              <div
-                className="flex items-center gap-3 px-5 py-2.5 rounded-full focus:outline-none focus-within:ring-2"
-                style={{
-                  background: "var(--ternary)",
-                }}
-              >
-                <i
-                  className="fas fa-business-time text-md"
-                  style={{ color: "var(--white)" }}
-                ></i>
-                <input
-                  type="number"
-                  placeholder="Years of Experience"
-                  min="0"
-                  value={experienceYears}
-                  onChange={(e) => setExperienceYears(e.target.value)}
-                  className="bg-transparent outline-none w-full"
-                  style={{ color: "var(--white)" }}
-                />
-              </div>
+              {/* Experience Per Service */}
+              {servicesOffered.map((service) => (
+                <div
+                  key={service}
+                  className="flex items-center gap-3 px-5 py-2.5 rounded-full focus:outline-none focus-within:ring-2"
+                  style={{
+                    background: "var(--ternary)",
+                  }}
+                >
+                  <i
+                    className="fas fa-business-time text-md"
+                    style={{ color: "var(--white)" }}
+                  ></i>
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder={`${service} Experience (years)`}
+                    value={experiencePerService[service] || ""}
+                    onChange={(e) =>
+                      setExperiencePerService((prev) => ({
+                        ...prev,
+                        [service]: e.target.value,
+                      }))
+                    }
+                    className="bg-transparent outline-none w-full"
+                    style={{ color: "var(--white)" }}
+                  />
+                </div>
+              ))}
 
               {/* Availability */}
               <div

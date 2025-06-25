@@ -8,6 +8,7 @@ import { AppContext } from "../context/AppContext.jsx";
 
 export default function ProviderCard({
   provider,
+  serviceName,
   isWishlisted: initialWishlisted,
   onProfileClick,
   onBook = () => {},
@@ -93,13 +94,24 @@ export default function ProviderCard({
 
         <div className="flex flex-col gap-1 text-sm text-[var(--secondary)] mb-4 ">
           <span>
-            Experience: <b>{provider.experienceYears || 0}</b> years
+            Experience:{" "}
+            <b>
+              {typeof provider.experiencePerService?.[serviceName] === "number"
+                ? `${provider.experiencePerService[serviceName]} ${
+                    provider.experiencePerService[serviceName] === 1
+                      ? "year"
+                      : "years"
+                  }`
+                : "N/A"}
+            </b>
           </span>
+
           <span>
             Availability: <b>{provider.availability || "N/A"}</b>
           </span>
         </div>
 
+        {/* Quick action buttons */}
         <div className="flex items-center justify-evenly mb-4">
           <button title="Voice Call" className="group">
             <img
