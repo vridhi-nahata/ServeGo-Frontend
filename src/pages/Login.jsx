@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { AppContext } from "../context/AppContext";
 import axios from "axios";
 import Select from "react-select";
+import AvailabilitySelector from "../components/AvailabilitySelector";
 
 function Login() {
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ function Login() {
   const [role, setRole] = useState("");
   const [servicesOffered, setServicesOffered] = useState([]);
   const [experiencePerService, setExperiencePerService] = useState({});
-  const [availability, setAvailability] = useState("");
+  const [availability, setAvailability] = useState([]);
   const [serviceDocs, setServiceDocs] = useState([]);
   const [avatar, setAvatar] = useState(null);
   const [formError, setFormError] = useState("");
@@ -428,7 +429,7 @@ function Login() {
               ))}
 
               {/* Availability */}
-              <div
+              {/* <div
                 className="flex items-center gap-3 px-5 py-2.5 rounded-full focus:outline-none focus-within:ring-2"
                 style={{
                   background: "var(--ternary)",
@@ -445,6 +446,15 @@ function Login() {
                   onChange={(e) => setAvailability(e.target.value)}
                   className="bg-transparent outline-none w-full"
                   style={{ color: "var(--white)" }}
+                />
+              </div> */}
+              <div className="bg-[var(--ternary)] p-3 rounded-xl text-white">
+                <div className="flex items-center gap-3 mb-2">
+                  <i className="fas fa-calendar-check text-md"></i>
+                  <label className="block text-sm">Weekly Availability</label>
+                </div>
+                <AvailabilitySelector
+                  onSave={(data) => setAvailability(data)}
                 />
               </div>
 
