@@ -16,6 +16,23 @@ export default function AvailabilitySelector({ onChange }) {
     daysOfWeek.map((day) => ({ day, active: false, slots: [] }))
   );
 
+  const doesOverlap = (newSlot, existingSlots, currentIndex = -1) => {
+    const newFrom = newSlot.from;
+    const newTo = newSlot.to;
+
+    return existingSlots.some((slot, i) => {
+      if (i === currentIndex) return false; // skip self on update
+
+      return (
+        slot.from &&
+        slot.to &&
+        newFrom &&
+        newTo &&
+        !(newTo <= slot.from || newFrom >= slot.to)
+      );
+    });
+  };
+
   const validateDaySlots = (dayIndex, updatedSlots) => {
     const hasValidSlot = updatedSlots.some(
       (s) => s.from && s.to && s.from < s.to
@@ -100,6 +117,20 @@ export default function AvailabilitySelector({ onChange }) {
         }));
         return;
       }
+
+      if (doesOverlap(lastSlot, currentSlots, currentSlots.length - 1)) {
+        setSlotErrors((prev) => ({
+          ...prev,
+          [dayIndex]: {
+            ...prev[dayIndex],
+            [currentSlots.length - 1]: {
+              type: "error",
+              message: "This slot overlaps with an existing one",
+            },
+          },
+        }));
+        return;
+      }
     }
 
     // Push new empty slot
@@ -139,10 +170,22 @@ export default function AvailabilitySelector({ onChange }) {
       const newErrors = { ...prev };
       if (!newErrors[dayIndex]) newErrors[dayIndex] = {};
 
-      if (from && to && from >= to) {
+      if (!from || !to) {
+        newErrors[dayIndex][slotIndex] = {
+          type: "error",
+          message: "Both 'From' and 'To' times are required",
+        };
+      } else if (from >= to) {
         newErrors[dayIndex][slotIndex] = {
           type: "error",
           message: "'From' time must be earlier than 'To' time",
+        };
+      } else if (
+        doesOverlap({ from, to }, updated[dayIndex].slots, slotIndex)
+      ) {
+        newErrors[dayIndex][slotIndex] = {
+          type: "error",
+          message: "This slot overlaps with an existing one",
         };
       } else {
         delete newErrors[dayIndex][slotIndex];
@@ -150,10 +193,8 @@ export default function AvailabilitySelector({ onChange }) {
           delete newErrors[dayIndex];
         }
       }
-
       return newErrors;
     });
-
     validateDaySlots(dayIndex, updated[dayIndex].slots);
   };
 
