@@ -23,7 +23,7 @@ export default function ProviderProfile() {
         setLoading(false);
       })
       .catch((err) => {
-        setErrorMessage("Error loading provider details");
+        // setErrorMessage("Error loading provider details");
         setLoading(false);
       });
   }, [providerId]);
@@ -34,28 +34,13 @@ export default function ProviderProfile() {
 
   if (!provider) {
     return (
-      <div className="text-center mt-20 text-red-500">Provider not found.</div>
+      <div className="text-center mt-20 text-red-500">Provider not found</div>
     );
   }
 
   return (
     <div className="min-h-screen py-20 px-6 bg-gradient-to-br from-[var(--primary-light)] to-[var(--white)]">
       <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-2xl p-8">
-        {/* Inline Error/Success Messages */}
-        {errorMessage && (
-          <div className="mt-3 flex items-center justify-center text-red-500">
-            <i className="fas fa-exclamation-circle"></i>
-            <span className="text-sm px-2 py-1 rounded-md">{errorMessage}</span>
-          </div>
-        )}
-        {successMessage && (
-          <div className="mt-3 flex items-center justify-center text-red-500">
-            <i className="fas fa-check-circle"></i>
-            <span className="text-sm px-2 py-1 rounded-md">
-              {successMessage}
-            </span>
-          </div>
-        )}
         <div className="flex flex-col sm:flex-row items-center gap-4">
           {/* Avatar */}
           <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-gradient-to-tr from-[var(--primary-light)] to-[var(--accent)] flex items-center justify-center text-5xl font-bold text-white shadow-lg mb-2 border-4 border-[var(--primary)]">
@@ -128,20 +113,29 @@ export default function ProviderProfile() {
         </div>
 
         {/* Details */}
-        <div className="mt-6 grid gap-4 grid-cols-1 sm:grid-cols-2 text-[var(--secondary)] text-sm sm:text-base">
-          {/* <p>
-            <strong>Email:</strong> {provider.email}
-          </p> */}
-          {/* <p>
-            <strong>Phone:</strong> {provider.phone}
-          </p> */}
+        <div className="mt-6 grid gap-4 grid-cols-1 sm:grid-cols-2 text-[var(--secondary)] text-sm">
+          <p>
+            <strong>Availability:</strong>{" "}
+            <span className="block ml-3 text-var[--secondary]">
+              {provider.availability?.map((day, i) => (
+                <div key={i}>
+                  {day.day}:{" "}
+                  <span className="text-xs text-[var(--gray)]">
+                    {day.slots
+                      .filter(
+                        (slot) => slot.from && slot.to && slot.from < slot.to
+                      )
+                      .map((slot) => `${slot.from} - ${slot.to}`)
+                      .join(", ") || "No valid slots"}
+                  </span>
+                </div>
+              ))}
+            </span>
+          </p>
 
           <p>
-            <strong>Availability:</strong> {provider.availability || "N/A"}
-          </p>
-          {/* <p>
             <strong>Location:</strong> {provider.location || "Not specified"}
-          </p> */}
+          </p>
           <p>
             <strong>Services Offered:</strong>{" "}
             {provider.servicesOffered?.join(", ")}
@@ -149,7 +143,7 @@ export default function ProviderProfile() {
           {provider.experiencePerService && (
             <div className="sm:col-span-2">
               <strong>Experience Per Service:</strong>
-              <ul className="list-disc list-inside pl-4 mt-1 text-[var(--secondary)]">
+              <ul className="list-none pl-4 mt-1 text-[var(--secondary)]">
                 {Object.entries(provider.experiencePerService).map(
                   ([service, years]) => (
                     <li key={service}>
@@ -231,14 +225,14 @@ export default function ProviderProfile() {
             setErrorMessage("");
             setSuccessMessage("");
           }}
-          onSubmit={async ({ date, time }) => {
+          onSubmit={async ({ date, timeSlot, notes }) => {
             try {
               const bookingData = {
                 provider: provider._id,
                 serviceName: provider.servicesOffered?.[0] || "Service",
                 date,
-                timeSlot: time,
-                notes: "",
+                timeSlot,
+                notes: notes || "",
               };
 
               const res = await axios.post(
@@ -247,14 +241,21 @@ export default function ProviderProfile() {
                 { withCredentials: true }
               );
 
-              if (res.data.success) {
-                setSuccessMessage("Booking confirmed!");
-                setErrorMessage("");
-                setShowBookingForm(false);
-              } else {
-                setErrorMessage(res.data.message || "Booking failed.");
-                setSuccessMessage("");
-              }
+              //     if (res.data.success) {
+              //       setSuccessMessage("Booking request sent to provider");
+              //       setErrorMessage("");
+              //       setTimeout(() => {
+              //         setShowBookingForm(false);
+              //         setSuccessMessage("");
+              //       }, 2000);
+              //     } else {
+              //       setErrorMessage(res.data.message || "Booking failed");
+              //       setSuccessMessage("");
+              //     }
+              return {
+                success: res.data.success,
+                message: res.data.message,
+              };
             } catch (err) {
               const msg =
                 err.response?.data?.message ||
@@ -262,6 +263,10 @@ export default function ProviderProfile() {
                 "Something went wrong";
               setErrorMessage(msg);
               setSuccessMessage("");
+              return {
+                success: false,
+                message: msg,
+              };
             }
           }}
         />

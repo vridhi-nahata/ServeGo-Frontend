@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 export default function BookingForm({
   provider,
@@ -7,15 +8,35 @@ export default function BookingForm({
   onSubmit,
 }) {
   const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
+  const [fromTime, setFromTime] = useState("");
+  const [toTime, setToTime] = useState("");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const [availableTimeRanges, setAvailableTimeRanges] = useState([]);
+  const [bookedSlots, setBookedSlots] = useState([]);
 
   const todayStr = new Date().toISOString().split("T")[0];
 
-  // Auto-hide success or error messages after 2 sec
+  useEffect(() => {
+    if (date && provider) {
+      const weekday = new Date(date).toLocaleDateString("en-US", {
+        weekday: "long",
+      });
+      const availableDay = provider.availability.find((d) => d.day === weekday);
+      setAvailableTimeRanges(availableDay?.slots || []);
+
+      // Fetch booked slots
+      axios
+        .get(
+          `/api/bookings/booked-slots?providerId=${provider._id}&date=${date}`
+        )
+        .then((res) => setBookedSlots(res.data.bookedSlots || []))
+        .catch(() => setBookedSlots([]));
+    }
+  }, [date, provider]);
+
   useEffect(() => {
     if (success || error) {
       const timer = setTimeout(() => {
@@ -26,7 +47,6 @@ export default function BookingForm({
     }
   }, [success, error]);
 
-  // Auto-close modal after successful booking
   useEffect(() => {
     if (success) {
       const closeTimer = setTimeout(() => {
@@ -36,6 +56,31 @@ export default function BookingForm({
     }
   }, [success]);
 
+  function timeToMinutes(timeStr) {
+    const [h, m] = timeStr.split(":").map(Number);
+    return h * 60 + m;
+  }
+
+  function isWithinAvailability(from, to, ranges) {
+    const f = timeToMinutes(from);
+    const t = timeToMinutes(to);
+    return ranges.some(({ from: af, to: at }) => {
+      const start = timeToMinutes(af);
+      const end = timeToMinutes(at);
+      return f >= start && t <= end;
+    });
+  }
+
+  function overlapsWithBooking(from, to, bookings) {
+    const f = timeToMinutes(from);
+    const t = timeToMinutes(to);
+    return bookings.some(({ timeSlot }) => {
+      const bf = timeToMinutes(timeSlot.from);
+      const bt = timeToMinutes(timeSlot.to);
+      return f < bt && t > bf;
+    });
+  }
+
   const handleBooking = async (e) => {
     e.preventDefault();
     setError("");
@@ -44,39 +89,54 @@ export default function BookingForm({
 
     const selectedDate = new Date(date);
     const today = new Date();
-    // today.setHours(0, 0, 0, 0);
 
-    if (!date || !time) {
+    if (!date || !fromTime || !toTime) {
       setError("Missing required fields");
       setLoading(false);
       return;
     }
 
-    // Time check
-    if (selectedDate.toDateString() === today.toDateString()) {
-      const [hours, minutes] = time.split(":").map(Number);
-      const selectedTime = new Date();
-      selectedTime.setHours(hours, minutes, 0, 0);
+    if (fromTime >= toTime) {
+      setError("'From' time must be earlier than 'To' time.");
+      setLoading(false);
+      return;
+    }
 
-      if (selectedTime <= today) {
-        setError("Choose a future time today");
-        setLoading(false);
-        return;
-      }
+    const now = new Date();
+    const selectedStart = new Date(`${date}T${fromTime}`);
+
+    if (selectedStart <= now) {
+      setError("Choose a future time");
+      setLoading(false);
+      return;
+    }
+
+    if (!isWithinAvailability(fromTime, toTime, availableTimeRanges)) {
+      setError("Time not within provider's available slots");
+      setLoading(false);
+      return;
+    }
+
+    if (overlapsWithBooking(fromTime, toTime, bookedSlots)) {
+      setError("This time overlaps with an existing booking");
+      setLoading(false);
+      return;
     }
 
     try {
       const response = await onSubmit({
         provider: provider._id,
+        serviceName,
         date,
-        time,
+        timeSlot: { from: fromTime, to: toTime },
         notes,
       });
 
       if (response?.success) {
-        setSuccess("Booking confirmed successfully!");
+        setSuccess("Booking request sent to provider");
         setDate("");
-        setTime("");
+        setFromTime("");
+        setToTime("");
       } else {
         setError(response?.message);
       }
@@ -98,38 +158,34 @@ export default function BookingForm({
         className="bg-[var(--white)] rounded-2xl shadow-2xl p-6 w-full max-w-md relative border border-[var(--primary-light)]"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Modal Content */}
         <h2 className="text-2xl font-semibold text-center text-[var(--primary)] mb-2">
           Book {provider.name}
         </h2>
-        <p className="text-center text-sm text-[var(--gray)] mb-4">
+        <p className="text-center text-sm text-[var(--gray)] mb-2">
           For:{" "}
           <span className="font-medium text-[var(--secondary)]">
             {serviceName}
           </span>
         </p>
 
-        {/* Inline Error */}
         {error && (
-          <div className="flex items-center justify-center text-red-500">
+          <div className="flex items-center justify-center text-red-500 py-2">
             <i className="fas fa-exclamation-circle"></i>
             <span className="text-sm px-2 rounded-md">{error}</span>
           </div>
         )}
 
-        {/* Inline Success */}
         {success && (
-          <div className="flex items-center justify-center text-green-700">
+          <div className="flex items-center justify-center text-green-700 py-2">
             <i className="fas fa-check-circle"></i>
             <span className="text-sm px-2 rounded-md">{success}</span>
           </div>
         )}
 
         <form onSubmit={handleBooking} className="space-y-4">
-          {/* Date */}
           <div>
             <label className="block text-sm font-medium text-[var(--secondary)] mb-1">
-              Select Date <span className="text-red-500">*</span>
+              Date <span className="text-red-500">*</span>
             </label>
             <input
               type="date"
@@ -140,25 +196,35 @@ export default function BookingForm({
             />
           </div>
 
-          {/* Time */}
-          <div>
-            <label className="block text-sm font-medium text-[var(--secondary)] mb-1">
-              Select Time <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="time"
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[var(--primary)] focus:outline-none"
-            />
+          <div className="flex gap-2">
+            <div className="w-1/2">
+              <label className="block text-sm font-medium text-[var(--secondary)] mb-1">
+                From <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="time"
+                value={fromTime}
+                onChange={(e) => setFromTime(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[var(--primary)] focus:outline-none"
+              />
+            </div>
+            <div className="w-1/2">
+              <label className="block text-sm font-medium text-[var(--secondary)] mb-1">
+                To <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="time"
+                value={toTime}
+                onChange={(e) => setToTime(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[var(--primary)] focus:outline-none"
+              />
+            </div>
           </div>
 
-          {/* Notes */}
           <div>
             <label className="block text-sm font-medium text-[var(--secondary)] mb-1">
               Notes
             </label>
-
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -167,7 +233,6 @@ export default function BookingForm({
           </div>
 
           <div className="flex justify-end items-center gap-4 pt-4">
-            {/* Cancel Button */}
             <button
               type="button"
               onClick={onClose}
@@ -176,7 +241,6 @@ export default function BookingForm({
               Cancel
             </button>
 
-            {/* Confirm Booking Button */}
             <button
               type="submit"
               disabled={loading}

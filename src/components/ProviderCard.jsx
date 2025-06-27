@@ -5,22 +5,25 @@ import { useNavigate } from "react-router-dom";
 import { FaHeart } from "react-icons/fa";
 import axios from "axios";
 import { AppContext } from "../context/AppContext.jsx";
+import BookingForm from "./BookingForm"
 
 export default function ProviderCard({
   provider,
   serviceName,
   isWishlisted: initialWishlisted,
   onProfileClick,
-  onBook = () => {},
 }) {
   const navigate = useNavigate();
   const [authMessage, setAuthMessage] = useState("");
+  const [showBooking, setShowBooking] = useState(false);
 
   const [isWishlisted, setIsWishlisted] = useState(initialWishlisted);
   const { backendUrl } = useContext(AppContext);
   useEffect(() => {
     setIsWishlisted(initialWishlisted);
   }, [initialWishlisted]);
+
+  // Handle wishlist
   const handleWishlist = async () => {
     try {
       const { data } = await axios.post(
@@ -44,6 +47,20 @@ export default function ProviderCard({
       }
     } catch (error) {
       setAuthMessage(error.message || "Something went wrong");
+    }
+  };
+  // Handle booking
+  const handleBookingSubmit = async (bookingData) => {
+    try {
+      const res = await axios.post(`${backendUrl}/api/bookings`, bookingData, {
+        withCredentials: true,
+      });
+      return res.data;
+    } catch (err) {
+      return {
+        success: false,
+        message: err.response?.data?.message || "Booking failed",
+      };
     }
   };
 
@@ -106,8 +123,15 @@ export default function ProviderCard({
             </b>
           </span>
 
+          {/* Availability */}
           <span>
-            Availability: <b>{provider.availability || "N/A"}</b>
+            Availability:{" "}
+            <b>
+              {Array.isArray(provider.availability) &&
+              provider.availability.length > 0
+                ? provider.availability.map((day) => `${day.day}`).join(", ")
+                : "N/A"}
+            </b>
           </span>
         </div>
 
@@ -141,13 +165,23 @@ export default function ProviderCard({
         </div>
         <div className="flex items-center justify-center">
           <button
-            onClick={onBook}
+            onClick={() => setShowBooking(true)}
             className="mb-2 w-full py-2 rounded-full bg-gradient-to-r from-[var(--accent)] to-[var(--secondary)] text-white font-bold shadow hover:scale-105 transition"
           >
             Book Now
           </button>
         </div>
       </div>
+      {/* Booking Form Modal */}
+      {showBooking && (
+  <BookingForm
+    provider={provider}
+    serviceName={serviceName}
+    onClose={() => setShowBooking(false)}
+    onSubmit={handleBookingSubmit}
+  />
+)}
+
     </div>
   );
 }

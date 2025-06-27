@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext, useEffect, useRef } from "react";
 import { SERVICES } from "../constants/services";
 import { useNavigate } from "react-router-dom";
 import { AppContext } from "../context/AppContext";
@@ -19,11 +19,11 @@ function Login() {
   const [role, setRole] = useState("");
   const [servicesOffered, setServicesOffered] = useState([]);
   const [experiencePerService, setExperiencePerService] = useState({});
-  const [availability, setAvailability] = useState([]);
   const [serviceDocs, setServiceDocs] = useState([]);
   const [avatar, setAvatar] = useState(null);
   const [formError, setFormError] = useState("");
   const [formSuccess, setFormSuccess] = useState("");
+  const availabilityRef = useRef([]);
 
   const serviceOptions = SERVICES.map((service) => ({
     label: service.name,
@@ -135,7 +135,7 @@ function Login() {
             ...(role === "provider" && {
               servicesOffered,
               experiencePerService,
-              availability,
+              availability: availabilityRef.current,
               serviceDocs: uploadedDocUrls, // Use uploaded URLs
               avatarUrl, //Image Url
             }),
@@ -159,7 +159,7 @@ function Login() {
               role,
               servicesOffered,
               experiencePerService,
-              availability,
+              availability: availabilityRef.current,
               serviceDocs: uploadedDocUrls,
               avatarUrl,
             })
@@ -429,47 +429,28 @@ function Login() {
               ))}
 
               {/* Availability */}
-              {/* <div
-                className="flex items-center gap-3 px-5 py-2.5 rounded-full focus:outline-none focus-within:ring-2"
-                style={{
-                  background: "var(--ternary)",
-                }}
-              >
-                <i
-                  className="fas fa-calendar-check text-md"
-                  style={{ color: "var(--white)" }}
-                ></i>
-                <input
-                  type="text"
-                  placeholder="Availability (e.g. Mon–Fri, 9am–6pm)"
-                  value={availability}
-                  onChange={(e) => setAvailability(e.target.value)}
-                  className="bg-transparent outline-none w-full"
-                  style={{ color: "var(--white)" }}
-                />
-              </div> */}
               <div className="bg-[var(--ternary)] p-3 rounded-xl text-white">
-                <div className="flex items-center gap-3 mb-2">
-                  <i className="fas fa-calendar-check text-md"></i>
-                  <label className="block text-sm">Weekly Availability</label>
+                <div className="flex items-center gap-3 mb-2 px-3">
+                  <i className="fas fa-calendar-check text-sm"></i>
+                  <label className="block text-sm">Availability</label>
                 </div>
                 <AvailabilitySelector
-                  onSave={(data) => setAvailability(data)}
+                  onChange={(data) => (availabilityRef.current = data)}
                 />
               </div>
 
               {/* Document Upload */}
               <div
-                className="flex flex-col gap-2 px-5 py-2.5 rounded-3xl focus:outline-none"
+                className="flex flex-col px-5 py-2.5 rounded-3xl focus:outline-none"
                 style={{ background: "var(--ternary)", color: "var(--white)" }}
               >
                 {/* Upload Button + Info */}
-                <div className="flex items-center gap-4 flex-wrap">
+                <div className="flex items-center gap-3 flex-wrap">
                   <i className="fas fa-file-upload text-md text-white"></i>
 
                   {/* Choose Files Button */}
                   <label
-                    className="text-xs bg-[var(--primary-light)] px-3 py-1 rounded-full cursor-pointer hover:bg-[var(--accent)] transition-all"
+                    className="text-xs bg-[var(--primary-light)] px-3 py-1 rounded-xl cursor-pointer hover:bg-[var(--accent)] transition-all"
                     style={{ color: "var(--white)" }}
                   >
                     Choose Files
@@ -540,14 +521,14 @@ function Login() {
 
                 {/* Actual Upload Button */}
                 <label className="relative inline-block">
-                  <span className="text-white text-xs bg-[var(--primary-light)] px-3 py-1 rounded-full cursor-pointer hover:bg-[var(--accent)] transition-all">
+                  <span className="text-white text-xs bg-[var(--primary-light)] px-3 py-1 rounded-xl cursor-pointer hover:bg-[var(--accent)] transition-all">
                     Browse
                   </span>
                   <input
                     type="file"
                     accept="image/*"
                     onChange={(e) => setAvatar(e.target.files[0])}
-                    className="absolute inset-0 opacity-0 cursor-pointer"
+                    className="absolute inset-0 opacity-0 pointer-events-none"
                   />
                 </label>
 
