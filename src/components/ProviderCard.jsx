@@ -16,6 +16,7 @@ export default function ProviderCard({
   const navigate = useNavigate();
   const [authMessage, setAuthMessage] = useState("");
   const [showBooking, setShowBooking] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
 
   const [isWishlisted, setIsWishlisted] = useState(initialWishlisted);
   const { backendUrl } = useContext(AppContext);
@@ -179,6 +180,8 @@ export default function ProviderCard({
     serviceName={serviceName}
     onClose={() => setShowBooking(false)}
     onSubmit={handleBookingSubmit}
+    showCalendar={showCalendar}
+  setShowCalendar={setShowCalendar}
   />
 )}
 

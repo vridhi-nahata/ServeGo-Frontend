@@ -12,6 +12,7 @@ export default function ProviderProfile() {
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [showCalendar, setShowCalendar] = useState(false);
 
   useEffect(() => {
     axios
@@ -114,7 +115,7 @@ export default function ProviderProfile() {
 
         {/* Details */}
         <div className="mt-6 grid gap-4 grid-cols-1 sm:grid-cols-2 text-[var(--secondary)] text-sm">
-          <p>
+          <div>
             <strong>Availability:</strong>{" "}
             <span className="block ml-3 text-var[--secondary]">
               {provider.availability?.map((day, i) => (
@@ -131,7 +132,7 @@ export default function ProviderProfile() {
                 </div>
               ))}
             </span>
-          </p>
+          </div>
 
           <p>
             <strong>Location:</strong> {provider.location || "Not specified"}
@@ -225,6 +226,8 @@ export default function ProviderProfile() {
             setErrorMessage("");
             setSuccessMessage("");
           }}
+          showCalendar={showCalendar}
+          setShowCalendar={setShowCalendar}
           onSubmit={async ({ date, timeSlot, notes }) => {
             try {
               const bookingData = {
@@ -241,17 +244,6 @@ export default function ProviderProfile() {
                 { withCredentials: true }
               );
 
-              //     if (res.data.success) {
-              //       setSuccessMessage("Booking request sent to provider");
-              //       setErrorMessage("");
-              //       setTimeout(() => {
-              //         setShowBookingForm(false);
-              //         setSuccessMessage("");
-              //       }, 2000);
-              //     } else {
-              //       setErrorMessage(res.data.message || "Booking failed");
-              //       setSuccessMessage("");
-              //     }
               return {
                 success: res.data.success,
                 message: res.data.message,
@@ -274,3 +266,75 @@ export default function ProviderProfile() {
     </div>
   );
 }
+
+// import React, { useEffect, useState } from "react";
+// import { useParams } from "react-router-dom";
+// import axios from "axios";
+// import StarRating from "../components/StarRating";
+// import { assets } from "../assets/assets";
+// import BookingForm from "../components/BookingForm";
+// import ProviderAvailabilityCalendar from "../components/ProviderAvailabilityCalendar";
+
+// export default function ProviderProfile() {
+//   const { providerId } = useParams();
+//   const [provider, setProvider] = useState(null);
+//   const [loading, setLoading] = useState(true);
+//   const [showBookingForm, setShowBookingForm] = useState(false);
+//   const [showCalendar, setShowCalendar] = useState(false);
+//   const [selectedSlot, setSelectedSlot] = useState(null);
+
+//   useEffect(() => {
+//     axios
+//       .get(`http://localhost:5000/api/user/provider-profile?id=${providerId}`, {
+//         withCredentials: true,
+//       })
+//       .then((res) => {
+//         setProvider(res.data.provider);
+//         setLoading(false);
+//       })
+//       .catch(() => setLoading(false));
+//   }, [providerId]);
+
+//   if (loading) return <div className="text-center mt-20 text-lg">Loading...</div>;
+//   if (!provider) return <div className="text-center mt-20 text-red-500">Provider not found</div>;
+
+//   return (
+//     <div className="min-h-screen py-20 px-6 bg-gradient-to-br from-[var(--primary-light)] to-[var(--white)]">
+//       <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-2xl p-8">
+//         {/* ...avatar, info, etc... */}
+//         <div className="mt-6">
+//           <button
+//             onClick={() => setShowCalendar(true)}
+//             className="mt-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+//           >
+//             Check Availability
+//           </button>
+//         </div>
+//         {showCalendar && (
+//           <ProviderAvailabilityCalendar
+//             provider={provider}
+//             onClose={() => setShowCalendar(false)}
+//             onSlotSelect={(slot) => {
+//               setSelectedSlot(slot);
+//               setShowCalendar(false);
+//               setShowBookingForm(true);
+//             }}
+//           />
+//         )}
+//         {showBookingForm && selectedSlot && (
+//           <BookingForm
+//             provider={provider}
+//             serviceName={provider.servicesOffered?.[0] || "Service"}
+//             initialDate={selectedSlot.date}
+//             initialFrom={selectedSlot.from}
+//             initialTo={selectedSlot.to}
+//             onClose={() => {
+//               setShowBookingForm(false);
+//               setSelectedSlot(null);
+//             }}
+//           />
+//         )}
+//       </div>
+//     </div>
+//   );
+// }

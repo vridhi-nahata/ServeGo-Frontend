@@ -9,6 +9,7 @@ import ServiceDetail from './pages/ServiceDetail'
 import ProviderProfile from "./pages/ProviderProfile";
 import { ToastContainer, toast } from 'react-toastify';
 
+
 function App() {
   return (
     <>

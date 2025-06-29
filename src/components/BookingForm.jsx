@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import ProviderAvailabilityCalendar from "../components/ProviderAvailabilityCalendar";
+import { CalendarDays } from "lucide-react"; // You can try other icons too
 
 export default function BookingForm({
   provider,
   serviceName,
   onClose,
   onSubmit,
+  showCalendar,
+  setShowCalendar,
 }) {
   const [date, setDate] = useState("");
   const [fromTime, setFromTime] = useState("");
@@ -16,6 +20,7 @@ export default function BookingForm({
   const [loading, setLoading] = useState(false);
   const [availableTimeRanges, setAvailableTimeRanges] = useState([]);
   const [bookedSlots, setBookedSlots] = useState([]);
+  const [preselectedSlot, setPreselectedSlot] = useState(null);
 
   const todayStr = new Date().toISOString().split("T")[0];
 
@@ -74,10 +79,10 @@ export default function BookingForm({
   function overlapsWithBooking(from, to, bookings) {
     const f = timeToMinutes(from);
     const t = timeToMinutes(to);
-    return bookings.some(({ timeSlot }) => {
-      const bf = timeToMinutes(timeSlot.from);
-      const bt = timeToMinutes(timeSlot.to);
-      return f < bt && t > bf;
+    return bookings.some(({ from: bf, to: bt }) => {
+      const start = timeToMinutes(bf);
+      const end = timeToMinutes(bt);
+      return f < end && t > start;
     });
   }
 
@@ -112,7 +117,7 @@ export default function BookingForm({
     }
 
     if (!isWithinAvailability(fromTime, toTime, availableTimeRanges)) {
-      setError("Time not within provider's available slots");
+      setError("Provider is unavailable at the selected date and time");
       setLoading(false);
       return;
     }
@@ -148,6 +153,7 @@ export default function BookingForm({
       setLoading(false);
     }
   };
+  console.log("showCalendar:", showCalendar);
 
   return (
     <div
@@ -167,6 +173,33 @@ export default function BookingForm({
             {serviceName}
           </span>
         </p>
+
+        <div className="mb-4">
+          <button
+            type="button"
+            onClick={() => setShowCalendar(!showCalendar)}
+            className="group bg-white border border-gray-300 p-2 rounded-full hover:bg-gray-100 transition flex items-center gap-2"
+          >
+            <CalendarDays className="w-5 h-5 text-blue-600 group-hover:scale-110 transition-transform" />
+            <span className="text-sm font-medium">
+              {showCalendar ? "Hide Availability" : "Check Availability"}
+            </span>
+          </button>
+        </div>
+
+        {showCalendar && (
+          <ProviderAvailabilityCalendar
+            provider={provider}
+            onClose={() => setShowCalendar(false)}
+            onSlotSelect={(slot) => {
+              // Optional: Auto-fill the form when user selects a slot
+              setDate(slot.date);
+              setFromTime(slot.from);
+              setToTime(slot.to);
+              setShowCalendar(false);
+            }}
+          />
+        )}
 
         {error && (
           <div className="flex items-center justify-center text-red-500 py-2">

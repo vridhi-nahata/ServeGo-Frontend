@@ -219,7 +219,7 @@ export default function AvailabilitySelector({ onChange }) {
               type="checkbox"
               checked={dayObj.active}
               onChange={() => toggleDay(i)}
-              className="appearance-none w-4 h-4 rounded-sm bg-white checked:bg-gradient-to-bl from-[var(--secondary)] to-[var(--accent)] checked:text-white checked:after:content-['✔'] checked:after:text-xs checked:after:block checked:after:text-center checked:after:leading-4"
+              className="appearance-none w-4 h-4 rounded-sm bg-white checked:bg-gradient-to-bl from-[var(--primary-light)] to-[var(--accent)] checked:text-white checked:after:content-['✔'] checked:after:text-xs checked:after:block checked:after:text-center checked:after:leading-4"
             />
             <span className="text-sm">{dayObj.day}</span>
           </label>
@@ -294,7 +294,7 @@ export default function AvailabilitySelector({ onChange }) {
               <button
                 type="button"
                 onClick={() => addSlot(i)}
-                className="bg-gradient-to-bl from-[var(--secondary)] to-[var(--accent)] hover:scale-105 text-sm px-2 py-1 rounded shadow-lg shadow-slate-800"
+                className="bg-gradient-to-bl from-[var(--primary-light)] to-[var(--accent)] hover:scale-105 text-sm px-2 py-1 rounded shadow-lg shadow-slate-800"
               >
                 <i className="fas fa-plus text-xs"></i> Add Slot
               </button>
