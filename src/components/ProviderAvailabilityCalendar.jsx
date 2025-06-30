@@ -63,6 +63,8 @@ export default function ProviderAvailabilityCalendar({
       const res = await axios.get(
         `/api/bookings/booked-slots?providerId=${provider._id}&date=${dateStr}`
       );
+      console.log("Booked slots from backend:", res.data.bookedSlots);
+
       setBookedSlots(res.data.bookedSlots || []);
     } catch (error) {
       setBookedSlots([]);
@@ -90,18 +92,24 @@ export default function ProviderAvailabilityCalendar({
             classNames: ['available-slot']
           })),
           // Booked slots as regular events (not background) so they show on top
-          ...(bookedSlots || []).map((slot, idx) => ({
-            id: `booked-${idx}`,
-            title: "BOOKED",
-            start: `${selectedDate}T${slot.from}:00`,
-            end: `${selectedDate}T${slot.to}:00`,
-            backgroundColor: "#ef4444",
-            borderColor: "#dc2626",
-            textColor: "white",
-            classNames: ['booked-slot']
-          })),
+          ...(bookedSlots || []).map((slot, idx) => {
+  console.log("Booked event start:", `${selectedDate}T${slot.from}:00`);
+  
+  return {
+    id: `booked-${idx}`,
+    title: "BOOKED",
+    start: `${selectedDate}T${slot.from}:00`,
+    end: `${selectedDate}T${slot.to}:00`,
+    backgroundColor: "#ef4444",
+    borderColor: "#dc2626",
+    textColor: "white",
+    classNames: ['booked-slot']
+  };
+}),
+
         ]
       : events;
+
 
   // Handle slot selection (drag in green area)
   const handleSelect = (info) => {
@@ -192,7 +200,7 @@ export default function ProviderAvailabilityCalendar({
           ✕ 
         </button>
         
-        <h3 className="text-lg font-semibold mb-4 text-center">
+        <h3 className="text-xl font-semibold mb-4 text-center">
           {provider.name}'s Availability Calendar
         </h3>
         
@@ -215,6 +223,9 @@ export default function ProviderAvailabilityCalendar({
           slotMaxTime="24:00:00"
           height="500px"
           scrollTime="08:00:00"
+//           validRange={{
+//     start: dayjs().format("YYYY-MM-DD"), // disables all days before today
+//   }}
           nowIndicator={true}
           selectMirror={true}
           selectOverlap={(event) => {
@@ -272,7 +283,7 @@ export default function ProviderAvailabilityCalendar({
           </div>
           {view === "timeGridDay" && (
             <div className="text-blue-600 font-medium">
-              💡 Click on green areas for 1-hour slots, or drag to select custom time ranges
+              💡drag on slots to select custom time ranges
             </div>
           )}
         </div>

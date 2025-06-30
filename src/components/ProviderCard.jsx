@@ -19,7 +19,7 @@ export default function ProviderCard({
   const [showCalendar, setShowCalendar] = useState(false);
 
   const [isWishlisted, setIsWishlisted] = useState(initialWishlisted);
-  const { backendUrl } = useContext(AppContext);
+  const { backendUrl,getUserData } = useContext(AppContext);
   useEffect(() => {
     setIsWishlisted(initialWishlisted);
   }, [initialWishlisted]);
@@ -45,6 +45,7 @@ export default function ProviderCard({
       }
       if (data.success) {
         setIsWishlisted(data.action === "added");
+        getUserData();
       }
     } catch (error) {
       setAuthMessage(error.message || "Something went wrong");
