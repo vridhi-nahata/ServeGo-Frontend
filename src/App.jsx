@@ -8,6 +8,7 @@ import Services from './pages/Services'
 import ServiceDetail from './pages/ServiceDetail'
 import ProviderProfile from "./pages/ProviderProfile";
 import { ToastContainer, toast } from 'react-toastify';
+import ProviderDashboard from './pages/ProviderDashboard';
 
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
         <Route path="/services" element={<Services/>} />
         <Route path="/services/:serviceName" element={<ServiceDetail />} />
         <Route path="/provider/:providerId" element={<ProviderProfile />} />
+        <Route path="/provider/dashboard" element={<ProviderDashboard />} />
       </Routes>
       </div>
     </>
