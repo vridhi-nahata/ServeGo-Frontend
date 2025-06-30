@@ -103,8 +103,9 @@ function Login() {
     e.preventDefault();
     setFormError("");
     setFormSuccess("");
-
+console.log("HANDle Submit called");
     try {
+      console.log("try")
       if (state === "Sign Up") {
         // Atleast 1 service
         if (role === "provider" && servicesOffered.length === 0) {
@@ -122,7 +123,7 @@ function Login() {
         if (role === "provider" && avatar) {
           avatarUrl = await uploadAvatarToCloudinary(avatar);
         }
-
+console.log("problem")
         // Send registration data, get OTP
         const { data } = await axios.post(
           `${backendUrl}/api/auth/send-verify-otp`,
@@ -142,7 +143,7 @@ function Login() {
           },
           { withCredentials: true }
         );
-
+console.log(data)
         if (data.success) {
           setIsLoggedIn(true);
           setFormSuccess("OTP sent to your email");
@@ -579,6 +580,7 @@ function Login() {
           )}
 
           <button
+          type="submit"
             className="w-full py-2.5 rounded-full font-medium mt-2"
             style={{
               background:

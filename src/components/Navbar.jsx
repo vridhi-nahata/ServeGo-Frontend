@@ -6,28 +6,11 @@ import axios from "axios";
 import { toast } from "react-toastify";
 
 function Navbar() {
-
   const navigate = useNavigate();
   const { userData, backendUrl, setUserData, setIsLoggedIn } =
     useContext(AppContext);
+  const role = userData?.role;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  // const sendVerificationOtp = async () => {
-  //   try {
-  //     axios.defaults.withCredentials = true;
-  //     const { data } = await axios.post(
-  //       backendUrl + "/api/auth/send-verify-otp"
-  //     );
-  //     if (data.success) {
-  //       navigate("email-verify");
-  //       setSuccess(data.message);
-  //     } else {
-  //       setError(data.message);
-  //     }
-  //   } catch (error) {
-  //     setError(error.message);
-  //   }
-  // };
 
   const logout = async () => {
     try {
@@ -117,12 +100,14 @@ function Navbar() {
                 style={{ background: "var(--white)" }}
               >
                 <ul className="text-sm space-y-1">
-                  {!userData.isAccountVerified && (
-                    <li
-                      onClick={sendVerificationOtp}
-                      className="px-3 py-1 hover:bg-gray-100 rounded cursor-pointer"
-                    >
-                      Verify email
+                  {role === "provider" && (
+                    <li>
+                      <Link
+                        to="/provider/dashboard"
+                        className="block px-3 py-2 hover:bg-gray-100 rounded"
+                      >
+                        Provider Dashboard
+                      </Link>
                     </li>
                   )}
                   <li
