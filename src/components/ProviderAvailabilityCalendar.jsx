@@ -187,7 +187,7 @@ export default function ProviderAvailabilityCalendar({
       >
         <button
           onClick={handleCloseClick}
-          className="absolute top-2 right-2 px-3 py-1 bg-red-100 text-red-600 rounded hover:bg-red-200 z-10"
+          className="absolute top-2 right-2 px-3 py-1 text-red-600 hover:bg-red-100 z-10"
         >
           ✕ 
         </button>
@@ -235,25 +235,25 @@ export default function ProviderAvailabilityCalendar({
         
         {view === "timeGridDay" && (
           <div className="flex justify-between items-center mt-4">
-            <button
+            {/* <button
               onClick={() => {
                 setView("dayGridMonth");
                 if (calendarRef.current) {
                   calendarRef.current.getApi().changeView("dayGridMonth");
                 }
               }}
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              className="px-4 py-2 bg-[var(--secondary)] text-white rounded hover:bg-[var(--primary)]"
             >
-              ← Back to Month
-            </button>
+              ← Back
+            </button> */}
             
-            <div className="text-sm">
+            {/* <div className="text-sm">
               {selectedDate && (
                 <span className="font-medium">
                   Viewing: {dayjs(selectedDate).format("dddd, MMMM D, YYYY")}
                 </span>
               )}
-            </div>
+            </div> */}
           </div>
         )}
         
@@ -262,17 +262,17 @@ export default function ProviderAvailabilityCalendar({
             <span className="inline-block w-3 h-3 bg-green-200 border border-green-600 mr-1"></span>
             Available
           </div>
-          <div className="flex items-center">
+          {/* <div className="flex items-center">
             <span className="inline-block w-3 h-3 bg-red-500 border border-red-600 mr-1"></span>
             Booked
-          </div>
+          </div> */}
           <div className="flex items-center">
             <span className="inline-block w-3 h-3 bg-red-200 border border-red-600 mr-1"></span>
             Unavailable
           </div>
           {view === "timeGridDay" && (
             <div className="text-blue-600 font-medium">
-              💡 Click on green areas for 1-hour slots, or drag to select custom time ranges
+              💡 Click or drag to select custom time ranges
             </div>
           )}
         </div>
