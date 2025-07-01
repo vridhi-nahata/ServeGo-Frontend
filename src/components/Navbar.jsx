@@ -96,7 +96,7 @@ function Navbar() {
                 {userData.name.charAt(0).toUpperCase()}
               </div>
               <div
-                className="absolute top-8.5 right-0 w-40 rounded-lg p-2 hidden group-hover:block shadow-md text-[color:var(--black)] z-10"
+                className="absolute top-8.5 right-0 w-40 rounded-lg hidden group-hover:block shadow-md text-[var(--secondary)] z-10"
                 style={{ background: "var(--white)" }}
               >
                 <ul className="text-sm space-y-1">
@@ -104,17 +104,24 @@ function Navbar() {
                     <li>
                       <Link
                         to="/provider/dashboard"
-                        className="block px-3 py-2 hover:bg-gray-100 rounded"
-                      >
-                        Provider Dashboard
+                        className="block px-3 py-2 hover:bg-[var(--primary-light)] rounded"
+                      >My Bookings
+                      </Link>
+                    </li>
+                  )}
+                  {role === "customer" && (
+                    <li>
+                      <Link
+                        to="/my-bookings"
+                        className="block px-3 py-2 hover:bg-[var(--primary-light)] rounded"
+                      >My Bookings
                       </Link>
                     </li>
                   )}
                   <li
                     onClick={logout}
-                    className="px-2 py-1 hover:bg-gray-200 cursor-pointer"
-                  >
-                    Logout
+                    className="block px-3 py-2 hover:bg-[var(--primary-light)] rounded"
+                  >Logout
                   </li>
                 </ul>
               </div>

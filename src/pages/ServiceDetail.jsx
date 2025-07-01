@@ -59,19 +59,21 @@ export default function ServiceDetail() {
           No providers found for this service.
         </div>
       ) : (
-        <div className="grid gap-y-4  gap-x-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 max-w-6xl">
-          {providers.map((provider) => (
-            <ProviderCard
-              key={provider._id}
-              provider={provider}
-              serviceName={serviceName}
-              isWishlisted={userData?.wishlist?.includes(provider._id)}
-              onProfileClick={() => navigate(`/provider/${provider._id}`)}
-              onBook={() => {
-                setSelectedProvider(provider);
-              }}
-            />
-          ))}
+        <div className="w-full px-4">
+          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 mx-auto justify-center">
+{providers.map((provider) => (
+  <div className="flex justify-center" key={provider._id}>
+    <ProviderCard
+      provider={provider}
+      serviceName={serviceName}
+      isWishlisted={userData?.wishlist?.includes(provider._id)}
+      onProfileClick={() => navigate(`/provider/${provider._id}`)}
+      onBook={() => setSelectedProvider(provider)}
+    />
+  </div>
+))}
+
+          </div>
         </div>
       )}
 
