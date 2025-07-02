@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import dayjs from "dayjs";
 import { FaCheck, FaTimes } from "react-icons/fa";
@@ -9,6 +9,9 @@ export default function CustomerBookings() {
   const [actionLoading, setActionLoading] = useState("");
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("all");
+  const [confirmCancelId, setConfirmCancelId] = useState(null);
+
+  const modalRef = useRef();
 
   useEffect(() => {
     axios
@@ -25,11 +28,32 @@ export default function CustomerBookings() {
       });
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (modalRef.current && !modalRef.current.contains(e.target)) {
+        setConfirmCancelId(null); // Close the modal
+      }
+    };
+
+    if (confirmCancelId) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [confirmCancelId]);
+
+  useEffect(() => {
+    const timer = setInterval(() => setTime(Date.now()), 60_000);
+    return () => clearInterval(timer);
+  }, []);
+
   const respondToUpdate = async (id, response) => {
     setActionLoading(id + response);
     try {
       const res = await axios.patch(
-  `http://localhost:5000/api/bookings/${id}/customer-response`, 
+        `http://localhost:5000/api/bookings/${id}/customer-response`,
         { response },
         { withCredentials: true }
       );
@@ -50,12 +74,24 @@ export default function CustomerBookings() {
       ? bookings
       : bookings.filter((b) => latestStatus(b.statusHistory) === filter);
 
+  const isTooCloseToBooking = (b) => {
+    const bookingDateTime = dayjs(
+      `${dayjs(b.date).format("YYYY-MM-DD")} ${b.timeSlot.from}`,
+      "YYYY-MM-DD HH:mm"
+    );
+    const diffMins = bookingDateTime.diff(dayjs(), "minute");
+    // Disable cancel if the booking has already started or is within 2 hours
+    return diffMins <= 120;
+  };
+
   const statusOptions = [
     { label: "All", value: "all" },
     { label: "Pending", value: "pending" },
     { label: "Confirmed", value: "confirmed" },
-    { label: "Rejected", value: "rejected" },
     { label: "Updated", value: "update-time" },
+    { label: "Rejected", value: "rejected" },
+    { label: "Cancelled", value: "cancelled" },
+    { label: "Completed", value: "completed" },
   ];
 
   return (
@@ -72,7 +108,7 @@ export default function CustomerBookings() {
               key={opt.value}
               className={`px-4 py-1 rounded-full border text-sm font-medium ${
                 filter === opt.value
-                  ? "bg-[var(--primary)] text-white"
+                  ? "bg-[var(--primary)] text-[var(--white)]"
                   : "bg-[var(--primary-light)] text-[var(--primary)] hover:bg-[var(--accent)] hover:text-white"
               }`}
               onClick={() => setFilter(opt.value)}
@@ -109,7 +145,7 @@ export default function CustomerBookings() {
                       Notes: {b.notes || "—"}
                     </div>
                     <div
-                      className={`inline-block mt-1 text-xs font-semibold rounded px-2 py-1 ${
+                      className={`inline-block mt-1 text-xs font-semibold rounded-xl px-2 py-1 ${
                         status === "pending"
                           ? "bg-yellow-100 text-yellow-700"
                           : status === "confirmed"
@@ -118,6 +154,8 @@ export default function CustomerBookings() {
                           ? "bg-red-100 text-red-700"
                           : status === "update-time"
                           ? "bg-blue-100 text-blue-700"
+                          : status === "cancelled"
+                          ? "bg-gray-200 text-gray-700"
                           : ""
                       }`}
                     >
@@ -141,21 +179,40 @@ export default function CustomerBookings() {
                       </div>
                       <div className="flex gap-2">
                         <button
-                          className="flex items-center gap-1 px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
+                          className="flex items-center gap-1 text-sm px-3 py-1 bg-green-500 text-white rounded hover:bg-green-700"
                           disabled={actionLoading === b._id + "accepted"}
                           onClick={() => respondToUpdate(b._id, "accepted")}
                         >
                           <FaCheck /> Accept
                         </button>
                         <button
-                          className="flex items-center gap-1 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-                          disabled={actionLoading === b._id + "rejected"}
-                          onClick={() => respondToUpdate(b._id, "rejected")}
+                          className="flex items-center gap-1 text-sm px-3 py-1 bg-red-500 text-white rounded hover:bg-red-700"
+                          onClick={() => setConfirmCancelId(b._id)}
                         >
-                          <FaTimes /> Reject
+                          <FaTimes /> Cancel
                         </button>
                       </div>
                     </div>
+                  )}
+                  {["pending", "confirmed"].includes(status) && (
+                    <button
+                      title={isTooCloseToBooking(b) ? "Booking cannot be cancelled within 2 hours of start time" : ""}
+
+                      className={`flex items-center gap-1 text-sm px-3 py-1 rounded transition w-40
+      ${
+        isTooCloseToBooking(b)
+          ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+          : "bg-red-500 text-white hover:bg-red-700"
+      }`}
+                      onClick={() => {
+                        if (!isTooCloseToBooking(b)) setConfirmCancelId(b._id);
+                      }}
+                      disabled={isTooCloseToBooking(b)}
+                    >
+                      <FaTimes /> Cancel Booking
+                    </button>
+                    
+                    
                   )}
                 </div>
               );
@@ -163,6 +220,40 @@ export default function CustomerBookings() {
           </div>
         )}
       </div>
+      {confirmCancelId && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div
+            ref={modalRef}
+            className="bg-white p-6 rounded-lg shadow-md w-[90%] max-w-md text-center"
+          >
+            <h3 className="text-xl font-semibold mb-4 text-[var(--primary)]">
+              Confirm Cancellation
+            </h3>
+            <p className="text-sm text-gray-600 mb-6">
+              Are you sure you want to cancel this booking? This action cannot
+              be undone.
+            </p>
+
+            <div className="flex justify-center gap-4">
+              <button
+                className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
+                onClick={() => setConfirmCancelId(null)}
+              >
+                Back
+              </button>
+              <button
+                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-700"
+                onClick={() => {
+                  respondToUpdate(confirmCancelId, "cancelled");
+                  setConfirmCancelId(null);
+                }}
+              >
+                Cancel Booking
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
