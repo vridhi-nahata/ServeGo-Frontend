@@ -56,6 +56,8 @@ export default function ProviderDashboard() {
     confirmed: "bg-green-100 text-green-700",
     rejected: "bg-red-100 text-red-700",
     "update-time": "bg-blue-100 text-blue-700",
+    completed: "bg-purple-100 text-purple-700",
+    cancelled: "bg-gray-200 text-gray-700",
   };
 
   const grouped = bookings.reduce((acc, b) => {
@@ -80,22 +82,31 @@ export default function ProviderDashboard() {
           My Bookings
         </h1>
 
-        <div className="flex justify-center gap-3 mb-8">
-          {["all", "pending", "confirmed", "rejected"].map((s) => (
+        <div className="flex justify-center gap-3 mb-8 flex-wrap">
+          {[
+            "all",
+            "pending",
+            "confirmed",
+            "updated",
+            "rejected",
+            "cancelled",
+            "completed",
+          ].map((s) => (
             <button
               key={s}
               onClick={() => setFilter(s)}
               className="px-4 py-1.5 rounded-full text-sm font-medium border transition-all"
               style={{
-                backgroundColor: filter === s ? "var(--primary)" : "white",
-                color: filter === s ? "white" : "var(--primary)",
-                borderColor: "var(--accent)",
+                backgroundColor: filter === s ? "var(--primary)" : "var(--primary-light)",
+                color: filter === s ? "var(--white)" : "var(--primary)"
               }}
             >
               {s.charAt(0).toUpperCase() + s.slice(1)}
             </button>
+            
           ))}
         </div>
+        
 
         {loading ? (
           <div
@@ -106,7 +117,7 @@ export default function ProviderDashboard() {
           </div>
         ) : Object.keys(grouped).length === 0 ? (
           <div className="text-center text-gray-500 text-lg">
-            No bookings found.
+            No bookings found
           </div>
         ) : (
           Object.entries(grouped).map(([status, group]) => (
@@ -202,21 +213,21 @@ export default function ProviderDashboard() {
                       {status === "pending" && (
                         <div className="flex flex-wrap gap-2">
                           <button
-                            className="flex items-center gap-1 px-3 py-1 rounded bg-green-500 text-white hover:bg-green-600"
+                            className="flex items-center gap-1 text-sm px-3 py-1 rounded bg-green-500 text-white hover:bg-green-700"
                             disabled={actionLoading === b._id + "confirmed"}
                             onClick={() => handleStatus(b._id, "confirmed")}
                           >
                             <FaCheck /> Accept
                           </button>
                           <button
-                            className="flex items-center gap-1 px-3 py-1 rounded bg-red-500 text-white hover:bg-red-600"
+                            className="flex items-center gap-1 text-sm px-3 py-1 rounded bg-red-500 text-white hover:bg-red-700"
                             disabled={actionLoading === b._id + "rejected"}
                             onClick={() => handleStatus(b._id, "rejected")}
                           >
                             <FaTimes /> Reject
                           </button>
                           <button
-                            className="flex items-center gap-1 px-3 py-1 rounded bg-blue-500 text-white hover:bg-blue-600"
+                            className="flex items-center gap-1 text-sm px-3 py-1 rounded bg-blue-500 text-white hover:bg-blue-700"
                             onClick={() => setShowTimeUpdate(b._id)}
                           >
                             <FaClock /> Update Time
