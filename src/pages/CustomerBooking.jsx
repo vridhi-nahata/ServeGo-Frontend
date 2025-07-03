@@ -2,6 +2,8 @@ import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import dayjs from "dayjs";
 import { FaCheck, FaTimes } from "react-icons/fa";
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
+dayjs.extend(isSameOrAfter);
 
 export default function CustomerBookings() {
   const [bookings, setBookings] = useState([]);
@@ -10,6 +12,8 @@ export default function CustomerBookings() {
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("all");
   const [confirmCancelId, setConfirmCancelId] = useState(null);
+  //   const [visibleOtps, setVisibleOtps] = useState({});
+  const [tick, setTick] = useState(0);
 
   const modalRef = useRef();
 
@@ -29,6 +33,50 @@ export default function CustomerBookings() {
   }, []);
 
   useEffect(() => {
+    const fetchOtpForEligibleBookings = async () => {
+      const now = dayjs();
+      const updatedBookings = await Promise.all(
+        bookings.map(async (b) => {
+          const latestStatus = b.statusHistory?.at(-1)?.status;
+          const bookingTime = dayjs(
+            `${dayjs(b.date).format("YYYY-MM-DD")} ${b.timeSlot.from}`,
+            "YYYY-MM-DD HH:mm"
+          );
+
+          const isEligible =
+            latestStatus === "confirmed" &&
+            now.isSameOrAfter(bookingTime, "minute") &&
+            !b.otp;
+
+          if (isEligible) {
+            try {
+              const res = await axios.get(
+                `http://localhost:5000/api/bookings/generate-otp/${b._id}`,
+                { withCredentials: true }
+              );
+              return { ...b, otp: res.data.otp };
+            } catch (err) {
+              console.error(
+                `OTP fetch failed for ${b._id}:`,
+                err.response?.data?.message || err.message
+              );
+            }
+          }
+          return b;
+        })
+      );
+      setBookings(updatedBookings);
+    };
+
+    fetchOtpForEligibleBookings(); // run immediately when tick changes
+  }, [tick]);
+
+  useEffect(() => {
+    const timer = setInterval(() => setTick((t) => t + 1), 10_000); // every 10 seconds
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
     const handleClickOutside = (e) => {
       if (modalRef.current && !modalRef.current.contains(e.target)) {
         setConfirmCancelId(null); // Close the modal
@@ -44,10 +92,22 @@ export default function CustomerBookings() {
     };
   }, [confirmCancelId]);
 
-  useEffect(() => {
-    const timer = setInterval(() => setTime(Date.now()), 60_000);
-    return () => clearInterval(timer);
-  }, []);
+  const markCompleted = async (bookingId) => {
+    try {
+      const res = await axios.patch(
+        `http://localhost:5000/api/bookings/mark-complete/${bookingId}`,
+        {},
+        { withCredentials: true }
+      );
+      setBookings((prev) =>
+        prev.map((b) => (b._id === bookingId ? res.data.booking : b))
+      );
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to mark as complete");
+    }
+  };
+
+  
 
   const respondToUpdate = async (id, response) => {
     setActionLoading(id + response);
@@ -89,6 +149,7 @@ export default function CustomerBookings() {
     { label: "Pending", value: "pending" },
     { label: "Confirmed", value: "confirmed" },
     { label: "Updated", value: "update-time" },
+    { label: "In Progress", value: "in-progress" },
     { label: "Rejected", value: "rejected" },
     { label: "Cancelled", value: "cancelled" },
     { label: "Completed", value: "completed" },
@@ -154,8 +215,12 @@ export default function CustomerBookings() {
                           ? "bg-red-100 text-red-700"
                           : status === "update-time"
                           ? "bg-blue-100 text-blue-700"
+                          : status === "in-progress"
+                          ? "bg-orange-100 text-orange-700"
                           : status === "cancelled"
                           ? "bg-gray-200 text-gray-700"
+                          : status === "completed"
+                          ? "bg-purple-100 text-purple-700"
                           : ""
                       }`}
                     >
@@ -194,10 +259,22 @@ export default function CustomerBookings() {
                       </div>
                     </div>
                   )}
+
+                  {b.otp && !b.otpVerified && (
+                    <div className="mt-2">
+                      <p className="text-sm font-semibold text-green-600">
+                        OTP: {b.otp}
+                      </p>
+                    </div>
+                  )}
+
                   {["pending", "confirmed"].includes(status) && (
                     <button
-                      title={isTooCloseToBooking(b) ? "Booking cannot be cancelled within 2 hours of start time" : ""}
-
+                      title={
+                        isTooCloseToBooking(b)
+                          ? "Booking cannot be cancelled within 2 hours of start time"
+                          : ""
+                      }
                       className={`flex items-center gap-1 text-sm px-3 py-1 rounded transition w-40
       ${
         isTooCloseToBooking(b)
@@ -211,8 +288,15 @@ export default function CustomerBookings() {
                     >
                       <FaTimes /> Cancel Booking
                     </button>
-                    
-                    
+                  )}
+
+                  {b.otpVerified && !b.completedByCustomer && (
+                    <button
+                      onClick={() => markCompleted(b._id)}
+                      className="mt-2 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    >
+                      Mark Completed
+                    </button>
                   )}
                 </div>
               );

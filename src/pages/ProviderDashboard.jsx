@@ -14,6 +14,8 @@ export default function ProviderDashboard() {
   const [newTo, setNewTo] = useState("");
   const [filter, setFilter] = useState("all");
   const [expanded, setExpanded] = useState({});
+  const [otpInputs, setOtpInputs] = useState({});
+  const [otpError, setOtpError] = useState({});
 
   useEffect(() => {
     setLoading(true);
@@ -56,6 +58,7 @@ export default function ProviderDashboard() {
     confirmed: "bg-green-100 text-green-700",
     rejected: "bg-red-100 text-red-700",
     "update-time": "bg-blue-100 text-blue-700",
+    "in-progress": "bg-orange-100 text-orange-700",
     completed: "bg-purple-100 text-purple-700",
     cancelled: "bg-gray-200 text-gray-700",
   };
@@ -68,6 +71,37 @@ export default function ProviderDashboard() {
     acc[latest].push(b);
     return acc;
   }, {});
+
+  const markCompleted = async (bookingId) => {
+    try {
+      const res = await axios.patch(
+        `http://localhost:5000/api/bookings/mark-complete/${bookingId}`,
+        {},
+        { withCredentials: true }
+      );
+      setBookings((prev) =>
+        prev.map((b) => (b._id === bookingId ? res.data.booking : b))
+      );
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to mark as complete");
+    }
+  };
+
+  const verifyOtp = async (id) => {
+    try {
+      const res = await axios.post(
+        `http://localhost:5000/api/bookings/${id}/verify-otp`,
+        {
+          otp: otpInputs[id],
+        },
+        { withCredentials: true }
+      );
+      alert(res.data.message);
+      // Refresh bookings list here
+    } catch (err) {
+      alert(err.response?.data?.message || "OTP verification failed");
+    }
+  };
 
   return (
     <div
@@ -88,6 +122,7 @@ export default function ProviderDashboard() {
             "pending",
             "confirmed",
             "updated",
+            "in-progress",
             "rejected",
             "cancelled",
             "completed",
@@ -97,16 +132,15 @@ export default function ProviderDashboard() {
               onClick={() => setFilter(s)}
               className="px-4 py-1.5 rounded-full text-sm font-medium border transition-all"
               style={{
-                backgroundColor: filter === s ? "var(--primary)" : "var(--primary-light)",
-                color: filter === s ? "var(--white)" : "var(--primary)"
+                backgroundColor:
+                  filter === s ? "var(--primary)" : "var(--primary-light)",
+                color: filter === s ? "var(--white)" : "var(--primary)",
               }}
             >
               {s.charAt(0).toUpperCase() + s.slice(1)}
             </button>
-            
           ))}
         </div>
-        
 
         {loading ? (
           <div
@@ -280,6 +314,74 @@ export default function ProviderDashboard() {
                           </div>
                         </div>
                       )}
+
+                      {b.otp && !b.otpVerified && (
+                        <div className="mt-2">
+                          <form
+                            onSubmit={async (e) => {
+                              e.preventDefault();
+                              setOtpError((prev) => ({ ...prev, [b._id]: "" })); // reset error
+                              try {
+                                await axios.post(
+                                  `http://localhost:5000/api/bookings/verify-otp/${b._id}`,
+                                  { otp: otpInputs[b._id] },
+                                  { withCredentials: true }
+                                );
+
+                                // refresh bookings
+                                const res = await axios.get(
+                                  "http://localhost:5000/api/bookings/provider-requests",
+                                  {
+                                    withCredentials: true,
+                                  }
+                                );
+                                setBookings(res.data.bookings || []);
+                              } catch (error) {
+                                const msg =
+                                  error.response?.data?.message ||
+                                  "OTP verification failed";
+                                setOtpError((prev) => ({
+                                  ...prev,
+                                  [b._id]: msg,
+                                }));
+                              }
+                            }}
+                          >
+                            <input
+                              type="text"
+                              value={otpInputs[b._id] || ""}
+                              onChange={(e) =>
+                                setOtpInputs((prev) => ({
+                                  ...prev,
+                                  [b._id]: e.target.value,
+                                }))
+                              }
+                              placeholder="Enter OTP"
+                              className="border px-2 py-1 rounded w-32"
+                            />
+                            <button className="ml-2 px-3 py-1 bg-green-600 text-white rounded">
+                              Verify
+                            </button>
+
+                            {/* Styled error message */}
+                            {otpError[b._id] && (
+                              <div className="text-sm text-red-600 mt-1">
+                                {otpError[b._id]}
+                              </div>
+                            )}
+                          </form>
+                        </div>
+                      )}
+                      <div>
+                        {b.otpVerified && !b.completedByCustomer && (
+                          <button
+                            onClick={() => markCompleted(b._id)}
+                            className="mt-2 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 w-full"
+                          >
+                            Mark Completed
+                          </button>
+                        )}
+                      </div>
                     </motion.div>
                   ))}
                 </div>
