@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { FaHeart } from "react-icons/fa";
 import axios from "axios";
 import { AppContext } from "../context/AppContext.jsx";
-import BookingForm from "./BookingForm"
+import BookingForm from "./BookingForm";
 
 export default function ProviderCard({
   provider,
@@ -84,7 +84,7 @@ export default function ProviderCard({
         <button
           className="absolute top-1 right-4 rounded-full p-2 transition"
           onClick={handleWishlist}
-          title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
+          title={isWishlisted ? "Remove from favourite" : "Add to favourite"}
         >
           <FaHeart
             className={`transition duration-200 cursor-pointer ${
@@ -175,16 +175,15 @@ export default function ProviderCard({
       </div>
       {/* Booking Form Modal */}
       {showBooking && (
-  <BookingForm
-    provider={provider}
-    serviceName={serviceName}
-    onClose={() => setShowBooking(false)}
-    onSubmit={handleBookingSubmit}
-    showCalendar={showCalendar}
-  setShowCalendar={setShowCalendar}
-  />
-)}
-
+        <BookingForm
+          provider={provider}
+          serviceName={serviceName}
+          onClose={() => setShowBooking(false)}
+          onSubmit={handleBookingSubmit}
+          showCalendar={showCalendar}
+          setShowCalendar={setShowCalendar}
+        />
+      )}
     </div>
   );
 }
