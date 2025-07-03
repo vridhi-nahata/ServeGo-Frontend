@@ -74,6 +74,7 @@ export default function ProviderDashboard() {
 
   const markCompleted = async (bookingId) => {
     try {
+      console.log("Mark completed triggered");
       const res = await axios.patch(
         `http://localhost:5000/api/bookings/mark-complete/${bookingId}`,
         {},
@@ -84,22 +85,6 @@ export default function ProviderDashboard() {
       );
     } catch (err) {
       alert(err.response?.data?.message || "Failed to mark as complete");
-    }
-  };
-
-  const verifyOtp = async (id) => {
-    try {
-      const res = await axios.post(
-        `http://localhost:5000/api/bookings/${id}/verify-otp`,
-        {
-          otp: otpInputs[id],
-        },
-        { withCredentials: true }
-      );
-      alert(res.data.message);
-      // Refresh bookings list here
-    } catch (err) {
-      alert(err.response?.data?.message || "OTP verification failed");
     }
   };
 
@@ -365,7 +350,8 @@ export default function ProviderDashboard() {
 
                             {/* Styled error message */}
                             {otpError[b._id] && (
-                              <div className="text-sm text-red-600 mt-1">
+                              <div className="flex gap-2 text-sm text-red-600 mt-3">
+                                <i className="fas fa-exclamation-circle mt-1"></i>
                                 {otpError[b._id]}
                               </div>
                             )}
@@ -373,10 +359,10 @@ export default function ProviderDashboard() {
                         </div>
                       )}
                       <div>
-                        {b.otpVerified && !b.completedByCustomer && (
+                        {b.otpVerified && !b.completedByProvider && (
                           <button
                             onClick={() => markCompleted(b._id)}
-                            className="mt-2 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 w-full"
+                            className="mt-2 px-3 py-1 bg-[var(--ternary)] text-white rounded hover:bg-[var(--secondary)] w-full"
                           >
                             Mark Completed
                           </button>

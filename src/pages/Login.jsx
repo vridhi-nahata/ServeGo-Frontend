@@ -14,6 +14,7 @@ function Login() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [location, setLocation] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState("");
@@ -304,6 +305,29 @@ console.log(data)
             </div>
           )}
 
+          {/* Location */}
+          {state === "Sign Up" && (
+            <div
+              className="flex items-center gap-3 px-5 py-2.5 rounded-full focus:outline-none focus-within:ring-2"
+              style={{
+                background: "var(--ternary)",
+              }}
+            >
+              <i
+                className="fas fa-location text-md"
+                style={{ color: "var(--white)" }}
+              ></i>
+              <input
+                type="text"
+                placeholder="Location"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                className="bg-transparent outline-none w-full"
+                style={{ color: "var(--white)" }}
+              />
+            </div>
+          )}
+
           {/* Password */}
           <div
             className="flex items-center gap-3 px-5 py-2.5 rounded-full focus:outline-none focus-within:ring-2"
@@ -472,7 +496,7 @@ console.log(data)
                   <span className="text-xs">
                     {serviceDocs.length > 0
                       ? `${serviceDocs.length} file(s) selected`
-                      : "Document / Certificate"}
+                      : "Work Demo"}
                   </span>
                 </div>
 

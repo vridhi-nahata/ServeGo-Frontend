@@ -167,7 +167,7 @@ export default function ProviderProfile() {
           {provider.serviceDocs?.length > 0 && (
             <div className="w-full mt-6">
               <h3 className="text-xl font-semibold text-[var(--primary)] mb-3">
-                Documents
+                Work Demo
               </h3>
               <div className="grid grid-cols-2 gap-4">
                 {provider.serviceDocs.map((docUrl, index) => {

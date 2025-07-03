@@ -304,7 +304,7 @@ export default function Home() {
               className="mx-auto text-4xl mb-4"
               style={{ color: "var(--secondary)" }}
             />
-            <h3 className="font-semibold text-lg mb-2">4. Pay & Book</h3>
+            <h3 className="font-semibold text-lg mb-2">4. Book & Pay</h3>
             <p className="text-sm" style={{ color: "var(--gray)" }}>
               Pay securely via UPI, wallet, or card and confirm your booking.
             </p>

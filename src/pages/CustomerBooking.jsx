@@ -12,7 +12,6 @@ export default function CustomerBookings() {
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("all");
   const [confirmCancelId, setConfirmCancelId] = useState(null);
-  //   const [visibleOtps, setVisibleOtps] = useState({});
   const [tick, setTick] = useState(0);
 
   const modalRef = useRef();
@@ -72,7 +71,7 @@ export default function CustomerBookings() {
   }, [tick]);
 
   useEffect(() => {
-    const timer = setInterval(() => setTick((t) => t + 1), 10_000); // every 10 seconds
+    const timer = setInterval(() => setTick((t) => t + 1), 1_000); // every 1 second
     return () => clearInterval(timer);
   }, []);
 
@@ -293,7 +292,7 @@ export default function CustomerBookings() {
                   {b.otpVerified && !b.completedByCustomer && (
                     <button
                       onClick={() => markCompleted(b._id)}
-                      className="mt-2 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                      className="mt-2 px-3 py-1 bg-[var(--ternary)] text-white rounded hover:bg-[var(--secondary)]"
                     >
                       Mark Completed
                     </button>
