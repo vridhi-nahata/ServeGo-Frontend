@@ -151,7 +151,7 @@ export default function Home() {
               <FaSearch /> Explore Services
             </span>
           </Link>
-          <Link
+          {/* <Link
             to="/login"
             className="font-bold px-10 py-4 rounded-full shadow-lg transition text-lg"
             style={{
@@ -170,7 +170,7 @@ export default function Home() {
             <span className="inline-flex items-center gap-2">
               <FaUserCheck /> Become a Provider
             </span>
-          </Link>
+          </Link> */}
         </div>
       </section>
 
