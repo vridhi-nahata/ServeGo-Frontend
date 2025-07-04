@@ -135,15 +135,27 @@ export default function ProviderProfile() {
           </div>
 
           <p>
-            <strong>Location:</strong> {provider.location || "Not specified"}
+            <strong>Location:</strong>{" "}
+            {provider.location
+              ? [
+                  provider.location.area,
+                  provider.location.city,
+                  provider.location.state,
+                  provider.location.country,
+                  provider.location.pinCode,
+                ]
+                  .filter(Boolean) // Remove any empty parts
+                  .join(", ")
+              : "Not specified"}
           </p>
-          <p>
+
+          {/* <p>
             <strong>Services Offered:</strong>{" "}
             {provider.servicesOffered?.join(", ")}
-          </p>
+          </p> */}
           {provider.experiencePerService && (
             <div className="sm:col-span-2">
-              <strong>Experience Per Service:</strong>
+              <strong>Experience per service offered:</strong>
               <ul className="list-none pl-4 mt-1 text-[var(--secondary)]">
                 {Object.entries(provider.experiencePerService).map(
                   ([service, years]) => (

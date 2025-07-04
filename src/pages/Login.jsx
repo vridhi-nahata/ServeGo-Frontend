@@ -5,6 +5,7 @@ import { AppContext } from "../context/AppContext";
 import axios from "axios";
 import Select from "react-select";
 import AvailabilitySelector from "../components/AvailabilitySelector";
+import { Country, State, City } from "country-state-city";
 
 function Login() {
   const navigate = useNavigate();
@@ -14,10 +15,15 @@ function Login() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [location, setLocation] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState("");
+  const [selectedCountry, setSelectedCountry] = useState(null);
+  const [selectedState, setSelectedState] = useState(null);
+  const [selectedCity, setSelectedCity] = useState(null);
+  const [area, setArea] = useState("");
+  const [pinCode, setPinCode] = useState("");
+
   const [servicesOffered, setServicesOffered] = useState([]);
   const [experiencePerService, setExperiencePerService] = useState({});
   const [serviceDocs, setServiceDocs] = useState([]);
@@ -104,9 +110,8 @@ function Login() {
     e.preventDefault();
     setFormError("");
     setFormSuccess("");
-console.log("HANDle Submit called");
+
     try {
-      console.log("try")
       if (state === "Sign Up") {
         // Atleast 1 service
         if (role === "provider" && servicesOffered.length === 0) {
@@ -124,7 +129,15 @@ console.log("HANDle Submit called");
         if (role === "provider" && avatar) {
           avatarUrl = await uploadAvatarToCloudinary(avatar);
         }
-console.log("problem")
+
+        const location = {
+          country: selectedCountry?.name || "",
+          state: selectedState?.name || "",
+          city: selectedCity?.name || "",
+          area: area.trim(),
+          pinCode: pinCode.trim(),
+        };
+
         // Send registration data, get OTP
         const { data } = await axios.post(
           `${backendUrl}/api/auth/send-verify-otp`,
@@ -134,17 +147,18 @@ console.log("problem")
             phone,
             password,
             role,
+            location,
             ...(role === "provider" && {
               servicesOffered,
               experiencePerService,
               availability: availabilityRef.current,
               serviceDocs: uploadedDocUrls, // Use uploaded URLs
-              avatarUrl, //Image Url
             }),
+            avatarUrl, //Image Url
           },
           { withCredentials: true }
         );
-console.log(data)
+        console.log(data);
         if (data.success) {
           setIsLoggedIn(true);
           setFormSuccess("OTP sent to your email");
@@ -159,6 +173,7 @@ console.log(data)
               phone,
               password,
               role,
+              location,
               servicesOffered,
               experiencePerService,
               availability: availabilityRef.current,
@@ -305,29 +320,6 @@ console.log(data)
             </div>
           )}
 
-          {/* Location */}
-          {state === "Sign Up" && (
-            <div
-              className="flex items-center gap-3 px-5 py-2.5 rounded-full focus:outline-none focus-within:ring-2"
-              style={{
-                background: "var(--ternary)",
-              }}
-            >
-              <i
-                className="fas fa-location text-md"
-                style={{ color: "var(--white)" }}
-              ></i>
-              <input
-                type="text"
-                placeholder="Location"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                className="bg-transparent outline-none w-full"
-                style={{ color: "var(--white)" }}
-              />
-            </div>
-          )}
-
           {/* Password */}
           <div
             className="flex items-center gap-3 px-5 py-2.5 rounded-full focus:outline-none focus-within:ring-2"
@@ -366,7 +358,7 @@ console.log(data)
               }}
             >
               <i
-                className="fas fa-user-tag text-md"
+                className="fas fa-user-tag text-sm"
                 style={{ color: "var(--white)" }}
               ></i>
               <select
@@ -382,6 +374,153 @@ console.log(data)
                 <option value="provider">Provider</option>
                 <option value="admin">Admin</option>
               </select>
+            </div>
+          )}
+
+          {/* Location */}
+          {state === "Sign Up" && (
+            <div className="flex flex-col gap-4">
+              {/* Country Dropdown */}
+              <div
+                className="flex items-center gap-3 px-5 py-2.5 rounded-full focus:outline-none focus-within:ring-2"
+                style={{ background: "var(--ternary)", color: "var(--white)" }}
+              >
+                <i className="fas fa-flag text-md" />
+                <select
+                  value={selectedCountry?.isoCode || ""}
+                  onChange={(e) => {
+                    const country = Country.getCountryByCode(e.target.value);
+                    setSelectedCountry(country);
+                    setSelectedState(null);
+                    setSelectedCity(null);
+                  }}
+                  className="w-full bg-transparent outline-none cursor-pointer"
+                  style={{
+                    color: "var(--white)",
+                    background: "var(--ternary)",
+                  }}
+                >
+                  <option value="">-- Select Country --</option>
+                  {Country.getAllCountries().map((c) => (
+                    <option key={c.isoCode} value={c.isoCode}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* State Dropdown */}
+              {selectedCountry && (
+                <div
+                  className="flex items-center gap-3 px-5 py-2.5 rounded-full focus:outline-none focus-within:ring-2"
+                  style={{
+                    background: "var(--ternary)",
+                    color: "var(--white)",
+                  }}
+                >
+                  <i className="fas fa-map-marker-alt text-md" />
+                  <select
+                    value={selectedState?.isoCode || ""}
+                    onChange={(e) => {
+                      const allStates = State.getStatesOfCountry(
+                        selectedCountry.isoCode
+                      );
+                      const state = allStates.find(
+                        (s) => s.isoCode === e.target.value
+                      );
+                      setSelectedState(state);
+                      setSelectedCity(null);
+                    }}
+                    className="w-full bg-transparent outline-none cursor-pointer"
+                    style={{
+                      color: "var(--white)",
+                      background: "var(--ternary)",
+                    }}
+                  >
+                    <option value="">-- Select State --</option>
+                    {State.getStatesOfCountry(selectedCountry.isoCode).map(
+                      (s) => (
+                        <option key={s.isoCode} value={s.isoCode}>
+                          {s.name}
+                        </option>
+                      )
+                    )}
+                  </select>
+                </div>
+              )}
+
+              {/* City Dropdown */}
+              {selectedState && (
+                <div
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-full focus:outline-none focus-within:ring-2"
+                  style={{
+                    background: "var(--ternary)",
+                    color: "var(--white)",
+                  }}
+                >
+                  <i className="fas fa-city text-sm" />
+                  <select
+                    value={selectedCity?.name || ""}
+                    onChange={(e) => {
+                      const allCities = City.getCitiesOfState(
+                        selectedCountry.isoCode,
+                        selectedState.isoCode
+                      );
+                      const city = allCities.find(
+                        (c) => c.name === e.target.value
+                      );
+                      setSelectedCity(city);
+                    }}
+                    className="w-full bg-transparent outline-none cursor-pointer"
+                    style={{
+                      color: "var(--white)",
+                      background: "var(--ternary)",
+                    }}
+                  >
+                    <option value="">-- Select City --</option>
+                    {City.getCitiesOfState(
+                      selectedCountry.isoCode,
+                      selectedState.isoCode
+                    ).map((c) => (
+                      <option key={c.name} value={c.name}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Area Text */}
+              <div
+                className="flex items-center gap-3 px-5 py-2.5 rounded-full focus:outline-none focus-within:ring-2"
+                style={{ background: "var(--ternary)", color: "var(--white)" }}
+              >
+                <i className="fas fa-location-arrow text-lg" />
+                <input
+                  type="text"
+                  placeholder="Area / Locality"
+                  value={area}
+                  onChange={(e) => setArea(e.target.value)}
+                  className="bg-transparent outline-none w-full"
+                  style={{ color: "var(--white)" }}
+                />
+              </div>
+
+              {/* PinCode Text */}
+              <div
+                className="flex items-center gap-3 px-5 py-2.5 rounded-full focus:outline-none focus-within:ring-2"
+                style={{ background: "var(--ternary)", color: "var(--white)" }}
+              >
+                <i className="fas fa-mail-bulk text-sm" />
+                <input
+                  type="text"
+                  placeholder="Pin Code"
+                  value={pinCode}
+                  onChange={(e) => setPinCode(e.target.value)}
+                  className="bg-transparent outline-none w-full"
+                  style={{ color: "var(--white)" }}
+                />
+              </div>
             </div>
           )}
 
@@ -530,53 +669,53 @@ console.log(data)
                   </div>
                 )}
               </div>
-
-              {/* Profile Picture */}
-              <div
-                className="flex items-center justify-between gap-3 px-5 py-2.5 rounded-full focus:outline-none focus-within:ring-2"
-                style={{
-                  background: "var(--ternary)",
-                  color: "var(--white)",
-                }}
-              >
-                <i
-                  className="fas fa-image text-md"
-                  style={{ color: "var(--white)" }}
-                ></i>
-
-                {/* Actual Upload Button */}
-                <label className="relative inline-block">
-                  <span className="text-white text-xs bg-[var(--primary-light)] px-3 py-1 rounded-xl cursor-pointer hover:bg-[var(--accent)] transition-all">
-                    Browse
-                  </span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setAvatar(e.target.files[0])}
-                    className="absolute inset-0 opacity-0 pointer-events-none"
-                  />
-                </label>
-
-                {/* File name & remove icon */}
-                <div className="flex items-center gap-2 w-full justify-between">
-                  <span className="text-xs truncate" title={avatar?.name}>
-                    {avatar ? avatar.name : "Upload Profile Picture"}
-                  </span>
-                  {avatar && (
-                    <button
-                      type="button"
-                      onClick={() => setAvatar(null)}
-                      className="text-red-300 hover:text-red-500 text-sm"
-                      title="Remove"
-                    >
-                      &times;
-                    </button>
-                  )}
-                </div>
-              </div>
             </>
           )}
+          {/* Profile Picture */}
+          {state === "Sign Up" && (
+            <div
+              className="flex items-center justify-between gap-3 px-5 py-2.5 rounded-full focus:outline-none focus-within:ring-2"
+              style={{
+                background: "var(--ternary)",
+                color: "var(--white)",
+              }}
+            >
+              <i
+                className="fas fa-image text-md"
+                style={{ color: "var(--white)" }}
+              ></i>
 
+              {/* Actual Upload Button */}
+              <label className="relative inline-block">
+                <span className="text-white text-xs bg-[var(--primary-light)] px-3 py-1 rounded-xl cursor-pointer hover:bg-[var(--accent)] transition-all">
+                  Browse
+                </span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setAvatar(e.target.files[0])}
+                  className="absolute inset-0 opacity-0 pointer-events-none"
+                />
+              </label>
+
+              {/* File name & remove icon */}
+              <div className="flex items-center gap-2 w-full justify-between">
+                <span className="text-xs truncate" title={avatar?.name}>
+                  {avatar ? avatar.name : "Upload Profile Picture"}
+                </span>
+                {avatar && (
+                  <button
+                    type="button"
+                    onClick={() => setAvatar(null)}
+                    className="text-red-300 hover:text-red-500 text-sm"
+                    title="Remove"
+                  >
+                    &times;
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
           {state === "Login" && (
             <p
               onClick={() => navigate("/reset-password")}
@@ -604,7 +743,7 @@ console.log(data)
           )}
 
           <button
-          type="submit"
+            type="submit"
             className="w-full py-2.5 rounded-full font-medium mt-2"
             style={{
               background:
