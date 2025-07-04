@@ -35,7 +35,7 @@ export default function BookingForm({
       // Fetch booked slots
       axios
         .get(
-          `/api/bookings/booked-slots?providerId=${provider._id}&date=${date}`
+          `http://localhost:5000/api/bookings/booked-slots?providerId=${provider._id}&date=${date}`
         )
         .then((res) => setBookedSlots(res.data.bookedSlots || []))
         .catch(() => setBookedSlots([]));
@@ -153,7 +153,6 @@ export default function BookingForm({
       setLoading(false);
     }
   };
-  console.log("showCalendar:", showCalendar);
 
   return (
     <div
