@@ -22,7 +22,12 @@ body {
     "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
 }
 
-h1,h2,h3,h4,h5,h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: Verdana, sans-serif;
 }
 
@@ -47,4 +52,34 @@ input:-webkit-autofill {
 
 .rotate-y-180 {
   transform: rotateY(180deg);
+}
+
+/* For booked slots on full calendar */
+.fc-event.booked-slot {
+  font-size: 0.7rem !important;
+  cursor: not-allowed !important;
+  pointer-events: none;
+  border-radius: 2px;
+}
+
+/* Responsive calendar header */
+.fc .fc-toolbar-title {
+  font-size: 1rem; /* smaller title on mobile */
+}
+
+.fc .fc-button {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  height: auto;
+}
+
+@media (min-width: 640px) {
+  .fc .fc-button {
+    font-size: 0.875rem;
+    padding: 0.375rem 0.75rem;
+  }
+
+  .fc .fc-toolbar-title {
+    font-size: 1.125rem;
+  }
 }
