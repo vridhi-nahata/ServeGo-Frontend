@@ -112,28 +112,40 @@ export default function ProviderCard({
 
         <div className="flex flex-col gap-1 text-sm text-[var(--secondary)] mb-4 ">
           <span>
-            Experience:{" "}
-            <b>
-              {typeof provider.experiencePerService?.[serviceName] === "number"
-                ? `${provider.experiencePerService[serviceName]} ${
-                    provider.experiencePerService[serviceName] === 1
-                      ? "year"
-                      : "years"
-                  }`
-                : "N/A"}
-            </b>
+            <strong>Experience : </strong>
+            {typeof provider.experiencePerService?.[serviceName] === "number"
+              ? `${provider.experiencePerService[serviceName]} ${
+                  provider.experiencePerService[serviceName] === 1
+                    ? "year"
+                    : "years"
+                }`
+              : "N/A"}
           </span>
 
           {/* Availability */}
           <span>
-            Availability:{" "}
-            <b>
-              {Array.isArray(provider.availability) &&
-              provider.availability.length > 0
-                ? provider.availability.map((day) => `${day.day}`).join(", ")
-                : "N/A"}
-            </b>
+            <strong>Availability : </strong>
+
+            {Array.isArray(provider.availability) &&
+            provider.availability.length > 0
+              ? provider.availability.map((day) => `${day.day}`).join(", ")
+              : "N/A"}
           </span>
+          {/* Location */}
+          <p>
+            <strong>Location :</strong>{" "}
+            {provider.location
+              ? [
+                  provider.location.area,
+                  provider.location.city,
+                  provider.location.state,
+                  provider.location.country,
+                  provider.location.pinCode,
+                ]
+                  .filter(Boolean) // Remove any empty parts
+                  .join(", ")
+              : "Not specified"}
+          </p>
         </div>
 
         {/* Quick action buttons */}
