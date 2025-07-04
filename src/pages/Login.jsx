@@ -118,6 +118,16 @@ function Login() {
           setFormError("Please select at least one service");
           return;
         }
+        if (
+          !selectedCountry ||
+          !selectedState ||
+          !selectedCity ||
+          !area.trim() ||
+          !pinCode.trim()
+        ) {
+          setFormError("Missing required fields");
+          return;
+        }
 
         let uploadedDocUrls = [];
         let avatarUrl = "";
