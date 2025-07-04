@@ -97,8 +97,6 @@ export default function ProviderAvailabilityCalendar({
       const res = await axios.get(
         `http://localhost:5000/api/bookings/booked-slots?providerId=${provider._id}&date=${dateStr}`
       );
-      console.log("Booked slots from backend:", res.data.bookedSlots);
-
       setBookedSlots(res.data.bookedSlots || []);
     } catch (error) {
       setBookedSlots([]);
@@ -120,22 +118,27 @@ export default function ProviderAvailabilityCalendar({
             backgroundColor: "#a7f3d0",
             borderColor: "#22c55e",
             display: "background",
-            classNames: ['available-slot']
+            classNames: ["available-slot"],
           })),
-          // Booked slots as regular events (not background) so they show on top
+          ...(getUnavailableRanges(availableRanges) || []).map((slot, idx) => ({
+            id: `unavail-${idx}`,
+            start: `${selectedDate}T${slot.from}:00`,
+            end: `${selectedDate}T${slot.to}:00`,
+            backgroundColor: "#fecaca",
+            borderColor: "#ef4444",
+            display: "background",
+          })),
           ...(bookedSlots || []).map((slot, idx) => ({
             id: `booked-${idx}`,
-            title: "BOOKED",
             start: `${selectedDate}T${slot.from}:00`,
             end: `${selectedDate}T${slot.to}:00`,
             backgroundColor: "#ef4444",
             borderColor: "#dc2626",
             textColor: "white",
-            classNames: ['booked-slot']
+            classNames: ["booked-slot"],
           })),
         ]
       : events;
-
 
   // Handle slot selection (drag in green area)
   const handleSelect = (info) => {
@@ -247,8 +250,8 @@ export default function ProviderAvailabilityCalendar({
         >
           ✕
         </button>
-        
-        <h3 className="text-lg font-semibold mb-4 text-center">
+
+        <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-center">
           {provider.name}'s Availability Calendar
         </h3>
 
@@ -299,9 +302,6 @@ export default function ProviderAvailabilityCalendar({
           slotMaxTime="24:00:00"
           height="500px"
           scrollTime="08:00:00"
-//           validRange={{
-//     start: dayjs().format("YYYY-MM-DD"), // disables all days before today
-//   }}
           nowIndicator={true}
           selectMirror={true}
           selectOverlap={(event) => {
