@@ -1,14 +1,19 @@
+// changes
 import React, { useState, useContext, useEffect, useRef } from "react";
 import { SERVICES } from "../constants/services";
+console.log("SERVICES after import", SERVICES);
+
 import { useNavigate } from "react-router-dom";
 import { AppContext } from "../context/AppContext";
 import axios from "axios";
 import Select from "react-select";
 import AvailabilitySelector from "../components/AvailabilitySelector";
 import { Country, State, City } from "country-state-city";
+const flatServices = SERVICES.flat();
 
 function Login() {
   const navigate = useNavigate();
+
   const { backendUrl, setIsLoggedIn, setUserData } = useContext(AppContext);
 
   const [state, setState] = useState("Login"); // "Login" or "Sign Up"
@@ -30,12 +35,59 @@ function Login() {
   const [avatar, setAvatar] = useState(null);
   const [formError, setFormError] = useState("");
   const [formSuccess, setFormSuccess] = useState("");
+  const [serviceBundles, setServiceBundles] = useState([]);
+
+  const [newBundle, setNewBundle] = useState({
+    category: null,
+    subcategory: null,
+    services: [],
+  });
+
   const availabilityRef = useRef([]);
 
-  const serviceOptions = SERVICES.map((service) => ({
-    label: service.name,
-    value: service.name,
-  }));
+  console.log("SERVICES:", SERVICES);
+
+  const handleAddBundle = () => {
+    if (
+      !newBundle.category ||
+      !newBundle.subcategory ||
+      newBundle.services.length === 0
+    ) {
+      setFormError(
+        "Please select category, subcategory, and at least one service."
+      );
+      return;
+    }
+    setServiceBundles((prev) => [...prev, { ...newBundle }]);
+    // Reset new bundle inputs
+    setNewBundle({
+      category: null,
+      subcategory: null,
+      services: [],
+    });
+  };
+  const subcategoryOptionsFor = (category) =>
+    Array.from(
+      new Set(
+        flatServices
+          .filter((s) => s.category === category)
+          .map((s) => s.subcategory)
+      )
+    ).map((sc) => ({ label: sc, value: sc }));
+
+  const serviceOptionsFor = (category, subcategory) =>
+    flatServices
+      .filter((s) => s.category === category && s.subcategory === subcategory)
+      .map((s) => ({ label: s.name, value: s.name }));
+
+  // Flatten all nested arrays
+  const flatServices = SERVICES.flat(Infinity).flatMap((subcategory) =>
+    (subcategory.services ?? []).map((service) => ({
+      category: subcategory.category,
+      subcategory: subcategory.subcategory,
+      name: service.name,
+    }))
+  );
 
   // Upload files to Cloudinary
   const uploadFilesToCloudinary = async (files) => {
@@ -114,7 +166,7 @@ function Login() {
     try {
       if (state === "Sign Up") {
         // Atleast 1 service
-        if (role === "provider" && servicesOffered.length === 0) {
+        if (role === "provider" && serviceBundles.length === 0) {
           setFormError("Please select at least one service");
           return;
         }
@@ -159,7 +211,7 @@ function Login() {
             role,
             location,
             ...(role === "provider" && {
-              servicesOffered,
+              servicesOffered: serviceBundles,
               experiencePerService,
               availability: availabilityRef.current,
               serviceDocs: uploadedDocUrls, // Use uploaded URLs
@@ -231,6 +283,10 @@ function Login() {
       );
     }
   };
+  console.log("servicesOffered state:", servicesOffered);
+  const categoryOptions = Array.from(
+    new Set(flatServices.map((s) => s.category))
+  ).map((c) => ({ label: c, value: c }));
 
   return (
     <div
@@ -550,29 +606,106 @@ function Login() {
                   <label className="block text-sm">Services Offered</label>
                 </div>
 
+                {/* Category */}
+
                 <Select
-                  isMulti
-                  options={serviceOptions}
-                  value={serviceOptions.filter((opt) =>
-                    servicesOffered.includes(opt.value)
+                  placeholder="Select Category"
+                  options={categoryOptions}
+                  value={categoryOptions.find(
+                    (opt) => opt.value === newBundle.category
                   )}
-                  onChange={(selected) => {
-                    const selectedValues = selected.map((opt) => opt.value);
-                    setServicesOffered(selectedValues);
-                    setExperiencePerService((prev) => {
-                      const updated = {};
-                      selectedValues.forEach((service) => {
-                        updated[service] = prev[service] || "";
-                      });
-                      return updated;
+                  onChange={(opt) => {
+                    setNewBundle({
+                      category: opt.value,
+                      subcategory: null,
+                      services: [],
                     });
                   }}
-                  className="text-black text-sm"
-                  placeholder="Select or search services"
+                  className="text-black text-sm mb-2"
                 />
+
+                {/* Subcategory */}
+
+                {newBundle.category && (
+                  <Select
+                    placeholder="Select Subcategory"
+                    options={subcategoryOptionsFor(newBundle.category)}
+                    value={subcategoryOptionsFor(newBundle.category).find(
+                      (opt) => opt.value === newBundle.subcategory
+                    )}
+                    onChange={(opt) => {
+                      setNewBundle((prev) => ({
+                        ...prev,
+                        subcategory: opt.value,
+                        services: [],
+                      }));
+                    }}
+                    className="text-black text-sm mb-2"
+                  />
+                )}
+
+                {/* Services */}
+
+                {newBundle.subcategory && (
+                  <Select
+                    placeholder="Select Services"
+                    options={serviceOptionsFor(
+                      newBundle.category,
+                      newBundle.subcategory
+                    )}
+                    isMulti
+                    value={serviceOptionsFor(
+                      newBundle.category,
+                      newBundle.subcategory
+                    ).filter((opt) => newBundle.services.includes(opt.value))}
+                    onChange={(selected) => {
+                      const selectedValues = selected.map((opt) => opt.value);
+                      setNewBundle((prev) => ({
+                        ...prev,
+                        services: selectedValues,
+                      }));
+                    }}
+                    className="text-black text-sm"
+                  />
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleAddBundle}
+                  className="mt-2 text-xs bg-[var(--primary-light)] px-3 py-1 rounded-xl cursor-pointer hover:bg-[var(--accent)] transition-all"
+                >
+                  Add service to bundle
+                </button>
+
+                {serviceBundles.length > 0 && (
+                  <div className="mt-2 space-y-2">
+                    {serviceBundles.map((b, i) => (
+                      <div
+                        key={i}
+                        className="flex flex-wrap gap-2 bg-[var(--ternary)] p-2 rounded-lg text-white text-xs justify-between items-center"
+                      >
+                        <span>
+                          <strong>{b.category}</strong> / {b.subcategory}:{" "}
+                          {b.services.join(", ")}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setServiceBundles((prev) =>
+                              prev.filter((_, idx) => idx !== i)
+                            )
+                          }
+                          className="text-red-300 hover:text-red-500"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              {/* Experience Per Service */}
+              {/* Experience Per Service
               {servicesOffered.map((service) => (
                 <div
                   key={service}
@@ -600,7 +733,7 @@ function Login() {
                     style={{ color: "var(--white)" }}
                   />
                 </div>
-              ))}
+              ))} */}
 
               {/* Availability */}
               <div className="bg-[var(--ternary)] p-3 rounded-xl text-white">
