@@ -70,6 +70,7 @@ function Login() {
       services: [],
     });
   };
+
   const subcategoryOptionsFor = (category) =>
     Array.from(
       new Set(
@@ -330,14 +331,6 @@ function Login() {
         >
           {state === "Sign Up" ? "Create Account" : "Login"}
         </h2>
-        <p
-          className="text-center text-sm mb-2"
-          style={{ color: "var(--primary-light)" }}
-        >
-          {state === "Sign Up"
-            ? "Create your account"
-            : "Login to your account"}
-        </p>
 
         <form onSubmit={handleSubmit} className="w-full space-y-4">
           {/* Name */}

@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { SERVICES } from "../constants/services";
 import { motion } from "framer-motion";
+import { Modal } from "antd";
+
 import {
   FaSearch,
   FaUserShield,
@@ -18,6 +20,9 @@ import {
   FaPhoneAlt,
   FaGift,
 } from "react-icons/fa";
+
+
+const CATEGORY_NAMES = ["Home Services", "Cleaning & Sanitation", "Beauty & Personal Care","Wellness & Lifestyle","Events & Photography", "Tutoring & Training","Automobile","Business & Professional","Renovation & Construction","Child & Elder Care","Pet Care","Packers & Movers","Home Help & Personal Assistance","Security & Safety","Real Estate & Property","Tailoring & Fashion"];
 
 const WHY_CHOOSE = [
   {
@@ -95,13 +100,38 @@ const WHY_CHOOSE = [
 export default function Home() {
   const navigate = useNavigate();
   const [page, setPage] = useState(0);
+   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedSubcategory, setSelectedSubcategory] = useState(null);
 
   // pagination logic
   const SERVICES_PER_PAGE = 6;
+//   const allServices = SERVICES.flatMap((cat) =>
+//   cat.subcategories.flatMap((sub) =>
+//     sub.services.map((service) => ({
+//       ...service,
+//       category: cat.category,
+//       subcategory: sub.subcategory,
+//     }))
+//   )
+// );
 
-  const totalPages = Math.ceil(SERVICES.length / SERVICES_PER_PAGE);
-  const start = page * SERVICES_PER_PAGE;
-  const visibleServices = SERVICES.slice(start, start + SERVICES_PER_PAGE);
+// Flatten groups into one array of subcategories
+const flatSubcategories = SERVICES.flatMap(group => group);
+
+// Flatten all services
+const allServices = flatSubcategories.flatMap(subcat => subcat.services);
+
+const totalPages = Math.ceil(allServices.length / SERVICES_PER_PAGE);
+const start = page * SERVICES_PER_PAGE;
+const visibleServices = allServices.slice(start, start + SERVICES_PER_PAGE);
+
+
+  // const totalPages = Math.ceil(SERVICES.length / SERVICES_PER_PAGE);
+  // const start = page * SERVICES_PER_PAGE;
+  // const visibleServices = SERVICES.slice(start, start + SERVICES_PER_PAGE);
+
+  console.log("SERVICES", SERVICES);
+
 
   return (
     <div className="min-h-screen">
@@ -175,7 +205,7 @@ export default function Home() {
       </section>
 
       {/* Popular services */}
-      <section className="py-20 px-6 bg-gradient-to-br from-[var(--primary-light)] to-[var(--white)] text-center">
+      {/* <section className="py-20 px-6 bg-gradient-to-br from-[var(--primary-light)] to-[var(--white)] text-center">
         <div className="relative mb-8">
           <h2
             className="text-3xl sm:text-4xl font-bold text-center"
@@ -239,7 +269,118 @@ export default function Home() {
             Next
           </button>
         </div>
-      </section>
+
+      </section> */}
+
+        {/* Explore Categories */}
+      <section className="py-20 px-6 bg-gradient-to-br from-[var(--primary-light)] to-[var(--white)] text-center">
+        <h2 className="text-3xl sm:text-4xl font-bold text-center mb-8" style={{ color: "var(--primary)" }}>
+          Explore Categories
+        </h2>
+        <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto">
+          {/* {SERVICES.map((cat) => (
+            <div
+              key={cat.category}
+              className="bg-[var(--white)] rounded-2xl shadow-lg hover:shadow-2xl transition cursor-pointer overflow-hidden group border-t-4 border-[var(--primary)]"
+              onClick={() => setSelectedCategory(cat)}
+            >
+              <div className="p-8">
+                <h3 className="font-bold text-2xl mb-2 text-[var(--primary)]">{cat.category}</h3>
+                <div className="text-gray-500 text-sm">{cat.subcategories.length} subcategories</div>
+              </div>
+            </div>
+          ))} */}
+          {SERVICES.map((subcatArray, index) => (
+  <div
+    key={index}
+    className="bg-[var(--white)] rounded-2xl shadow-lg hover:shadow-2xl transition cursor-pointer overflow-hidden group border-t-4 border-[var(--primary)]"
+    onClick={() => setSelectedCategory({ category:CATEGORY_NAMES[index]
+, subcategories: subcatArray })}
+  >
+    <div className="p-8">
+<h3 className="font-bold text-2xl mb-2 text-[var(--primary)]">
+  {CATEGORY_NAMES[index]
+}
+</h3>
+      <div className="text-gray-500 text-sm">{subcatArray.length} subcategories</div>
+    </div>
+  </div>
+))}
+
+{/* {SERVICES.map((subcatArray, index) => (
+  <div
+    key={index}
+    className="bg-[var(--white)] rounded-2xl shadow-lg hover:shadow-2xl transition cursor-pointer overflow-hidden group border-t-4 border-[var(--primary)]"
+    onClick={() =>
+      setSelectedCategory({
+        category: `Category ${index + 1}`,
+        subcategories: subcatArray
+      })
+    }
+  >
+    <div className="p-8">
+      <h3 className="font-bold text-2xl mb-2 text-[var(--primary)]">
+        {`Category ${index + 1}`}
+      </h3>
+      <div className="text-gray-500 text-sm">
+        {subcatArray.length} subcategories
+      </div>
+    </div>
+  </div>
+))} */}
+
+
+        </div>
+        {/* Category Modal */}
+        <Modal
+          open={!!selectedCategory}
+          onCancel={() => { setSelectedCategory(null); setSelectedSubcategory(null); }}
+          footer={null}
+          title={selectedCategory?.category}
+        >
+          {!selectedSubcategory ? (
+            <div>
+              <h4 className="font-semibold mb-4">Subcategories</h4>
+              <ul>
+                {selectedCategory?.subcategories.map((sub) => (
+                  <li
+                    key={sub.subcategory}
+                    className="cursor-pointer hover:text-[var(--primary)] py-2"
+                    onClick={() => setSelectedSubcategory(sub)}
+                  >
+                    {sub.subcategory}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <div>
+              <button
+                className="mb-3 text-xs text-[var(--primary)] underline"
+                onClick={() => setSelectedSubcategory(null)}
+              >
+                &larr; Back to Subcategories
+              </button>
+              <h4 className="font-semibold mb-4">{selectedSubcategory.subcategory} Services</h4>
+              <ul>
+                {selectedSubcategory.services.map((service) => (
+                  <li
+                    key={service.name}
+                    className="cursor-pointer hover:text-[var(--primary)] py-2"
+                    onClick={() => {
+                      setSelectedCategory(null);
+                      setSelectedSubcategory(null);
+                      navigate(`/services/${encodeURIComponent(service.name)}`);
+                    }}
+                  >
+                    {service.name}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </Modal>
+</section>
 
       {/* How It Works */}
       <section className="py-20 px-6" style={{ background: "var(--white)" }}>

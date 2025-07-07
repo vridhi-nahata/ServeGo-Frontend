@@ -112,7 +112,8 @@ export const SERVICES = [
   //   image: assets.lifting,
   // },
 
-  [
+// Home Services
+[
   {
     "category": "Home Services",
     "subcategory": "Carpentry & Woodwork",
@@ -217,7 +218,7 @@ export const SERVICES = [
   },
   {
     "category": "Home Services",
-    "subcategory": "Painting & Décor",
+    "subcategory": "Painting & Decor",
     "services": [
       {
         "name": "Interior Painting",
@@ -307,7 +308,7 @@ export const SERVICES = [
   }
 ],
 
-
+// Cleaning & Sanitation
 [
   {
     "category": "Cleaning & Sanitation",
@@ -419,7 +420,7 @@ export const SERVICES = [
   },
   {
     "category": "Cleaning & Sanitation",
-    "subcategory": "Sanitization Services",
+    "subcategory": "Sanitization",
     "services": [
       {
         "name": "Home Disinfection",
@@ -434,7 +435,11 @@ export const SERVICES = [
         "description": "Professional sanitization of workspaces to ensure a safe environment for employees and visitors."
       }
     ]
-  },
+  }
+],
+
+// Beauty & Personal Care
+[
   {
     "category": "Beauty & Personal Care",
     "subcategory": "Women's Salon & Grooming",
@@ -518,7 +523,11 @@ export const SERVICES = [
         "description": "Makeup and hairstyling for parties, photoshoots, and special occasions."
       }
     ]
-  },
+  }
+],
+
+// Wellness & Lifestyle
+[
   {
     "category": "Wellness & Lifestyle",
     "subcategory": "Fitness & Holistic Health",
@@ -554,7 +563,11 @@ export const SERVICES = [
         "description": "Relaxing massage with essential oils to soothe body and mind."
       }
     ]
-  },
+  }
+],
+
+// Events & Photography
+[
   {
     "category": "Events & Photography",
     "subcategory": "Event Planning & Management",
@@ -593,7 +606,7 @@ export const SERVICES = [
   }
 ],
 
-
+// Tutoring & Training
 [
   {
     "category": "Tutoring & Training",
@@ -667,8 +680,12 @@ export const SERVICES = [
       }
     ]
   },
+],
+
+// Automobile
+[
   {
-    "category": "Automobile Services",
+    "category": "Automobile",
     "subcategory": "Maintenance & Repairs",
     "services": [
       {
@@ -692,7 +709,7 @@ export const SERVICES = [
     ]
   },
   {
-    "category": "Automobile Services",
+    "category": "Automobile",
     "subcategory": "Cleaning & Detailing",
     "services": [
       {
@@ -716,7 +733,7 @@ export const SERVICES = [
     ]
   },
   {
-    "category": "Automobile Services",
+    "category": "Automobile",
     "subcategory": "Transport & Rentals",
     "services": [
       {
@@ -733,8 +750,12 @@ export const SERVICES = [
       }
     ]
   },
+],
+
+// Business & Professional
+[
   {
-    "category": "Business & Professional Services",
+    "category": "Business & Professional",
     "subcategory": "Financial & Legal",
     "services": [
       {
@@ -764,11 +785,11 @@ export const SERVICES = [
     ]
   },
   {
-    "category": "Business & Professional Services",
+    "category": "Business & Professional",
     "subcategory": "Digital & Marketing",
     "services": [
       {
-        "name": "Digital Marketing Services",
+        "name": "Digital Marketing",
         "price": "₹5000",
         "image": "/images/services/digital-marketing.jpg",
         "description": "SEO, social media marketing, and online advertising solutions."
@@ -794,7 +815,7 @@ export const SERVICES = [
     ]
   },
   {
-    "category": "Business & Professional Services",
+    "category": "Business & Professional",
     "subcategory": "Administrative Support",
     "services": [
       {
@@ -805,6 +826,10 @@ export const SERVICES = [
       }
     ]
   },
+],
+
+// Renovation & Construction
+[
   {
     "category": "Renovation & Construction",
     "subcategory": "Structural & Civil Work",
@@ -859,6 +884,10 @@ export const SERVICES = [
       }
     ]
   },
+],
+
+// Child & Elder Care
+[
   {
     "category": "Child & Elder Care",
     "subcategory": "Childcare",
@@ -907,9 +936,13 @@ export const SERVICES = [
       }
     ]
   },
+],
+
+// Pet Care
+[
   {
     "category": "Pet Care",
-    "subcategory": "Pet Services",
+    "subcategory": "Pet",
     "services": [
       {
         "name": "Pet Grooming",
@@ -945,11 +978,11 @@ export const SERVICES = [
   }
 ],
 
-
+// Packers & Movers
 [
   {
     "category": "Packers & Movers",
-    "subcategory": "Relocation Services",
+    "subcategory": "Relocation",
     "services": [
       {
         "name": "Home Relocation",
@@ -982,13 +1015,17 @@ export const SERVICES = [
     "subcategory": "Storage & Logistics",
     "services": [
       {
-        "name": "Storage Services",
+        "name": "Storage",
         "price": "₹3000 per month",
         "image": "/images/services/storage.jpg",
         "description": "Short-term and long-term storage solutions for household goods with secure and climate-controlled facilities."
       }
     ]
   },
+],
+
+// Home Help & Personal Assistance
+[
   {
     "category": "Home Help & Personal Assistance",
     "subcategory": "Domestic Help",
@@ -1009,7 +1046,7 @@ export const SERVICES = [
   },
   {
     "category": "Home Help & Personal Assistance",
-    "subcategory": "Convenience Services",
+    "subcategory": "Convenience",
     "services": [
       {
         "name": "Laundry Pickup & Delivery",
@@ -1043,9 +1080,13 @@ export const SERVICES = [
       }
     ]
   },
+],
+
+// Security & Safety
+[
   {
     "category": "Security & Safety",
-    "subcategory": "Security Services",
+    "subcategory": "Security",
     "services": [
       {
         "name": "Security Guard Services",
@@ -1060,19 +1101,23 @@ export const SERVICES = [
         "description": "Installation of fire safety equipment including extinguishers and alarms."
       },
       {
-        "name": "Bouncer Services",
+        "name": "Bouncer",
         "price": "₹2000 per event",
         "image": "/images/services/bouncer.jpg",
         "description": "Professional bouncers for events, parties, and special occasions."
       }
     ]
   },
+],
+
+// Real Estate & Property
+[
   {
     "category": "Real Estate & Property",
-    "subcategory": "Property Services",
+    "subcategory": "Property",
     "services": [
       {
-        "name": "Property Agency Services",
+        "name": "Property Agency",
         "price": "₹5000",
         "image": "/images/services/property-agency.jpg",
         "description": "Assistance in buying, selling, and renting properties through verified agents."
@@ -1091,9 +1136,13 @@ export const SERVICES = [
       }
     ]
   },
+],
+
+// Tailoring & Fashion
+[
   {
     "category": "Tailoring & Fashion",
-    "subcategory": "Tailoring Services",
+    "subcategory": "Tailoring",
     "services": [
       {
         "name": "Tailoring at Home",
@@ -1114,7 +1163,7 @@ export const SERVICES = [
         "description": "Design and creation of unique outfits tailored to your style."
       },
       {
-        "name": "Alteration Services",
+        "name": "Alteration",
         "price": "₹300 per garment",
         "image": "/images/services/alteration.jpg",
         "description": "Precise alterations and adjustments to ensure perfect fit."

@@ -153,6 +153,20 @@ export default function ProviderProfile() {
             <strong>Services Offered:</strong>{" "}
             {provider.servicesOffered?.join(", ")}
           </p> */}
+
+          {provider.servicesOffered && provider.servicesOffered.length > 0 && (
+  <div className="sm:col-span-2 mt-4">
+    <strong>Services Offered:</strong>
+    <ul className="list-disc pl-6 mt-1 text-[var(--secondary)]">
+      {provider.servicesOffered.map((bundle, i) => (
+        <li key={i}>
+          <span className="font-semibold">{bundle.category} / {bundle.subcategory}:</span>{" "}
+          {bundle.services.join(", ")}
+        </li>
+      ))}
+    </ul>
+  </div>
+)}
           {provider.experiencePerService && (
             <div className="sm:col-span-2">
               <strong>Experience per service offered:</strong>
