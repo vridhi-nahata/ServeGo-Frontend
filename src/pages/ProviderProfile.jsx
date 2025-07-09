@@ -149,43 +149,55 @@ export default function ProviderProfile() {
               : "Not specified"}
           </p>
 
-          {/* <p>
-            <strong>Services Offered:</strong>{" "}
-            {provider.servicesOffered?.join(", ")}
-          </p> */}
-
-          {provider.servicesOffered && provider.servicesOffered.length > 0 && (
-  <div className="sm:col-span-2 mt-4">
-    <strong>Services Offered:</strong>
-    <ul className="list-disc pl-6 mt-1 text-[var(--secondary)]">
-      {provider.servicesOffered.map((bundle, i) => (
-        <li key={i}>
-          <span className="font-semibold">{bundle.category} / {bundle.subcategory}:</span>{" "}
-          {bundle.services.join(", ")}
-        </li>
-      ))}
-    </ul>
-  </div>
-)}
-          {provider.experiencePerService && (
-            <div className="sm:col-span-2">
-              <strong>Experience per service offered:</strong>
-              <ul className="list-none pl-4 mt-1 text-[var(--secondary)]">
-                {Object.entries(provider.experiencePerService).map(
-                  ([service, years]) => (
-                    <li key={service}>
-                      {service}:{" "}
-                      <strong>
-                        {typeof years === "number"
-                          ? `${years} ${years === 1 ? "year" : "years"}`
-                          : "N/A"}
-                      </strong>
-                    </li>
-                  )
-                )}
-              </ul>
-            </div>
-          )}
+         {/* Services Offered */}
+          <div className="sm:col-span-2 mt-4">
+            <strong>Services Offered With Experience:</strong>
+            <ul className="list-disc pl-6 mt-1 text-[var(--secondary)] space-y-2">
+              {Object.entries(
+                provider.servicesOffered?.reduce((acc, bundle) => {
+                  const category = bundle.category;
+                  const subcategory = bundle.subcategory;
+                  if (!acc[category]) {
+                    acc[category] = {};
+                  }
+                  if (!acc[category][subcategory]) {
+                    acc[category][subcategory] = new Set();
+                  }
+                  bundle.services.forEach((service) =>
+                    acc[category][subcategory].add(service)
+                  );
+                  return acc;
+                }, {})
+              ).map(([category, subcats]) => (
+                <li key={category}>
+                  <div className="font-bold">{category}</div>
+                  <ul className="list-[circle] pl-5 mt-1 space-y-1">
+                    {Object.entries(subcats).map(([subcategory, services]) => (
+                      <li key={subcategory}>
+                        <div className="font-medium">{subcategory}</div>
+                        <ul className="list-none pl-3">
+                          {[...services].map((service) => (
+                            <li key={service}>
+                              {service}
+                              {provider.experiencePerService?.[service] && (
+                                <span className="text-xs text-[var(--gray)] ml-2">
+                                  ({provider.experiencePerService[service]}{" "}
+                                  {provider.experiencePerService[service] === 1
+                                    ? "year"
+                                    : "years"}
+                                  )
+                                </span>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
 
         {/* Documents section */}
@@ -246,7 +258,9 @@ export default function ProviderProfile() {
       {showBookingForm && (
         <BookingForm
           provider={provider}
-          serviceName={provider.servicesOffered?.[0] || "Service"}
+          serviceName={
+            provider.servicesOffered?.[0]?.services?.[0] || "Service"
+          }
           onClose={() => {
             setShowBookingForm(false);
             setErrorMessage("");
@@ -292,75 +306,3 @@ export default function ProviderProfile() {
     </div>
   );
 }
-
-// import React, { useEffect, useState } from "react";
-// import { useParams } from "react-router-dom";
-// import axios from "axios";
-// import StarRating from "../components/StarRating";
-// import { assets } from "../assets/assets";
-// import BookingForm from "../components/BookingForm";
-// import ProviderAvailabilityCalendar from "../components/ProviderAvailabilityCalendar";
-
-// export default function ProviderProfile() {
-//   const { providerId } = useParams();
-//   const [provider, setProvider] = useState(null);
-//   const [loading, setLoading] = useState(true);
-//   const [showBookingForm, setShowBookingForm] = useState(false);
-//   const [showCalendar, setShowCalendar] = useState(false);
-//   const [selectedSlot, setSelectedSlot] = useState(null);
-
-//   useEffect(() => {
-//     axios
-//       .get(`http://localhost:5000/api/user/provider-profile?id=${providerId}`, {
-//         withCredentials: true,
-//       })
-//       .then((res) => {
-//         setProvider(res.data.provider);
-//         setLoading(false);
-//       })
-//       .catch(() => setLoading(false));
-//   }, [providerId]);
-
-//   if (loading) return <div className="text-center mt-20 text-lg">Loading...</div>;
-//   if (!provider) return <div className="text-center mt-20 text-red-500">Provider not found</div>;
-
-//   return (
-//     <div className="min-h-screen py-20 px-6 bg-gradient-to-br from-[var(--primary-light)] to-[var(--white)]">
-//       <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-2xl p-8">
-//         {/* ...avatar, info, etc... */}
-//         <div className="mt-6">
-//           <button
-//             onClick={() => setShowCalendar(true)}
-//             className="mt-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-//           >
-//             Check Availability
-//           </button>
-//         </div>
-//         {showCalendar && (
-//           <ProviderAvailabilityCalendar
-//             provider={provider}
-//             onClose={() => setShowCalendar(false)}
-//             onSlotSelect={(slot) => {
-//               setSelectedSlot(slot);
-//               setShowCalendar(false);
-//               setShowBookingForm(true);
-//             }}
-//           />
-//         )}
-//         {showBookingForm && selectedSlot && (
-//           <BookingForm
-//             provider={provider}
-//             serviceName={provider.servicesOffered?.[0] || "Service"}
-//             initialDate={selectedSlot.date}
-//             initialFrom={selectedSlot.from}
-//             initialTo={selectedSlot.to}
-//             onClose={() => {
-//               setShowBookingForm(false);
-//               setSelectedSlot(null);
-//             }}
-//           />
-//         )}
-//       </div>
-//     </div>
-//   );
-// }

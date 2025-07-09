@@ -326,7 +326,7 @@ function Login() {
         }}
       >
         <h2
-          className="text-xl xs:text-2xl md:text-3xl font-semibold text-center pb-1"
+          className="text-xl sm:text-2xl md:text-3xl font-semibold text-center pb-1"
           style={{ color: "var(--white)" }}
         >
           {state === "Sign Up" ? "Create Account" : "Login"}

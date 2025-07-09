@@ -3,6 +3,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { SERVICES } from "../constants/services";
 import { motion } from "framer-motion";
 import { Modal } from "antd";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
 
 import {
   FaSearch,
@@ -21,8 +26,24 @@ import {
   FaGift,
 } from "react-icons/fa";
 
-
-const CATEGORY_NAMES = ["Home Services", "Cleaning & Sanitation", "Beauty & Personal Care","Wellness & Lifestyle","Events & Photography", "Tutoring & Training","Automobile","Business & Professional","Renovation & Construction","Child & Elder Care","Pet Care","Packers & Movers","Home Help & Personal Assistance","Security & Safety","Real Estate & Property","Tailoring & Fashion"];
+const CATEGORY_NAMES = [
+  "Home Services",
+  "Cleaning & Sanitation",
+  "Beauty & Personal Care",
+  "Wellness & Lifestyle",
+  "Events & Photography",
+  "Tutoring & Training",
+  "Automobile",
+  "Business & Professional",
+  "Renovation & Construction",
+  "Child & Elder Care",
+  "Pet Care",
+  "Packers & Movers",
+  "Home Help & Personal Assistance",
+  "Security & Safety",
+  "Real Estate & Property",
+  "Tailoring & Fashion",
+];
 
 const WHY_CHOOSE = [
   {
@@ -100,38 +121,16 @@ const WHY_CHOOSE = [
 export default function Home() {
   const navigate = useNavigate();
   const [page, setPage] = useState(0);
-   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState(null);
 
-  // pagination logic
-  const SERVICES_PER_PAGE = 6;
-//   const allServices = SERVICES.flatMap((cat) =>
-//   cat.subcategories.flatMap((sub) =>
-//     sub.services.map((service) => ({
-//       ...service,
-//       category: cat.category,
-//       subcategory: sub.subcategory,
-//     }))
-//   )
-// );
+  // Flatten groups into one array of subcategories
+  // const flatSubcategories = SERVICES.flatMap(group => group);
 
-// Flatten groups into one array of subcategories
-const flatSubcategories = SERVICES.flatMap(group => group);
-
-// Flatten all services
-const allServices = flatSubcategories.flatMap(subcat => subcat.services);
-
-const totalPages = Math.ceil(allServices.length / SERVICES_PER_PAGE);
-const start = page * SERVICES_PER_PAGE;
-const visibleServices = allServices.slice(start, start + SERVICES_PER_PAGE);
-
-
-  // const totalPages = Math.ceil(SERVICES.length / SERVICES_PER_PAGE);
-  // const start = page * SERVICES_PER_PAGE;
-  // const visibleServices = SERVICES.slice(start, start + SERVICES_PER_PAGE);
+  // Flatten all services
+  // const allServices = flatSubcategories.flatMap(subcat => subcat.services);
 
   console.log("SERVICES", SERVICES);
-
 
   return (
     <div className="min-h-screen">
@@ -204,93 +203,17 @@ const visibleServices = allServices.slice(start, start + SERVICES_PER_PAGE);
         </div>
       </section>
 
-      {/* Popular services */}
-      {/* <section className="py-20 px-6 bg-gradient-to-br from-[var(--primary-light)] to-[var(--white)] text-center">
-        <div className="relative mb-8">
-          <h2
-            className="text-3xl sm:text-4xl font-bold text-center"
-            style={{ color: "var(--primary)" }}
-          >
-            Services
-          </h2>
-
-          <div className="mt-4 sm:mt-0 sm:absolute sm:right-0 sm:top-1/2 sm:-translate-y-1/2">
-            <button
-              className="px-6 py-2 rounded-full font-bold bg-gradient-to-r from-[var(--accent)] to-[var(--secondary)] text-white shadow hover:scale-105 transition"
-              onClick={() => navigate("/services")}
-               onMouseOver={(e) => {
-              e.currentTarget.style.background = "var(--ternary)";
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.background =
-                "linear-gradient(to right, var(--accent), var(--secondary))";
-            }}
-            >
-              Explore All
-            </button>
-          </div>
-        </div>
-
-        <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto">
-          {visibleServices.map((service) => (
-            <div
-              key={service.name}
-              className="bg-[var(--white)] rounded-2xl shadow-lg hover:shadow-2xl transition cursor-pointer overflow-hidden group border-t-4 border-[var(--primary)]"
-              onClick={() =>
-                navigate(`/services/${encodeURIComponent(service.name)}`)
-              }
-            >
-              <img
-                src={service.image}
-                alt={service.name}
-                className="w-full h-40 object-contain p-5 bg-[var(--white)] group-hover:scale-105 transition-transform"
-              />
-              <div>
-                <h3 className="font-bold text-xl mb-2 text-[var(--primary)]">
-                  {service.name}
-                </h3>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="flex justify-center gap-4 mt-8">
-          <button
-            className="px-4 py-2 rounded-full bg-[var(--primary-light)] text-[var(--primary)] font-semibold shadow disabled:opacity-50"
-            onClick={() => setPage((p) => Math.max(0, p - 1))}
-            disabled={page === 0}
-          >
-            Prev
-          </button>
-          <button
-            className="px-4 py-2 rounded-full bg-[var(--primary-light)] text-[var(--primary)] font-semibold shadow disabled:opacity-50"
-            onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-            disabled={page === totalPages - 1}
-          >
-            Next
-          </button>
-        </div>
-
-      </section> */}
-
-        {/* Explore Categories */}
+      {/* Explore Categories */}
       <section className="py-20 px-6 bg-gradient-to-br from-[var(--primary-light)] to-[var(--white)] text-center">
-        <h2 className="text-3xl sm:text-4xl font-bold text-center mb-8" style={{ color: "var(--primary)" }}>
+        <h2
+          className="text-3xl sm:text-4xl font-bold text-center mb-8"
+          style={{ color: "var(--primary)" }}
+        >
           Explore Categories
         </h2>
-        <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto">
-          {/* {SERVICES.map((cat) => (
-            <div
-              key={cat.category}
-              className="bg-[var(--white)] rounded-2xl shadow-lg hover:shadow-2xl transition cursor-pointer overflow-hidden group border-t-4 border-[var(--primary)]"
-              onClick={() => setSelectedCategory(cat)}
-            >
-              <div className="p-8">
-                <h3 className="font-bold text-2xl mb-2 text-[var(--primary)]">{cat.category}</h3>
-                <div className="text-gray-500 text-sm">{cat.subcategories.length} subcategories</div>
-              </div>
-            </div>
-          ))} */}
-          {SERVICES.map((subcatArray, index) => (
+        {/* <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto"> */}
+
+        {/* {SERVICES.map((subcatArray, index) => (
   <div
     key={index}
     className="bg-[var(--white)] rounded-2xl shadow-lg hover:shadow-2xl transition cursor-pointer overflow-hidden group border-t-4 border-[var(--primary)]"
@@ -305,9 +228,61 @@ const visibleServices = allServices.slice(start, start + SERVICES_PER_PAGE);
       <div className="text-gray-500 text-sm">{subcatArray.length} subcategories</div>
     </div>
   </div>
-))}
+))} */}
 
-{/* {SERVICES.map((subcatArray, index) => (
+        <button
+          className="px-6 py-2 rounded-full font-bold bg-gradient-to-r from-[var(--accent)] to-[var(--secondary)] text-white shadow hover:scale-105 transition"
+          onClick={() => navigate("/services")}
+          onMouseOver={(e) => {
+            e.currentTarget.style.background = "var(--ternary)";
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.background =
+              "linear-gradient(to right, var(--accent), var(--secondary))";
+          }}
+        >
+          Explore All
+        </button>
+        <div>
+          <Swiper
+            modules={[Navigation, Pagination]}
+            spaceBetween={20}
+            slidesPerView={1}
+            navigation
+            pagination={{ clickable: true }}
+            breakpoints={{
+              350: { slidesPerView: 2 },
+              1024: { slidesPerView: 3 },
+              1280: { slidesPerView: 4 },
+            }}
+            className="w-full mx-auto"
+          >
+            {SERVICES.map((subcatArray, index) => (
+              <SwiperSlide key={index}>
+                <div
+                  className="bg-[var(--white)] rounded-2xl shadow-lg hover:shadow-2xl transition cursor-pointer overflow-hidden group border-t-4 border-[var(--primary)]"
+                  onClick={() =>
+                    setSelectedCategory({
+                      category: CATEGORY_NAMES[index],
+                      subcategories: subcatArray,
+                    })
+                  }
+                >
+                  <div className="p-8">
+                    <h3 className="font-bold text-2xl mb-2 text-[var(--primary)]">
+                      {CATEGORY_NAMES[index]}
+                    </h3>
+                    <div className="text-gray-500 text-sm">
+                      {subcatArray.length} subcategories
+                    </div>
+                  </div>
+                </div>
+              </SwiperSlide>
+            ))}
+          </Swiper>
+          {/* </div> */}
+
+          {/* {SERVICES.map((subcatArray, index) => (
   <div
     key={index}
     className="bg-[var(--white)] rounded-2xl shadow-lg hover:shadow-2xl transition cursor-pointer overflow-hidden group border-t-4 border-[var(--primary)]"
@@ -328,13 +303,14 @@ const visibleServices = allServices.slice(start, start + SERVICES_PER_PAGE);
     </div>
   </div>
 ))} */}
-
-
         </div>
         {/* Category Modal */}
         <Modal
           open={!!selectedCategory}
-          onCancel={() => { setSelectedCategory(null); setSelectedSubcategory(null); }}
+          onCancel={() => {
+            setSelectedCategory(null);
+            setSelectedSubcategory(null);
+          }}
           footer={null}
           title={selectedCategory?.category}
         >
@@ -361,7 +337,9 @@ const visibleServices = allServices.slice(start, start + SERVICES_PER_PAGE);
               >
                 &larr; Back to Subcategories
               </button>
-              <h4 className="font-semibold mb-4">{selectedSubcategory.subcategory} Services</h4>
+              <h4 className="font-semibold mb-4">
+                {selectedSubcategory.subcategory} Services
+              </h4>
               <ul>
                 {selectedSubcategory.services.map((service) => (
                   <li
@@ -380,7 +358,7 @@ const visibleServices = allServices.slice(start, start + SERVICES_PER_PAGE);
             </div>
           )}
         </Modal>
-</section>
+      </section>
 
       {/* How It Works */}
       <section className="py-20 px-6" style={{ background: "var(--white)" }}>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import ProviderAvailabilityCalendar from "../components/ProviderAvailabilityCalendar";
-import { CalendarDays } from "lucide-react"; // You can try other icons too
+import { CalendarDays } from "lucide-react";
 
 export default function BookingForm({
   provider,

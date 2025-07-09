@@ -89,12 +89,28 @@ function Navbar() {
         <div className="flex items-center gap-3">
           {userData ? (
             <div className="relative group">
-              <div
+              {/* <div
                 className="w-8 h-8 flex justify-center items-center text-[color:var(--white)] rounded-full cursor-pointer"
                 style={{ background: "var(--primary)" }}
               >
                 {userData.name.charAt(0).toUpperCase()}
-              </div>
+              </div> */}
+              
+              {userData.avatarUrl ? (
+                <img
+                  src={userData.avatarUrl}
+                  alt="avatar"
+                  className="w-8 h-8 rounded-full object-cover cursor-pointer"
+                />
+              ) : (
+                <div
+                  className="w-8 h-8 flex justify-center items-center text-[color:var(--white)] rounded-full cursor-pointer"
+                  style={{ background: "var(--primary)" }}
+                >
+                  {userData.name.charAt(0).toUpperCase()}
+                </div>
+              )}
+
               <div
                 className="absolute top-8.5 right-0 w-40 rounded-lg hidden group-hover:block shadow-md text-[var(--secondary)] z-10"
                 style={{ background: "var(--white)" }}
@@ -105,7 +121,8 @@ function Navbar() {
                       <Link
                         to="/provider/dashboard"
                         className="block px-3 py-2 hover:bg-[var(--primary-light)] rounded"
-                      >My Bookings
+                      >
+                        My Bookings
                       </Link>
                     </li>
                   )}
@@ -114,14 +131,16 @@ function Navbar() {
                       <Link
                         to="/my-bookings"
                         className="block px-3 py-2 hover:bg-[var(--primary-light)] rounded"
-                      >My Bookings
+                      >
+                        My Bookings
                       </Link>
                     </li>
                   )}
                   <li
                     onClick={logout}
                     className="block px-3 py-2 hover:bg-[var(--primary-light)] rounded"
-                  >Logout
+                  >
+                    Logout
                   </li>
                 </ul>
               </div>

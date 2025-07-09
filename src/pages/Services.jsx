@@ -1,15 +1,85 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { SERVICES } from "../constants/services";
+import Slider from "rc-slider";
+import "rc-slider/assets/index.css";
+
+import {
+  FaSearch,
+  FaFilter,
+  FaSortAlphaDown,
+  FaListUl,
+  FaCouch,
+  FaTools,
+  FaPaintRoller,
+  FaLeaf,
+  FaMicrochip,
+  FaChevronDown,
+  FaTimes,
+} from "react-icons/fa";
+import {
+  MdOutlineCleaningServices,
+  MdOutlinePestControl,
+} from "react-icons/md";
 
 export default function Services() {
   const navigate = useNavigate();
-  const [search, setSearch] = useState("");
-  const [sort, setSort] = useState("name");
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [selectedSubcategory, setSelectedSubcategory] = useState("");
 
-  // Flatten the SERVICES
+  // States
+  const [search, setSearch] = useState("");
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedSubcategories, setSelectedSubcategories] = useState([]);
+  const [showCategoryList, setShowCategoryList] = useState(false);
+  const [showSubcategoryList, setShowSubcategoryList] = useState(false);
+  const [categorySort, setCategorySort] = useState("");
+  const [subcategorySort, setSubcategorySort] = useState("");
+  const [serviceSort, setServiceSort] = useState("");
+  const [priceSort, setPriceSort] = useState("");
+  const [expandedCategories, setExpandedCategories] = useState({});
+  const [expandedSubcategories, setExpandedSubcategories] = useState({});
+  const [showFilter, setShowFilter] = useState(false);
+  const [showSort, setShowSort] = useState(false);
+  const [priceRange, setPriceRange] = useState([0, 5000]); // [min, max]
+
+  // Refs for outside click detection
+  const filterRef = useRef(null);
+  const sortRef = useRef(null);
+
+  // Subcategory Icons
+  const subcategoryIcons = {
+    "Carpentry & Woodwork": <FaCouch className="text-[var(--secondary)]" />,
+    "Air Conditioning & Cooling": (
+      <FaTools className="text-[var(--secondary)]" />
+    ),
+    "Painting & Decor": <FaPaintRoller className="text-[var(--secondary)]" />,
+    "Gardening & Outdoors": <FaLeaf className="text-[var(--secondary)]" />,
+    "Home Automation & Smart Devices": (
+      <FaMicrochip className="text-[var(--secondary)]" />
+    ),
+    "Residential Cleaning": (
+      <MdOutlineCleaningServices className="text-[var(--secondary)]" />
+    ),
+    "Commercial Cleaning": (
+      <MdOutlineCleaningServices className="text-[var(--secondary)]" />
+    ),
+    "Pest Control & Safety": (
+      <MdOutlinePestControl className="text-[var(--secondary)]" />
+    ),
+    Sanitization: <FaLeaf className="text-[var(--secondary)]" />,
+  };
+
+  const toggleCategory = (category) =>
+    setExpandedCategories((prev) => ({ ...prev, [category]: !prev[category] }));
+
+  const toggleSubcategory = (category, subcategory) => {
+    const key = `${category}__${subcategory}`;
+    setExpandedSubcategories((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
+  // Flatten and prepare all services
   const flattenedSubcategories = SERVICES.flat();
   let allServices = flattenedSubcategories.flatMap((sub) =>
     sub.services.map((service) => ({
@@ -19,7 +89,6 @@ export default function Services() {
     }))
   );
 
-  // Apply search filter
   if (search.trim()) {
     allServices = allServices.filter(
       (s) =>
@@ -29,129 +98,537 @@ export default function Services() {
     );
   }
 
-  // Apply category/subcategory filters
-  if (selectedCategory) {
-    allServices = allServices.filter((s) => s.category === selectedCategory);
-  }
-  if (selectedSubcategory) {
-    allServices = allServices.filter(
-      (s) => s.subcategory === selectedSubcategory
+  if (selectedCategories.length > 0) {
+    allServices = allServices.filter((s) =>
+      selectedCategories.includes(s.category)
     );
   }
 
-  // Sort
-  if (sort === "name") {
-    allServices.sort((a, b) => a.name.localeCompare(b.name));
-  } else if (sort === "category") {
-    allServices.sort((a, b) => a.category.localeCompare(b.category));
+  if (selectedCategories.length > 0) {
+    if (selectedSubcategories.length > 0) {
+      allServices = allServices.filter(
+        (s) =>
+          selectedCategories.includes(s.category) &&
+          selectedSubcategories.includes(s.subcategory)
+      );
+    } else {
+      // If no subcategory selected, show all subcategories of selected categories
+      allServices = allServices.filter((s) =>
+        selectedCategories.includes(s.category)
+      );
+    }
   }
 
-  // Unique categories
+  const extractPrice = (priceStr) => {
+    const match = priceStr?.match(/\d+/g);
+    return match ? parseInt(match[0]) : 0;
+  };
+
+  // Sort
+  allServices.sort((a, b) => {
+    let result = 0;
+    if (categorySort)
+      result =
+        categorySort === "asc"
+          ? a.category.localeCompare(b.category)
+          : b.category.localeCompare(a.category);
+    if (result !== 0) return result;
+    if (subcategorySort)
+      result =
+        subcategorySort === "asc"
+          ? a.subcategory.localeCompare(b.subcategory)
+          : b.subcategory.localeCompare(a.subcategory);
+    if (result !== 0) return result;
+    if (serviceSort)
+      result =
+        serviceSort === "asc"
+          ? a.name.localeCompare(b.name)
+          : b.name.localeCompare(a.name);
+    if (result !== 0) return result;
+    if (priceSort)
+      result =
+        priceSort === "asc"
+          ? extractPrice(a.price) - extractPrice(b.price)
+          : extractPrice(b.price) - extractPrice(a.price);
+    return result;
+  });
+
   const categories = [
     ...new Set(flattenedSubcategories.map((s) => s.category)),
   ];
 
-  // Unique subcategories for the selected category
-  const subcategories = selectedCategory
-    ? [
-        ...new Set(
-          flattenedSubcategories
-            .filter((s) => s.category === selectedCategory)
-            .map((s) => s.subcategory)
-        ),
-      ]
-    : [];
+  const groupedServices = {};
+  allServices.forEach((s) => {
+    if (!groupedServices[s.category]) groupedServices[s.category] = {};
+    if (!groupedServices[s.category][s.subcategory])
+      groupedServices[s.category][s.subcategory] = [];
+    groupedServices[s.category][s.subcategory].push(s);
+  });
+
+  useEffect(() => {
+    const cat = {};
+    const sub = {};
+    Object.entries(groupedServices).forEach(([c, subs]) => {
+      cat[c] = true;
+      Object.keys(subs).forEach((s) => {
+        sub[`${c}__${s}`] = true;
+      });
+    });
+    setExpandedCategories(cat);
+    setExpandedSubcategories(sub);
+  }, [JSON.stringify(groupedServices)]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (filterRef.current && !filterRef.current.contains(event.target)) {
+        setShowFilter(false);
+      }
+      if (sortRef.current && !sortRef.current.contains(event.target)) {
+        setShowSort(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
-    <div className="min-h-screen py-20 px-4 bg-gradient-to-br from-[var(--primary-light)] to-[var(--white)]">
-      <h2
-        className="text-4xl font-extrabold mb-10 text-center"
-        style={{ color: "var(--primary)" }}
-      >
-        All Services
-      </h2>
-
-      {/* Filters */}
-      <div className="flex flex-wrap gap-4 justify-center mb-8">
-        <input
-          type="text"
-          placeholder="Search services..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="px-4 py-2 rounded-full border border-gray-300 shadow text-sm w-60"
-        />
-        <select
-          value={selectedCategory}
-          onChange={(e) => {
-            setSelectedCategory(e.target.value);
-            setSelectedSubcategory("");
-          }}
-          className="px-4 py-2 rounded-full border border-gray-300 shadow text-sm"
-        >
-          <option value="">All Categories</option>
-          {categories.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat}
-            </option>
-          ))}
-        </select>
-        <select
-          value={selectedSubcategory}
-          onChange={(e) => setSelectedSubcategory(e.target.value)}
-          className="px-4 py-2 rounded-full border border-gray-300 shadow text-sm"
-          disabled={!selectedCategory}
-        >
-          <option value="">All Subcategories</option>
-          {subcategories.map((sub) => (
-            <option key={`${selectedCategory}-${sub}`} value={sub}>
-              {sub}
-            </option>
-          ))}
-        </select>
-        <select
-          value={sort}
-          onChange={(e) => setSort(e.target.value)}
-          className="px-4 py-2 rounded-full border border-gray-300 shadow text-sm"
-        >
-          <option value="name">Sort by Name</option>
-          <option value="category">Sort by Category</option>
-        </select>
-      </div>
-
-      {/* Service Cards */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 max-w-7xl mx-auto text-center">
-        {allServices.map((service) => (
-          <div
-            key={`${service.category}-${service.subcategory}-${service.name}`}
-            className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition cursor-pointer overflow-hidden group border-t-4 border-[var(--primary)]"
-            onClick={() =>
-              navigate(`/services/${encodeURIComponent(service.name)}`)
-            }
-          >
-            <img
-              src={service.image}
-              alt={service.name}
-              className="w-full h-40 object-contain p-6 bg-white group-hover:scale-105 transition-transform"
+    <div className="min-h-screen py-24 px-4 bg-gradient-to-br from-[var(--primary-light)] to-[var(--white)]">
+      {/* Top Header */}
+      <div className="flex flex-wrap items-center justify-between px-2 mb-6">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[var(--primary)]">
+          Service Catalog
+        </h2>
+        <div className="flex gap-2 items-center">
+          {/* Search */}
+          <div className="relative xs:w-28 sm:w-32 md:w-44 lg:w-52">
+            <FaSearch className="absolute left-3 top-3 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10 pr-4 py-2 rounded-full border border-gray-300 shadow text-sm w-full focus:ring-2 focus:ring-[var(--primary)]"
             />
-            <div className="p-5">
-              <h3 className="font-bold text-xl mb-2 text-[var(--primary)]">
-                {service.name}
-              </h3>
-              <p className="text-gray-600">{service.description}</p>
-              <p className="text-gray-500 mt-1 text-sm">{service.price}</p>
-              <div className="text-xs text-gray-500 mt-2">
-                {service.category} / {service.subcategory}
-              </div>
-            </div>
           </div>
-        ))}
+
+          {/* Filter */}
+          <div className="relative">
+            <button
+              onClick={() => setShowFilter(!showFilter)}
+              className="flex items-center gap-2 px-3 py-2 rounded-full border border-gray-300 shadow text-sm bg-white hover:bg-gray-50"
+            >
+              <FaFilter />
+              <span className="hidden sm:inline">Filter</span>
+            </button>
+
+            {showFilter && (
+              <div
+                ref={filterRef}
+                className="absolute z-50 right-4 mt-2 w-[320px] bg-white border shadow-xl rounded-xl p-4"
+              >
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-lg font-semibold">Filter</h3>
+                  <button
+                    onClick={() => setShowFilter(false)}
+                    className="text-gray-500 hover:text-red-600 cursor-pointer"
+                  >
+                    <FaTimes />
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  {/* === Collapsible Category Filter === */}
+                  <div className="mb-4">
+                    <button
+                      onClick={() => setShowCategoryList(!showCategoryList)}
+                      className="w-full flex justify-between items-center text-sm font-semibold text-[var(--primary)] mb-1"
+                    >
+                      <span>Categories</span>
+                      <FaChevronDown
+                        className={`transition-transform ${
+                          showCategoryList ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+
+                    {showCategoryList && (
+                      <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto pr-1 border rounded bg-white p-2">
+                        {/* All Categories Checkbox */}
+                        <label className="flex items-center gap-2 px-2 py-1 rounded hover:bg-[var(--primary-light)] cursor-pointer w-full">
+                          <input
+                            type="checkbox"
+                            checked={
+                              selectedCategories.length === categories.length
+                            }
+                            onChange={(e) => {
+                              const isChecked = e.target.checked;
+                              setSelectedCategories(
+                                isChecked ? [...categories] : []
+                              );
+                            }}
+                            className="accent-[var(--primary)]"
+                          />
+                          <span className="text-sm">All Categories</span>
+                        </label>
+
+                        {categories.map((cat) => (
+                          <label
+                            key={cat}
+                            className="flex items-center gap-2 px-2 py-1 rounded hover:bg-[var(--primary-light)] cursor-pointer w-full"
+                          >
+                            <input
+                              type="checkbox"
+                              value={cat}
+                              checked={selectedCategories.includes(cat)}
+                              onChange={(e) => {
+                                const isChecked = e.target.checked;
+                                setSelectedCategories((prev) =>
+                                  isChecked
+                                    ? [...prev, cat]
+                                    : prev.filter((c) => c !== cat)
+                                );
+                              }}
+                              className="accent-[var(--primary)]"
+                            />
+                            <span className="text-sm">{cat}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* === Collapsible Subcategory Filter (only if categories selected) === */}
+                  <div className="mb-4">
+                    <button
+                      disabled={selectedCategories.length === 0}
+                      onClick={() =>
+                        setShowSubcategoryList(!showSubcategoryList)
+                      }
+                      className={`w-full flex justify-between items-center text-sm font-semibold ${
+                        selectedCategories.length === 0
+                          ? "text-gray-400 cursor-not-allowed"
+                          : "text-[var(--primary)]"
+                      } mb-1`}
+                    >
+                      <span>Subcategories</span>
+                      <FaChevronDown
+                        className={`transition-transform ${
+                          showSubcategoryList ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+
+                    {showSubcategoryList && selectedCategories.length > 0 && (
+                      <div className="space-y-2 mt-2 max-h-[300px] overflow-y-auto pr-1">
+                        {selectedCategories.map((cat) => {
+                          const subs = flattenedSubcategories
+                            .filter((s) => s.category === cat)
+                            .map((s) => s.subcategory);
+                          const uniqueSubs = [...new Set(subs)];
+                          return (
+                            <div
+                              key={cat}
+                              className="bg-gray-50 border rounded p-2"
+                            >
+                              <p className="text-sm font-medium text-[var(--secondary)] mb-2">
+                                {cat}
+                              </p>
+
+                              {/* === All Subcategories checkbox === */}
+                              <label className="flex items-center gap-2 px-2 py-1 mb-2 bg-white rounded hover:bg-[var(--primary-light)] w-full cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={uniqueSubs.every((sub) =>
+                                    selectedSubcategories.includes(sub)
+                                  )}
+                                  onChange={(e) => {
+                                    const isChecked = e.target.checked;
+                                    setSelectedSubcategories((prev) => {
+                                      const withoutCurrent = prev.filter(
+                                        (s) => !uniqueSubs.includes(s)
+                                      );
+                                      return isChecked
+                                        ? [...withoutCurrent, ...uniqueSubs]
+                                        : withoutCurrent;
+                                    });
+                                  }}
+                                  className="accent-[var(--primary)]"
+                                />
+                                <span className="text-sm">
+                                  All Subcategories
+                                </span>
+                              </label>
+
+                              <div className="flex flex-wrap gap-2">
+                                {uniqueSubs.map((sub) => (
+                                  <label
+                                    key={sub}
+                                    className="flex items-center gap-2 px-2 py-1 bg-white rounded hover:bg-[var(--primary-light)] w-full cursor-pointer"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      value={sub}
+                                      checked={selectedSubcategories.includes(
+                                        sub
+                                      )}
+                                      onChange={(e) => {
+                                        const isChecked = e.target.checked;
+                                        setSelectedSubcategories((prev) =>
+                                          isChecked
+                                            ? [...prev, sub]
+                                            : prev.filter((s) => s !== sub)
+                                        );
+                                      }}
+                                      className="accent-[var(--primary)]"
+                                    />
+                                    <span className="text-sm">{sub}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Price range */}
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Price Range (₹)
+                    </label>
+                    <Slider
+                      range
+                      min={0}
+                      max={5000}
+                      defaultValue={priceRange}
+                      value={priceRange}
+                      onChange={(range) => setPriceRange(range)}
+                      trackStyle={[
+                        { backgroundColor: "var(--secondary)", height: 6 },
+                      ]}
+                      handleStyle={[
+                        {
+                          borderColor: "var(--secondary)",
+                          backgroundColor: "#fff",
+                          height: 14,
+                          width: 14,
+                        },
+                        {
+                          borderColor: "var(--secondary)",
+                          backgroundColor: "#fff",
+                          height: 14,
+                          width: 14,
+                        },
+                      ]}
+                      railStyle={{ backgroundColor: "#d1d5db" }}
+                    />
+
+                    <div className="flex justify-between text-sm mt-2">
+                      <span>Min: ₹{priceRange[0]}</span>
+                      <span>Max: ₹{priceRange[1]}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between mt-3">
+                    <button
+                      onClick={() => {
+                        setSelectedCategories([]);
+                        setSelectedSubcategories([]);
+
+                        setPriceRange([0, 5000]);
+                      }}
+                      className="text-sm text-[var(--gray)] hover:underline hover:scale-105 transition-transform duration-100 ease-linear"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Sort */}
+          <div className="relative">
+            <button
+              onClick={() => setShowSort(!showSort)}
+              className="flex items-center gap-2 px-3 py-2 rounded-full border border-gray-300 shadow text-sm bg-white hover:bg-gray-50"
+            >
+              <FaSortAlphaDown />
+              <span className="hidden sm:inline">Sort</span>
+            </button>
+
+            {showSort && (
+              <div
+                ref={sortRef}
+                className="absolute z-50 right-4 mt-2 w-[260px] bg-white border shadow-xl rounded-xl p-4"
+              >
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-lg font-semibold">Sort</h3>
+                  <button
+                    onClick={() => setShowSort(false)}
+                    className="text-gray-500 hover:text-red-600 cursor-pointer"
+                  >
+                    <FaTimes />
+                  </button>
+                </div>
+
+                <div className="space-y-2 text-sm">
+                  <select
+                    value={categorySort}
+                    onChange={(e) => setCategorySort(e.target.value)}
+                    className="w-full border px-3 py-2 rounded"
+                  >
+                    <option value="">Sort by Category</option>
+                    <option value="asc">A → Z</option>
+                    <option value="desc">Z → A</option>
+                  </select>
+
+                  <select
+                    value={subcategorySort}
+                    onChange={(e) => setSubcategorySort(e.target.value)}
+                    className="w-full border px-3 py-2 rounded"
+                  >
+                    <option value="">Sort by Subcategory</option>
+                    <option value="asc">A → Z</option>
+                    <option value="desc">Z → A</option>
+                  </select>
+
+                  <select
+                    value={serviceSort}
+                    onChange={(e) => setServiceSort(e.target.value)}
+                    className="w-full border px-3 py-2 rounded"
+                  >
+                    <option value="">Sort by Service</option>
+                    <option value="asc">A → Z</option>
+                    <option value="desc">Z → A</option>
+                  </select>
+
+                  <select
+                    value={priceSort}
+                    onChange={(e) => setPriceSort(e.target.value)}
+                    className="w-full border px-3 py-2 rounded"
+                  >
+                    <option value="">Sort by Price</option>
+                    <option value="asc">Low → High</option>
+                    <option value="desc">High → Low</option>
+                  </select>
+                  {/* <option value="rating">Sort by Rating</option>
+<option value="popularity">Sort by Popularity</option> */}
+                </div>
+                <div className="flex justify-between mt-3">
+                  <button
+                    onClick={() => {
+                      setCategorySort("");
+                      setSubcategorySort("");
+                      setServiceSort("");
+                      setPriceSort("");
+                    }}
+                    className="text-sm text-[var(--gray)] hover:underline hover:scale-105 transition-transform duration-100 ease-linear"
+                  >
+                    Clear
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
-      {allServices.length === 0 && (
+      {/* No Results */}
+      {Object.keys(groupedServices).length === 0 && (
         <div className="text-center text-gray-500 mt-10">
           No services found.
         </div>
       )}
+
+      {/* Display Services */}
+      <div className="max-w-7xl mx-auto space-y-6">
+        {Object.entries(groupedServices).map(([category, subcats]) => {
+          const isCategoryOpen = expandedCategories[category];
+          return (
+            <div
+              key={category}
+              className="bg-white border shadow rounded-xl p-4 space-y-4"
+            >
+              <button
+                onClick={() => toggleCategory(category)}
+                className="w-full text-left text-2xl font-bold text-[var(--primary)] flex items-center justify-between"
+              >
+                {category}
+                <FaChevronDown
+                  className={`transition-transform ${
+                    isCategoryOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              {isCategoryOpen &&
+                Object.entries(subcats).map(([subcategory, services]) => {
+                  const subKey = `${category}__${subcategory}`;
+                  const isSubOpen = expandedSubcategories[subKey];
+
+                  return (
+                    <div
+                      key={subcategory}
+                      className="border rounded p-4 bg-white shadow-sm"
+                    >
+                      <button
+                        onClick={() => toggleSubcategory(category, subcategory)}
+                        className="flex justify-between items-center w-full text-[var(--secondary)] font-semibold text-lg mb-2"
+                      >
+                        <span className="flex items-center gap-2">
+                          {subcategoryIcons[subcategory] || <FaListUl />}
+                          {subcategory}
+                        </span>
+                        <FaChevronDown
+                          className={`transition-transform ${
+                            isSubOpen ? "rotate-180" : ""
+                          }`}
+                        />
+                      </button>
+
+                      {isSubOpen && (
+                        <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                          {services.map((service) => (
+                            <div
+                              key={service.name}
+                              className="cursor-pointer group border rounded bg-gray-50 hover:bg-white hover:shadow p-2 text-center transition"
+                              onClick={() =>
+                                navigate(
+                                  `/services/${encodeURIComponent(
+                                    service.name
+                                  )}`
+                                )
+                              }
+                            >
+                              <div className="relative w-full h-24">
+                                <img
+                                  src={service.image}
+                                  alt={service.name}
+                                  className="object-contain w-full h-full"
+                                />
+                                <span className="absolute bottom-1 right-1 bg-[var(--secondary)] text-white text-xs px-2 py-0.5 rounded">
+                                  {service.price}
+                                </span>
+                              </div>
+                              <p className="mt-2 text-sm font-medium text-[var(--ternary)]">
+                                {service.name}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
