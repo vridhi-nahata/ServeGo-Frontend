@@ -124,14 +124,6 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState(null);
 
-  // Flatten groups into one array of subcategories
-  // const flatSubcategories = SERVICES.flatMap(group => group);
-
-  // Flatten all services
-  // const allServices = flatSubcategories.flatMap(subcat => subcat.services);
-
-  console.log("SERVICES", SERVICES);
-
   return (
     <div className="min-h-screen">
       {/* Hero Section */}

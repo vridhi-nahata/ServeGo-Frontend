@@ -1,5 +1,6 @@
 import logo from './logo.png';
 import arrow_icon from './arrow_icon.png';
+import sort from './sort.png'
 
 import cleaning from './house_cleaning.png'
 import physiotherapy from './physiotherapy.png'
@@ -28,7 +29,6 @@ import voice_call from './voice_call.png'
 import video_call from './video_call.png'
 import user from './user.png'
 import booking from './booking.png'
-
 
 export const assets = {
   logo,
@@ -59,4 +59,5 @@ export const assets = {
   video_call,
   user,
   booking,
+  sort,
 };

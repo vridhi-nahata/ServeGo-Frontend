@@ -1,7 +1,6 @@
 // changes
 import React, { useState, useContext, useEffect, useRef } from "react";
 import { SERVICES } from "../constants/services";
-console.log("SERVICES after import", SERVICES);
 
 import { useNavigate } from "react-router-dom";
 import { AppContext } from "../context/AppContext";
@@ -45,8 +44,6 @@ function Login() {
   });
 
   const availabilityRef = useRef([]);
-
-  console.log("SERVICES:", SERVICES);
 
   const handleAddBundle = () => {
     if (!newBundle.category) {
@@ -225,7 +222,7 @@ function Login() {
           },
           { withCredentials: true }
         );
-        console.log(data);
+        
         if (data.success) {
           setIsLoggedIn(true);
           setFormSuccess("OTP sent to your email");

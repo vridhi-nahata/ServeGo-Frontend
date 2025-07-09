@@ -3,11 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { SERVICES } from "../constants/services";
 import Slider from "rc-slider";
 import "rc-slider/assets/index.css";
+import { assets } from "../assets/assets";
 
 import {
   FaSearch,
   FaFilter,
-  FaSortAlphaDown,
   FaListUl,
   FaCouch,
   FaTools,
@@ -89,6 +89,7 @@ export default function Services() {
     }))
   );
 
+  // Search logic
   if (search.trim()) {
     allServices = allServices.filter(
       (s) =>
@@ -98,6 +99,7 @@ export default function Services() {
     );
   }
 
+  // Filter logic
   if (selectedCategories.length > 0) {
     allServices = allServices.filter((s) =>
       selectedCategories.includes(s.category)
@@ -119,44 +121,18 @@ export default function Services() {
     }
   }
 
+  // Price filter
   const extractPrice = (priceStr) => {
     const match = priceStr?.match(/\d+/g);
     return match ? parseInt(match[0]) : 0;
   };
 
-  // Sort
-  allServices.sort((a, b) => {
-    let result = 0;
-    if (categorySort)
-      result =
-        categorySort === "asc"
-          ? a.category.localeCompare(b.category)
-          : b.category.localeCompare(a.category);
-    if (result !== 0) return result;
-    if (subcategorySort)
-      result =
-        subcategorySort === "asc"
-          ? a.subcategory.localeCompare(b.subcategory)
-          : b.subcategory.localeCompare(a.subcategory);
-    if (result !== 0) return result;
-    if (serviceSort)
-      result =
-        serviceSort === "asc"
-          ? a.name.localeCompare(b.name)
-          : b.name.localeCompare(a.name);
-    if (result !== 0) return result;
-    if (priceSort)
-      result =
-        priceSort === "asc"
-          ? extractPrice(a.price) - extractPrice(b.price)
-          : extractPrice(b.price) - extractPrice(a.price);
-    return result;
+  allServices = allServices.filter((s) => {
+    const price = extractPrice(s.price);
+    return price >= priceRange[0] && price <= priceRange[1];
   });
 
-  const categories = [
-    ...new Set(flattenedSubcategories.map((s) => s.category)),
-  ];
-
+  // create groupedServices
   const groupedServices = {};
   allServices.forEach((s) => {
     if (!groupedServices[s.category]) groupedServices[s.category] = {};
@@ -164,6 +140,58 @@ export default function Services() {
       groupedServices[s.category][s.subcategory] = [];
     groupedServices[s.category][s.subcategory].push(s);
   });
+
+  // Sorting
+
+  // Sort categories
+  let sortedCategoryKeys = Object.keys(groupedServices);
+  if (categorySort) {
+    sortedCategoryKeys.sort((a, b) =>
+      categorySort === "asc" ? a.localeCompare(b) : b.localeCompare(a)
+    );
+  }
+
+  // Sort subcategories inside each category
+  const sortedGroupedServices = {};
+  sortedCategoryKeys.forEach((category) => {
+    let subcategories = Object.keys(groupedServices[category]);
+
+    if (subcategorySort) {
+      subcategories.sort((a, b) =>
+        subcategorySort === "asc" ? a.localeCompare(b) : b.localeCompare(a)
+      );
+    }
+
+    sortedGroupedServices[category] = {};
+
+    subcategories.forEach((subcat) => {
+      let services = [...groupedServices[category][subcat]];
+
+      // Sort services inside subcategory
+      if (serviceSort) {
+        services.sort((a, b) =>
+          serviceSort === "asc"
+            ? a.name.localeCompare(b.name)
+            : b.name.localeCompare(a.name)
+        );
+      }
+
+      // Apply price sort only when serviceSort is not set
+      if (!serviceSort && priceSort) {
+        services.sort((a, b) =>
+          priceSort === "asc"
+            ? extractPrice(a.price) - extractPrice(b.price)
+            : extractPrice(b.price) - extractPrice(a.price)
+        );
+      }
+
+      sortedGroupedServices[category][subcat] = services;
+    });
+  });
+
+  const categories = [
+    ...new Set(flattenedSubcategories.map((s) => s.category)),
+  ];
 
   useEffect(() => {
     const cat = {};
@@ -195,22 +223,23 @@ export default function Services() {
   }, []);
 
   return (
-    <div className="min-h-screen py-24 px-4 bg-gradient-to-br from-[var(--primary-light)] to-[var(--white)]">
+    <div className="min-h-screen py-20 px-4 bg-gradient-to-br from-[var(--primary-light)] to-[var(--white)]">
       {/* Top Header */}
       <div className="flex flex-wrap items-center justify-between px-2 mb-6">
-        <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[var(--primary)]">
+        <h2 className="py-3 text-2xl sm:text-3xl md:text-4xl font-extrabold text-[var(--primary)]">
           Service Catalog
         </h2>
-        <div className="flex gap-2 items-center">
+
+        <div className="flex gap-2 items-center justify-center">
           {/* Search */}
-          <div className="relative xs:w-28 sm:w-32 md:w-44 lg:w-52">
-            <FaSearch className="absolute left-3 top-3 text-gray-400" />
+          <div className="relative w-3/4 xs:w-28 sm:w-32 md:w-44 lg:w-52">
+            <FaSearch className="absolute left-3 top-2 text-gray-400" />
             <input
               type="text"
               placeholder="Search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-10 pr-4 py-2 rounded-full border border-gray-300 shadow text-sm w-full focus:ring-2 focus:ring-[var(--primary)]"
+              className="pl-10 pr-2 py-1.5 rounded-full border border-gray-300 shadow text-sm w-full outline-none focus:ring-2 focus:ring-[var(--primary)]"
             />
           </div>
 
@@ -227,7 +256,7 @@ export default function Services() {
             {showFilter && (
               <div
                 ref={filterRef}
-                className="absolute z-50 right-4 mt-2 w-[320px] bg-white border shadow-xl rounded-xl p-4"
+                className="absolute z-50 right-0 mt-2 w-[300px] bg-white border shadow-xl rounded-xl p-4"
               >
                 <div className="flex justify-between items-center mb-3">
                   <h3 className="text-lg font-semibold">Filter</h3>
@@ -255,7 +284,7 @@ export default function Services() {
                     </button>
 
                     {showCategoryList && (
-                      <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto pr-1 border rounded bg-white p-2">
+                      <div className="flex flex-wrap gap-2 max-h-36 overflow-y-auto pr-1 border rounded bg-gray-50 p-2">
                         {/* All Categories Checkbox */}
                         <label className="flex items-center gap-2 px-2 py-1 rounded hover:bg-[var(--primary-light)] cursor-pointer w-full">
                           <input
@@ -277,7 +306,7 @@ export default function Services() {
                         {categories.map((cat) => (
                           <label
                             key={cat}
-                            className="flex items-center gap-2 px-2 py-1 rounded hover:bg-[var(--primary-light)] cursor-pointer w-full"
+                            className="flex items-center gap-2 px-2 py-1 rounded bg:transparent hover:bg-[var(--primary-light)] cursor-pointer w-full"
                           >
                             <input
                               type="checkbox"
@@ -322,7 +351,7 @@ export default function Services() {
                     </button>
 
                     {showSubcategoryList && selectedCategories.length > 0 && (
-                      <div className="space-y-2 mt-2 max-h-[300px] overflow-y-auto pr-1">
+                      <div className="space-y-2 mt-2 max-h-36 overflow-y-auto pr-1">
                         {selectedCategories.map((cat) => {
                           const subs = flattenedSubcategories
                             .filter((s) => s.category === cat)
@@ -338,7 +367,7 @@ export default function Services() {
                               </p>
 
                               {/* === All Subcategories checkbox === */}
-                              <label className="flex items-center gap-2 px-2 py-1 mb-2 bg-white rounded hover:bg-[var(--primary-light)] w-full cursor-pointer">
+                              <label className="flex items-center gap-2 px-2 py-1 mb-2 bg-transparent rounded hover:bg-[var(--primary-light)] w-full cursor-pointer">
                                 <input
                                   type="checkbox"
                                   checked={uniqueSubs.every((sub) =>
@@ -366,7 +395,7 @@ export default function Services() {
                                 {uniqueSubs.map((sub) => (
                                   <label
                                     key={sub}
-                                    className="flex items-center gap-2 px-2 py-1 bg-white rounded hover:bg-[var(--primary-light)] w-full cursor-pointer"
+                                    className="flex items-center gap-2 px-2 py-1 bg-transparent rounded hover:bg-[var(--primary-light)] w-full cursor-pointer"
                                   >
                                     <input
                                       type="checkbox"
@@ -427,9 +456,46 @@ export default function Services() {
                       railStyle={{ backgroundColor: "#d1d5db" }}
                     />
 
-                    <div className="flex justify-between text-sm mt-2">
-                      <span>Min: ₹{priceRange[0]}</span>
-                      <span>Max: ₹{priceRange[1]}</span>
+                    <div className="flex items-center justify-between mt-2 gap-2 text-sm">
+                      <div className="flex flex-row gap-0.5">
+                        <label className="text-sm text-gray-600">Min ₹</label>
+                        <input
+                          type="number"
+                          min={0}
+                          max={priceRange[1]}
+                          value={priceRange[0]}
+                          onChange={(e) => {
+                            const newMin = Math.max(
+                              0,
+                              parseInt(e.target.value) || 0
+                            );
+                            if (newMin <= priceRange[1]) {
+                              setPriceRange([newMin, priceRange[1]]);
+                            }
+                          }}
+                          className="border px-2 py-0.5 rounded text-sm w-24 focus:outline-none focus:ring-1 focus:ring-[var(--secondary)]"
+                        />
+                      </div>
+
+                      <div className="flex flex-row gap-0.5">
+                        <label className="text-sm text-gray-600">Max ₹</label>
+                        <input
+                          type="number"
+                          min={priceRange[0]}
+                          max={5000}
+                          value={priceRange[1]}
+                          onChange={(e) => {
+                            const newMax = Math.min(
+                              5000,
+                              parseInt(e.target.value) || 0
+                            );
+                            if (newMax >= priceRange[0]) {
+                              setPriceRange([priceRange[0], newMax]);
+                            }
+                          }}
+                          className="border px-1 py-0.5 rounded text-sm w-16 focus:outline-none focus:ring-1 focus:ring-[var(--secondary)]"
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -443,7 +509,7 @@ export default function Services() {
                       }}
                       className="text-sm text-[var(--gray)] hover:underline hover:scale-105 transition-transform duration-100 ease-linear"
                     >
-                      Clear
+                      Clear All
                     </button>
                   </div>
                 </div>
@@ -457,14 +523,14 @@ export default function Services() {
               onClick={() => setShowSort(!showSort)}
               className="flex items-center gap-2 px-3 py-2 rounded-full border border-gray-300 shadow text-sm bg-white hover:bg-gray-50"
             >
-              <FaSortAlphaDown />
+              <img src={assets.sort} alt="Filter" className="w-5 h-4" />
               <span className="hidden sm:inline">Sort</span>
             </button>
 
             {showSort && (
               <div
                 ref={sortRef}
-                className="absolute z-50 right-4 mt-2 w-[260px] bg-white border shadow-xl rounded-xl p-4"
+                className="absolute z-50 right-0 mt-2 w-[260px] bg-white border shadow-xl rounded-xl p-4"
               >
                 <div className="flex justify-between items-center mb-3">
                   <h3 className="text-lg font-semibold">Sort</h3>
@@ -477,48 +543,101 @@ export default function Services() {
                 </div>
 
                 <div className="space-y-2 text-sm">
-                  <select
-                    value={categorySort}
-                    onChange={(e) => setCategorySort(e.target.value)}
-                    className="w-full border px-3 py-2 rounded"
-                  >
-                    <option value="">Sort by Category</option>
-                    <option value="asc">A → Z</option>
-                    <option value="desc">Z → A</option>
-                  </select>
+                  {/* Category sort */}
+                  <div className="relative w-full">
+                    <select
+                      value={categorySort}
+                      onChange={(e) => setCategorySort(e.target.value)}
+                      className="w-full border px-3 py-2 pr-10 rounded text-[var(--primary)] appearance-none"
+                    >
+                      <option value="" disabled hidden>
+                        Sort by Category
+                      </option>
 
-                  <select
-                    value={subcategorySort}
-                    onChange={(e) => setSubcategorySort(e.target.value)}
-                    className="w-full border px-3 py-2 rounded"
-                  >
-                    <option value="">Sort by Subcategory</option>
-                    <option value="asc">A → Z</option>
-                    <option value="desc">Z → A</option>
-                  </select>
+                      <option value="">Default</option>
+                      <option value="asc">A → Z</option>
+                      <option value="desc">Z → A</option>
+                    </select>
+                    <FaChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[var(--primary)] pointer-events-none" />
+                  </div>
 
-                  <select
-                    value={serviceSort}
-                    onChange={(e) => setServiceSort(e.target.value)}
-                    className="w-full border px-3 py-2 rounded"
-                  >
-                    <option value="">Sort by Service</option>
-                    <option value="asc">A → Z</option>
-                    <option value="desc">Z → A</option>
-                  </select>
+                  {/* Subcategory sort */}
+                  <div className="relative w-full">
+                    <select
+                      value={subcategorySort}
+                      onChange={(e) => setSubcategorySort(e.target.value)}
+                      className="w-full border px-3 py-2 rounded text-[var(--primary)] appearance-none"
+                    >
+                      <option value="" disabled hidden>
+                        Sort by Subcategory
+                      </option>
 
-                  <select
-                    value={priceSort}
-                    onChange={(e) => setPriceSort(e.target.value)}
-                    className="w-full border px-3 py-2 rounded"
-                  >
-                    <option value="">Sort by Price</option>
-                    <option value="asc">Low → High</option>
-                    <option value="desc">High → Low</option>
-                  </select>
+                      <option value="">Default</option>
+                      <option value="asc">A → Z</option>
+                      <option value="desc">Z → A</option>
+                    </select>
+                    <FaChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[var(--primary)] pointer-events-none" />
+                  </div>
+
+                  {/* Service sort */}
+                  <div className="relative w-full">
+                    <select
+                      value={serviceSort}
+                      title={
+                        priceSort
+                          ? "You can sort by either Service name or Price at a time"
+                          : ""
+                      }
+                      onChange={(e) => setServiceSort(e.target.value)}
+                      disabled={!!priceSort}
+                      className={`w-full border px-3 py-2 rounded text-[var(--primary)] appearance-none ${
+                        priceSort
+                          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                          : ""
+                      }`}
+                    >
+                      <option value="" disabled hidden>
+                        Sort by Service
+                      </option>
+
+                      <option value="">Default</option>
+                      <option value="asc">A → Z</option>
+                      <option value="desc">Z → A</option>
+                    </select>
+                    <FaChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[var(--primary)] pointer-events-none" />
+                  </div>
+
+                  {/* Price sort */}
+                  <div className="relative w-full">
+                    <select
+                      value={priceSort}
+                      title={
+                        serviceSort
+                          ? "You can sort by either Service name or Price at a time"
+                          : ""
+                      }
+                      onChange={(e) => setPriceSort(e.target.value)}
+                      disabled={!!serviceSort}
+                      className={`w-full border px-3 py-2 rounded text-[var(--primary)] appearance-none ${
+                        serviceSort
+                          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                          : ""
+                      }`}
+                    >
+                      <option value="" disabled hidden>
+                        Sort by Price
+                      </option>
+
+                      <option value="">Default</option>
+                      <option value="asc">Low → High</option>
+                      <option value="desc">High → Low</option>
+                    </select>
+                    <FaChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[var(--primary)] pointer-events-none" />
+                  </div>
                   {/* <option value="rating">Sort by Rating</option>
 <option value="popularity">Sort by Popularity</option> */}
                 </div>
+
                 <div className="flex justify-between mt-3">
                   <button
                     onClick={() => {
@@ -529,7 +648,7 @@ export default function Services() {
                     }}
                     className="text-sm text-[var(--gray)] hover:underline hover:scale-105 transition-transform duration-100 ease-linear"
                   >
-                    Clear
+                    Clear All
                   </button>
                 </div>
               </div>
@@ -547,7 +666,7 @@ export default function Services() {
 
       {/* Display Services */}
       <div className="max-w-7xl mx-auto space-y-6">
-        {Object.entries(groupedServices).map(([category, subcats]) => {
+        {Object.entries(sortedGroupedServices).map(([category, subcats]) => {
           const isCategoryOpen = expandedCategories[category];
           return (
             <div
