@@ -21,9 +21,36 @@ import {
   MdOutlineCleaningServices,
   MdOutlinePestControl,
 } from "react-icons/md";
+import notFoundImg from "../assets/icons/not-found.webp";
 
 export default function Services() {
   const navigate = useNavigate();
+
+  // Price extract
+  const extractPrice = (priceStr) => {
+    const match = priceStr?.match(/\d+/g);
+    return match ? parseInt(match[0]) : 0;
+  };
+
+  // Flatten and prepare all services
+  const flattenedSubcategories = SERVICES.flat();
+  let allServices = flattenedSubcategories.flatMap((sub) =>
+    sub.services.map((service) => ({
+      ...service,
+      category: sub.category,
+      subcategory: sub.subcategory,
+    }))
+  );
+
+  // Extract all prices and find max
+  const allPrices = allServices.map((s) => extractPrice(s.price));
+  const maxPrice = allPrices.length ? Math.max(...allPrices) : 5000;
+
+  useEffect(() => {
+    if (priceRange[1] === 0 && maxPrice > 0) {
+      setPriceRange([0, maxPrice]);
+    }
+  }, [maxPrice]);
 
   // States
   const [search, setSearch] = useState("");
@@ -39,7 +66,7 @@ export default function Services() {
   const [expandedSubcategories, setExpandedSubcategories] = useState({});
   const [showFilter, setShowFilter] = useState(false);
   const [showSort, setShowSort] = useState(false);
-  const [priceRange, setPriceRange] = useState([0, 5000]); // [min, max]
+  const [priceRange, setPriceRange] = useState([0, 0]); // [min, max]
 
   // Refs for outside click detection
   const filterRef = useRef(null);
@@ -79,16 +106,6 @@ export default function Services() {
     }));
   };
 
-  // Flatten and prepare all services
-  const flattenedSubcategories = SERVICES.flat();
-  let allServices = flattenedSubcategories.flatMap((sub) =>
-    sub.services.map((service) => ({
-      ...service,
-      category: sub.category,
-      subcategory: sub.subcategory,
-    }))
-  );
-
   // Search logic
   if (search.trim()) {
     allServices = allServices.filter(
@@ -120,12 +137,6 @@ export default function Services() {
       );
     }
   }
-
-  // Price filter
-  const extractPrice = (priceStr) => {
-    const match = priceStr?.match(/\d+/g);
-    return match ? parseInt(match[0]) : 0;
-  };
 
   allServices = allServices.filter((s) => {
     const price = extractPrice(s.price);
@@ -432,7 +443,7 @@ export default function Services() {
                     <Slider
                       range
                       min={0}
-                      max={5000}
+                      max={maxPrice}
                       defaultValue={priceRange}
                       value={priceRange}
                       onChange={(range) => setPriceRange(range)}
@@ -456,8 +467,8 @@ export default function Services() {
                       railStyle={{ backgroundColor: "#d1d5db" }}
                     />
 
-                    <div className="flex items-center justify-between mt-2 gap-2 text-sm">
-                      <div className="flex flex-row gap-0.5">
+                    <div className="flex items-center justify-between mt-2 text-sm">
+                      <div className="flex flex-row gap-1">
                         <label className="text-sm text-gray-600">Min ₹</label>
                         <input
                           type="number"
@@ -473,27 +484,27 @@ export default function Services() {
                               setPriceRange([newMin, priceRange[1]]);
                             }
                           }}
-                          className="border px-2 py-0.5 rounded text-sm w-24 focus:outline-none focus:ring-1 focus:ring-[var(--secondary)]"
+                          className="border px-2 py-0.5 rounded text-xs w-20 focus:outline-none focus:ring-1 focus:ring-[var(--secondary)]"
                         />
                       </div>
 
-                      <div className="flex flex-row gap-0.5">
+                      <div className="flex flex-row gap-1">
                         <label className="text-sm text-gray-600">Max ₹</label>
                         <input
                           type="number"
                           min={priceRange[0]}
-                          max={5000}
+                          max={maxPrice}
                           value={priceRange[1]}
                           onChange={(e) => {
                             const newMax = Math.min(
-                              5000,
+                              maxPrice,
                               parseInt(e.target.value) || 0
                             );
                             if (newMax >= priceRange[0]) {
                               setPriceRange([priceRange[0], newMax]);
                             }
                           }}
-                          className="border px-1 py-0.5 rounded text-sm w-16 focus:outline-none focus:ring-1 focus:ring-[var(--secondary)]"
+                          className="border px-1 py-0.5 rounded text-xs w-20 focus:outline-none focus:ring-1 focus:ring-[var(--secondary)]"
                         />
                       </div>
                     </div>
@@ -505,7 +516,7 @@ export default function Services() {
                         setSelectedCategories([]);
                         setSelectedSubcategories([]);
 
-                        setPriceRange([0, 5000]);
+                        setPriceRange([0, maxPrice]);
                       }}
                       className="text-sm text-[var(--gray)] hover:underline hover:scale-105 transition-transform duration-100 ease-linear"
                     >
@@ -659,8 +670,16 @@ export default function Services() {
 
       {/* No Results */}
       {Object.keys(groupedServices).length === 0 && (
-        <div className="text-center text-gray-500 mt-10">
-          No services found.
+        <div className="text-center mt-10">
+          <img
+            src={notFoundImg}
+            alt="No results"
+            className="w-52 mx-auto mb-4"
+          />
+          <h3 className="text-2xl text-[var(--primary)] font-semibold">
+            Oops! No results found
+          </h3>
+          <p className="text-xl text-[var(--gray)] mt-3">Try something else</p>
         </div>
       )}
 

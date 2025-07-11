@@ -26,24 +26,55 @@ import {
   FaGift,
 } from "react-icons/fa";
 
+// category icons
+import homeServices from "../assets/category/home-services.webp";
+
 const CATEGORY_NAMES = [
   "Home Services",
   "Cleaning & Sanitation",
-  "Beauty & Personal Care",
+  "Beauty & Grooming",
   "Wellness & Lifestyle",
   "Events & Photography",
   "Tutoring & Training",
   "Automobile",
   "Business & Professional",
   "Renovation & Construction",
-  "Child & Elder Care",
+  "Care & Support",
   "Pet Care",
   "Packers & Movers",
-  "Home Help & Personal Assistance",
+  "Home Help",
   "Security & Safety",
   "Real Estate & Property",
   "Tailoring & Fashion",
 ];
+const CATEGORY_ICONS = {
+  "Home Services": homeServices,
+  "Cleaning & Sanitation":
+    "https://cdn-icons-png.flaticon.com/512/10465/10465072.png",
+  "Beauty & Grooming":
+    "https://cdn-icons-png.flaticon.com/512/8916/8916279.png",
+  "Wellness & Lifestyle":
+    "https://cdn-icons-png.flaticon.com/512/4489/4489231.png",
+  "Events & Photography":
+    "https://cdn-icons-png.flaticon.com/512/5997/5997584.png",
+  "Tutoring & Training":
+    "https://cdn-icons-png.flaticon.com/512/2942/2942841.png",
+  Automobile: "https://cdn-icons-png.flaticon.com/512/10495/10495140.png",
+  "Business & Professional":
+    "https://cdn-icons-png.flaticon.com/512/10494/10494737.png",
+  "Renovation & Construction":
+    "https://cdn-icons-png.flaticon.com/512/10494/10494923.png",
+  "Care & Support": "https://cdn-icons-png.flaticon.com/512/4076/4076549.png",
+  "Pet Care": "https://cdn-icons-png.flaticon.com/512/616/616408.png",
+  "Packers & Movers": "https://cdn-icons-png.flaticon.com/512/3176/3176292.png",
+  "Home Help": "https://cdn-icons-png.flaticon.com/512/627/627596.png",
+  "Security & Safety":
+    "https://cdn-icons-png.flaticon.com/512/3349/3349576.png",
+  "Real Estate & Property":
+    "https://cdn-icons-png.flaticon.com/512/10494/10494901.png",
+  "Tailoring & Fashion":
+    "https://cdn-icons-png.flaticon.com/512/9460/9460615.png",
+};
 
 const WHY_CHOOSE = [
   {
@@ -203,27 +234,9 @@ export default function Home() {
         >
           Explore Categories
         </h2>
-        {/* <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto"> */}
-
-        {/* {SERVICES.map((subcatArray, index) => (
-  <div
-    key={index}
-    className="bg-[var(--white)] rounded-2xl shadow-lg hover:shadow-2xl transition cursor-pointer overflow-hidden group border-t-4 border-[var(--primary)]"
-    onClick={() => setSelectedCategory({ category:CATEGORY_NAMES[index]
-, subcategories: subcatArray })}
-  >
-    <div className="p-8">
-<h3 className="font-bold text-2xl mb-2 text-[var(--primary)]">
-  {CATEGORY_NAMES[index]
-}
-</h3>
-      <div className="text-gray-500 text-sm">{subcatArray.length} subcategories</div>
-    </div>
-  </div>
-))} */}
 
         <button
-          className="px-6 py-2 rounded-full font-bold bg-gradient-to-r from-[var(--accent)] to-[var(--secondary)] text-white shadow hover:scale-105 transition"
+          className="px-6 py-2 rounded-full font-bold bg-gradient-to-r from-[var(--accent)] to-[var(--secondary)] text-white shadow hover:scale-105 transition mb-2"
           onClick={() => navigate("/services")}
           onMouseOver={(e) => {
             e.currentTarget.style.background = "var(--ternary)";
@@ -235,6 +248,7 @@ export default function Home() {
         >
           Explore All
         </button>
+
         <div>
           <Swiper
             modules={[Navigation, Pagination]}
@@ -252,7 +266,7 @@ export default function Home() {
             {SERVICES.map((subcatArray, index) => (
               <SwiperSlide key={index}>
                 <div
-                  className="bg-[var(--white)] rounded-2xl shadow-lg hover:shadow-2xl transition cursor-pointer overflow-hidden group border-t-4 border-[var(--primary)]"
+                  className="rounded-full p-4 hover:scale-125 transition cursor-pointer overflow-hidden group flex flex-col items-center text-center"
                   onClick={() =>
                     setSelectedCategory({
                       category: CATEGORY_NAMES[index],
@@ -260,15 +274,19 @@ export default function Home() {
                     })
                   }
                 >
-                  <div className="p-8">
-                    <h3 className="font-bold text-2xl mb-2 text-[var(--primary)]">
-                      {CATEGORY_NAMES[index]}
-                    </h3>
-                    <div className="text-gray-500 text-sm">
-                      {subcatArray.length} subcategories
-                    </div>
-                  </div>
+                  <img
+                    src={CATEGORY_ICONS[CATEGORY_NAMES[index]]}
+                    alt={CATEGORY_NAMES[index]}
+                    className="w-20 h-20 object-contain"
+                    // className="w-20 h-20 p-3 object-contain rounded-full hover:shadow-2xl"
+                  />
                 </div>
+                <h3 className="font-bold text-xl text-[var(--primary)] mb-1">
+                  {CATEGORY_NAMES[index]}
+                </h3>
+                <p className="text-gray-500 text-sm">
+                  {subcatArray.length} subcategories
+                </p>
               </SwiperSlide>
             ))}
           </Swiper>
@@ -297,7 +315,7 @@ export default function Home() {
 ))} */}
         </div>
         {/* Category Modal */}
-        <Modal
+        {/* <Modal
           open={!!selectedCategory}
           onCancel={() => {
             setSelectedCategory(null);
@@ -347,6 +365,74 @@ export default function Home() {
                   </li>
                 ))}
               </ul>
+            </div>
+          )}
+        </Modal> */}
+        <Modal
+          open={!!selectedCategory}
+          onCancel={() => {
+            setSelectedCategory(null);
+            setSelectedSubcategory(null);
+          }}
+          footer={null}
+          title={selectedCategory?.category}
+        >
+          {!selectedSubcategory ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {selectedCategory?.subcategories.map((sub) => (
+                <div
+                  key={sub.subcategory}
+                  className="cursor-pointer border p-4 rounded-lg shadow hover:shadow-md transition bg-white text-center"
+                  onClick={() => setSelectedSubcategory(sub)}
+                >
+                  <img
+                    src={sub.icon || sub.services[0].image}
+                    alt={sub.subcategory}
+                    className="w-full h-28 object-cover rounded mb-2"
+                  />
+
+                  <h4 className="text-sm font-semibold text-[var(--primary)]">
+                    {sub.subcategory}
+                  </h4>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div>
+              <button
+                className="mb-3 text-xs text-[var(--primary)] underline"
+                onClick={() => setSelectedSubcategory(null)}
+              >
+                ← Back to Subcategories
+              </button>
+              <h4 className="font-semibold mb-4 text-[var(--primary)]">
+                {selectedSubcategory.subcategory} Services
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {selectedSubcategory.services.map((service) => (
+                  <div
+                    key={service.name}
+                    className="cursor-pointer border p-4 rounded-lg shadow hover:shadow-md transition flex items-center justify-between"
+                    onClick={() => {
+                      setSelectedCategory(null);
+                      setSelectedSubcategory(null);
+                      navigate(`/services/${encodeURIComponent(service.name)}`);
+                    }}
+                  >
+                    <div>
+                      <h5 className="font-semibold text-[var(--primary)] mb-1">
+                        {service.name}
+                      </h5>
+                      <p className="text-gray-500 text-sm">{service.price}</p>
+                    </div>
+                    <img
+                      src={service.image}
+                      alt={service.name}
+                      className="w-16 h-16 object-cover rounded"
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </Modal>
