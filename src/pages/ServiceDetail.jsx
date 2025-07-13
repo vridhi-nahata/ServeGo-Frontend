@@ -9,7 +9,20 @@ import { SERVICES } from "../constants/services";
 export default function ServiceDetail() {
   const { serviceName } = useParams();
   const { userData } = useContext(AppContext);
-  const service = SERVICES.find((s) => s.name === serviceName);
+
+  // Find the service using the flattened array:
+  const allServices = SERVICES.flatMap((categoryArray) =>
+    categoryArray.flatMap((subcatObj) =>
+      subcatObj.services.map((service) => ({
+        ...service,
+        category: subcatObj.category,
+        subcategory: subcatObj.subcategory,
+      }))
+    )
+  );
+
+  const service = allServices.find((s) => s.name === serviceName);
+
   const [providers, setProviders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedProvider, setSelectedProvider] = useState(null); // track booking state
@@ -43,7 +56,7 @@ export default function ServiceDetail() {
           {service?.name}
         </h2>
         <p className="text-[var(--gray)] text-lg text-center">
-          {service?.desc || "Service details coming soon."}
+          {service?.description || "Service details coming soon."}
         </p>
       </div>
 
@@ -56,23 +69,22 @@ export default function ServiceDetail() {
         <div className="text-center">Loading...</div>
       ) : providers.length === 0 ? (
         <div className="text-center text-[var(--gray)]">
-          No providers found for this service.
+          No providers found for this service
         </div>
       ) : (
         <div className="w-full px-4">
           <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 mx-auto justify-center">
-{providers.map((provider) => (
-  <div className="flex justify-center" key={provider._id}>
-    <ProviderCard
-      provider={provider}
-      serviceName={serviceName}
-      isWishlisted={userData?.wishlist?.includes(provider._id)}
-      onProfileClick={() => navigate(`/provider/${provider._id}`)}
-      onBook={() => setSelectedProvider(provider)}
-    />
-  </div>
-))}
-
+            {providers.map((provider) => (
+              <div className="flex justify-center" key={provider._id}>
+                <ProviderCard
+                  provider={provider}
+                  serviceName={serviceName}
+                  isWishlisted={userData?.wishlist?.includes(provider._id)}
+                  onProfileClick={() => navigate(`/provider/${provider._id}`)}
+                  onBook={() => setSelectedProvider(provider)}
+                />
+              </div>
+            ))}
           </div>
         </div>
       )}

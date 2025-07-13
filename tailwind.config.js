@@ -5,7 +5,8 @@ export default {
   theme: {
     extend: {
       screens: {
-        xs: '350px', // Extra small devices (eg. phones, 350px and up)
+        xxs: '375px',
+        xs: '480px', // Extra small devices (eg. phones, 350px and up)
       },
       fontFamily: {
         nosifer: ['Nosifer', 'sans-serif'],

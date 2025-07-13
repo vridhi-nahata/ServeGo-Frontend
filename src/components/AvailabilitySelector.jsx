@@ -296,7 +296,7 @@ export default function AvailabilitySelector({ onChange }) {
                 onClick={() => addSlot(i)}
                 className="bg-gradient-to-bl from-[var(--primary-light)] to-[var(--accent)] hover:scale-105 text-sm px-2 py-1 rounded shadow-lg shadow-slate-800"
               >
-                <i className="fas fa-plus text-xs"></i> Add Slot
+                <i className="fas fa-plus text-xs"></i> Add New Slot
               </button>
             </div>
           )}
