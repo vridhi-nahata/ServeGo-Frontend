@@ -3,24 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { SERVICES } from "../constants/services";
 import Slider from "rc-slider";
 import "rc-slider/assets/index.css";
-// import { assets } from "../assets/assets";
+import { CATEGORY_NAMES, CATEGORY_ICONS } from "../constants/categoryData";
 
 import {
   FaSearch,
   FaFilter,
-  FaListUl,
-  FaCouch,
-  FaTools,
-  FaPaintRoller,
-  FaLeaf,
-  FaMicrochip,
   FaChevronDown,
   FaTimes,
 } from "react-icons/fa";
-import {
-  MdOutlineCleaningServices,
-  MdOutlinePestControl,
-} from "react-icons/md";
 
 export default function Services() {
   const navigate = useNavigate();
@@ -70,29 +60,6 @@ export default function Services() {
   // Refs for outside click detection
   const filterRef = useRef(null);
   const sortRef = useRef(null);
-
-  // Subcategory Icons
-  const subcategoryIcons = {
-    "Carpentry & Woodwork": <FaCouch className="text-[var(--secondary)]" />,
-    "Air Conditioning & Cooling": (
-      <FaTools className="text-[var(--secondary)]" />
-    ),
-    "Painting & Decor": <FaPaintRoller className="text-[var(--secondary)]" />,
-    "Gardening & Outdoors": <FaLeaf className="text-[var(--secondary)]" />,
-    "Home Automation & Smart Devices": (
-      <FaMicrochip className="text-[var(--secondary)]" />
-    ),
-    "Residential Cleaning": (
-      <MdOutlineCleaningServices className="text-[var(--secondary)]" />
-    ),
-    "Commercial Cleaning": (
-      <MdOutlineCleaningServices className="text-[var(--secondary)]" />
-    ),
-    "Pest Control & Safety": (
-      <MdOutlinePestControl className="text-[var(--secondary)]" />
-    ),
-    Sanitization: <FaLeaf className="text-[var(--secondary)]" />,
-  };
 
   const toggleCategory = (category) =>
     setExpandedCategories((prev) => ({ ...prev, [category]: !prev[category] }));
@@ -695,7 +662,15 @@ export default function Services() {
                 onClick={() => toggleCategory(category)}
                 className="w-full text-left text-2xl font-bold text-[var(--primary)] flex items-center justify-between"
               >
-                {category}
+                <span className="flex items-center gap-2">
+                  <img
+                    src={CATEGORY_ICONS[category]}
+                    alt={category}
+                    className="w-10 h-10 object-contain"
+                  />
+                  {category}
+                </span>
+
                 <FaChevronDown
                   className={`transition-transform ${
                     isCategoryOpen ? "rotate-180" : ""
@@ -718,7 +693,18 @@ export default function Services() {
                         className="flex justify-between items-center w-full text-[var(--secondary)] font-semibold text-lg mb-2"
                       >
                         <span className="flex items-center gap-2">
-                          {subcategoryIcons[subcategory] || <FaListUl />}
+                          <img
+                            src={
+                              flattenedSubcategories.find(
+                                (s) =>
+                                  s.category === category &&
+                                  s.subcategory === subcategory
+                              )?.subcategoryIcon || "/icons/default-icon.png"
+                            }
+                            alt={subcategory}
+                            className="w-10 h-10 object-contain"
+                          />
+
                           {subcategory}
                         </span>
                         <FaChevronDown

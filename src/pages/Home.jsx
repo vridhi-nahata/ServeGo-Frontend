@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Modal } from "antd";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
+import { CATEGORY_NAMES, CATEGORY_ICONS } from "../constants/categoryData";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
@@ -27,44 +28,6 @@ import {
   FaPhoneAlt,
   FaGift,
 } from "react-icons/fa";
-
-const CATEGORY_NAMES = [
-  "Home Services",
-  "Cleaning & Sanitation",
-  "Beauty & Grooming",
-  "Wellness & Lifestyle",
-  "Events & Photography",
-  "Tutoring & Training",
-  "Automobile",
-  "Business & Professional",
-  "Renovation & Construction",
-  "Care & Support",
-  "Pet Care",
-  "Packers & Movers",
-  "Home Help",
-  "Security & Safety",
-  "Real Estate & Property",
-  "Tailoring & Fashion",
-];
-
-const CATEGORY_ICONS = {
-  "Home Services": "/category/home-services.webp",
-  "Cleaning & Sanitation": "/category/cleaning-and-sanitation.webp",
-  "Beauty & Grooming": "/category/beauty-and-grooming.png",
-  "Wellness & Lifestyle": "/category/wellness-and-lifestyle.webp",
-  "Events & Photography": "/category/events-and-photography.png",
-  "Tutoring & Training": "/category/tutoring-and-training.png",
-  Automobile: "/category/automobile.webp",
-  "Business & Professional": "/category/business-and-professional.webp",
-  "Renovation & Construction": "/category/renovation-and-construction.webp",
-  "Care & Support": "/category/care-and-support.webp",
-  "Pet Care": "/category/pet-care.webp",
-  "Packers & Movers": "/category/packers-and-movers.webp",
-  "Home Help": "/category/home-help.webp",
-  "Security & Safety": "/category/security-and-safety.webp",
-  "Real Estate & Property": "/category/real-estate-and-property.webp",
-  "Tailoring & Fashion": "/category/tailoring-and-fashion.webp",
-};
 
 const WHY_CHOOSE = [
   {
@@ -455,7 +418,7 @@ title={
                     <img
                       src={service.image}
                       alt={service.name}
-                      className="w-28 h-20 sm:w-24 sm:h-24 object-cover rounded"
+                      className="w-28 h-20 sm:w-24 sm:h-24 object-contain rounded"
                     />
                   </div>
                 ))}

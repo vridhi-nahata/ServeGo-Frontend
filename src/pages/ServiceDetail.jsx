@@ -46,18 +46,33 @@ export default function ServiceDetail() {
   return (
     <div className="min-h-screen py-20 px-4 bg-gradient-to-br from-[var(--primary-light)] to-[var(--white)]">
       {/* About service section */}
-      <div className="max-w-3xl mx-auto bg-[var(--white)] rounded-2xl shadow-lg p-8 mb-10 flex flex-col items-center">
-        <img
-          src={service?.image}
-          alt={service?.name}
-          className="w-32 h-32 object-contain mb-4"
-        />
-        <h2 className="text-3xl font-bold mb-2 text-[var(--primary)]">
-          {service?.name}
-        </h2>
-        <p className="text-[var(--gray)] text-lg text-center">
-          {service?.description || "Service details coming soon."}
-        </p>
+
+      <div className="w-full mx-auto bg-[var(--white)] rounded-2xl shadow-lg p-6 mb-10 flex flex-col md:flex-row items-stretch justify-between md:h-72">
+        {/* Left: Text Section */}
+        <div className="w-full md:w-3/5 md:pr-6 flex flex-col mb-4 md:mb-0">
+          <h2 className="text-3xl font-bold mb-2 text-[var(--primary)]">
+            {service?.name}
+          </h2>
+          <p className="text-[var(--gray)] text-md">
+            {service?.description || "Service details coming soon."}
+          </p>
+        </div>
+
+        {/* Right: Full Height Image */}
+        <div className="w-full md:w-2/5 h-64 md:h-full">
+          <a
+            href={service?.image}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block h-full"
+          >
+            <img
+              src={service?.image}
+              alt={service?.name}
+              className="w-full h-full object-cover rounded-xl"
+            />
+          </a>
+        </div>
       </div>
 
       {/* Available providers list */}
@@ -68,8 +83,16 @@ export default function ServiceDetail() {
       {loading ? (
         <div className="text-center">Loading...</div>
       ) : providers.length === 0 ? (
-        <div className="text-center text-[var(--gray)]">
-          No providers found for this service
+        <div className="text-center mt-10">
+          <img
+            src="/icons/no-provider.webp"
+            alt="No results"
+            className="w-52 mx-auto mb-4"
+          />
+          <h3 className="text-2xl text-[var(--primary)] font-semibold">
+            Oops! No provider available
+          </h3>
+          <p className="text-xl text-[var(--gray)] mt-3">No provider found for this service</p>
         </div>
       ) : (
         <div className="w-full px-4">
