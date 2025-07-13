@@ -2,7 +2,6 @@ import React, { useEffect, useState, useContext } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import StarRating from "../components/StarRating";
-import { assets } from "../assets/assets";
 import BookingForm from "../components/BookingForm";
 
 export default function ProviderProfile() {
@@ -86,16 +85,16 @@ export default function ProviderProfile() {
             <div className="flex justify-center sm:justify-start gap-6 pt-5">
               <button title="Voice Call" className="group">
                 <img
-                  src={assets.voice_call}
+                  src="/icons/voice-call.png"
                   alt="Voice Call"
-                  className="w-7 h-7 transition-transform duration-200 group-hover:scale-125"
+                  className="w-12 h-9 transition-transform duration-200 group-hover:scale-125"
                 />
               </button>
               <button title="Video Call" className="group">
                 <img
-                  src={assets.video_call}
+                  src="/icons/video-call.png"
                   alt="Video Call"
-                  className="w-7 h-7 transition-transform duration-200 group-hover:scale-125"
+                  className="w-9 h-9 transition-transform duration-200 group-hover:scale-125"
                 />
               </button>
               <button
@@ -104,9 +103,9 @@ export default function ProviderProfile() {
                 className="group"
               >
                 <img
-                  src={assets.booking}
+                  src="/icons/book-now.png"
                   alt="Book Now"
-                  className="w-7 h-7 transition-transform duration-200 group-hover:scale-125"
+                  className="w-12 h-12 transition-transform duration-200 group-hover:scale-125"
                 />
               </button>
             </div>

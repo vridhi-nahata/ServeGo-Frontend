@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { SERVICES } from "../constants/services";
 import { motion } from "framer-motion";
@@ -20,14 +20,13 @@ import {
   FaUserCheck,
   FaCogs,
   FaRegCommentDots,
+  FaChevronLeft,
+  FaChevronRight,
   FaClipboardList,
   FaHandHoldingUsd,
   FaPhoneAlt,
   FaGift,
 } from "react-icons/fa";
-
-// category icons
-import homeServices from "../assets/category/home-services.webp";
 
 const CATEGORY_NAMES = [
   "Home Services",
@@ -47,33 +46,24 @@ const CATEGORY_NAMES = [
   "Real Estate & Property",
   "Tailoring & Fashion",
 ];
+
 const CATEGORY_ICONS = {
-  "Home Services": homeServices,
-  "Cleaning & Sanitation":
-    "https://cdn-icons-png.flaticon.com/512/10465/10465072.png",
-  "Beauty & Grooming":
-    "https://cdn-icons-png.flaticon.com/512/8916/8916279.png",
-  "Wellness & Lifestyle":
-    "https://cdn-icons-png.flaticon.com/512/4489/4489231.png",
-  "Events & Photography":
-    "https://cdn-icons-png.flaticon.com/512/5997/5997584.png",
-  "Tutoring & Training":
-    "https://cdn-icons-png.flaticon.com/512/2942/2942841.png",
-  Automobile: "https://cdn-icons-png.flaticon.com/512/10495/10495140.png",
-  "Business & Professional":
-    "https://cdn-icons-png.flaticon.com/512/10494/10494737.png",
-  "Renovation & Construction":
-    "https://cdn-icons-png.flaticon.com/512/10494/10494923.png",
-  "Care & Support": "https://cdn-icons-png.flaticon.com/512/4076/4076549.png",
-  "Pet Care": "https://cdn-icons-png.flaticon.com/512/616/616408.png",
-  "Packers & Movers": "https://cdn-icons-png.flaticon.com/512/3176/3176292.png",
-  "Home Help": "https://cdn-icons-png.flaticon.com/512/627/627596.png",
-  "Security & Safety":
-    "https://cdn-icons-png.flaticon.com/512/3349/3349576.png",
-  "Real Estate & Property":
-    "https://cdn-icons-png.flaticon.com/512/10494/10494901.png",
-  "Tailoring & Fashion":
-    "https://cdn-icons-png.flaticon.com/512/9460/9460615.png",
+  "Home Services": "/category/home-services.webp",
+  "Cleaning & Sanitation": "/category/cleaning-and-sanitation.webp",
+  "Beauty & Grooming": "/category/beauty-and-grooming.png",
+  "Wellness & Lifestyle": "/category/wellness-and-lifestyle.webp",
+  "Events & Photography": "/category/events-and-photography.png",
+  "Tutoring & Training": "/category/tutoring-and-training.png",
+  Automobile: "/category/automobile.webp",
+  "Business & Professional": "/category/business-and-professional.webp",
+  "Renovation & Construction": "/category/renovation-and-construction.webp",
+  "Care & Support": "/category/care-and-support.webp",
+  "Pet Care": "/category/pet-care.webp",
+  "Packers & Movers": "/category/packers-and-movers.webp",
+  "Home Help": "/category/home-help.webp",
+  "Security & Safety": "/category/security-and-safety.webp",
+  "Real Estate & Property": "/category/real-estate-and-property.webp",
+  "Tailoring & Fashion": "/category/tailoring-and-fashion.webp",
 };
 
 const WHY_CHOOSE = [
@@ -151,9 +141,39 @@ const WHY_CHOOSE = [
 
 export default function Home() {
   const navigate = useNavigate();
-  const [page, setPage] = useState(0);
+  // const [page, setPage] = useState(0);
+  const prevRef = useRef(null);
+  const nextRef = useRef(null);
+  const [swiperInstance, setSwiperInstance] = useState(null);
+  const [isBeginning, setIsBeginning] = useState(true);
+  const [isEnd, setIsEnd] = useState(false);
+
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState(null);
+
+  const handleSlideChange = (swiper) => {
+    setIsBeginning(swiper.isBeginning);
+    setIsEnd(swiper.isEnd);
+  };
+
+  useEffect(() => {
+    if (
+      swiperInstance &&
+      prevRef.current &&
+      nextRef.current &&
+      swiperInstance.params
+    ) {
+      // Delay to ensure refs are set
+      setTimeout(() => {
+        swiperInstance.params.navigation.prevEl = prevRef.current;
+        swiperInstance.params.navigation.nextEl = nextRef.current;
+
+        swiperInstance.navigation.destroy();
+        swiperInstance.navigation.init();
+        swiperInstance.navigation.update();
+      }, 0);
+    }
+  }, [swiperInstance]);
 
   return (
     <div className="min-h-screen">
@@ -227,41 +247,58 @@ export default function Home() {
       </section>
 
       {/* Explore Categories */}
-      <section className="py-20 px-6 bg-gradient-to-br from-[var(--primary-light)] to-[var(--white)] text-center">
-        <h2
-          className="text-3xl sm:text-4xl font-bold text-center mb-8"
-          style={{ color: "var(--primary)" }}
-        >
-          Explore Categories
-        </h2>
+      <section className="py-12 px-6 pb-20 bg-gradient-to-br from-[var(--primary-light)] to-[var(--white)] text-center">
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-8">
+          <h2
+            className="text-3xl sm:text-4xl font-bold text-center w-full sm:w-auto m-6 px-12"
+            style={{ color: "var(--primary)" }}
+          >
+            Service Catalog
+          </h2>
 
-        <button
-          className="px-6 py-2 rounded-full font-bold bg-gradient-to-r from-[var(--accent)] to-[var(--secondary)] text-white shadow hover:scale-105 transition mb-2"
-          onClick={() => navigate("/services")}
-          onMouseOver={(e) => {
-            e.currentTarget.style.background = "var(--ternary)";
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.background =
-              "linear-gradient(to right, var(--accent), var(--secondary))";
-          }}
-        >
-          Explore All
-        </button>
-
-        <div>
+          <button
+            className="px-6 py-2 rounded-full font-bold bg-gradient-to-r from-[var(--accent)] to-[var(--secondary)] text-white shadow hover:scale-105 transition"
+            onClick={() => navigate("/services")}
+            onMouseOver={(e) => {
+              e.currentTarget.style.background = "var(--primary)";
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.background =
+                "linear-gradient(to right, var(--accent), var(--secondary))";
+            }}
+          >
+            See All
+          </button>
+        </div>
+        <div className="relative overflow-visible">
           <Swiper
             modules={[Navigation, Pagination]}
+            onSwiper={setSwiperInstance}
             spaceBetween={20}
             slidesPerView={1}
-            navigation
+            navigation={{
+              prevEl: prevRef.current,
+              nextEl: nextRef.current,
+            }}
+            onBeforeInit={(swiper) => {
+              swiper.params.navigation.prevEl = prevRef.current;
+              swiper.params.navigation.nextEl = nextRef.current;
+            }}
+            onSlideChange={(swiper) => {
+              setIsBeginning(swiper.isBeginning);
+              setIsEnd(swiper.isEnd);
+            }}
+            onAfterInit={(swiper) => {
+              setIsBeginning(swiper.isBeginning);
+              setIsEnd(swiper.isEnd);
+            }}
             pagination={{ clickable: true }}
             breakpoints={{
-              350: { slidesPerView: 2 },
-              1024: { slidesPerView: 3 },
-              1280: { slidesPerView: 4 },
+              480: { slidesPerView: 2 },
+              750: { slidesPerView: 3 },
+              1040: { slidesPerView: 4 },
+              1620: { slidesPerView: 5 },
             }}
-            className="w-full mx-auto"
           >
             {SERVICES.map((subcatArray, index) => (
               <SwiperSlide key={index}>
@@ -274,12 +311,15 @@ export default function Home() {
                     })
                   }
                 >
-                  <img
-                    src={CATEGORY_ICONS[CATEGORY_NAMES[index]]}
-                    alt={CATEGORY_NAMES[index]}
-                    className="w-20 h-20 object-contain"
-                    // className="w-20 h-20 p-3 object-contain rounded-full hover:shadow-2xl"
-                  />
+                  <div className="w-40 h-40 flex items-center justify-center overflow-hidden m-2">
+                    <div className="w-36 h-36 p-1 flex items-center justify-center">
+                      <img
+                        src={CATEGORY_ICONS[CATEGORY_NAMES[index]]}
+                        alt={CATEGORY_NAMES[index]}
+                        className="object-contain w-full h-full"
+                      />
+                    </div>
+                  </div>
                 </div>
                 <h3 className="font-bold text-xl text-[var(--primary)] mb-1">
                   {CATEGORY_NAMES[index]}
@@ -290,84 +330,38 @@ export default function Home() {
               </SwiperSlide>
             ))}
           </Swiper>
-          {/* </div> */}
 
-          {/* {SERVICES.map((subcatArray, index) => (
-  <div
-    key={index}
-    className="bg-[var(--white)] rounded-2xl shadow-lg hover:shadow-2xl transition cursor-pointer overflow-hidden group border-t-4 border-[var(--primary)]"
-    onClick={() =>
-      setSelectedCategory({
-        category: `Category ${index + 1}`,
-        subcategories: subcatArray
-      })
-    }
-  >
-    <div className="p-8">
-      <h3 className="font-bold text-2xl mb-2 text-[var(--primary)]">
-        {`Category ${index + 1}`}
-      </h3>
-      <div className="text-gray-500 text-sm">
-        {subcatArray.length} subcategories
-      </div>
-    </div>
-  </div>
-))} */}
+          {/* Custom Arrows */}
+          <button
+            ref={prevRef}
+            className={`absolute -left-1 top-28 transform -translate-y-1/2 z-10 w-10 h-10 rounded-full shadow flex items-center justify-center transition
+              ${
+                isBeginning
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  : "bg-white text-[var(--primary)] hover:scale-105 hover:shadow-md"
+              }
+            `}
+            disabled={isBeginning}
+          >
+            <FaChevronLeft className="text-sm sm:text-lg" />
+          </button>
+
+          <button
+            ref={nextRef}
+            className={`absolute -right-1 top-28 transform -translate-y-1/2 z-10 w-10 h-10 rounded-full shadow flex items-center justify-center transition
+              ${
+                isEnd
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  : "bg-white text-[var(--primary)] hover:scale-105 hover:shadow-md"
+              }
+            `}
+            disabled={isEnd}
+          >
+            <FaChevronRight className="text-sm sm:text-lg" />
+          </button>
         </div>
+
         {/* Category Modal */}
-        {/* <Modal
-          open={!!selectedCategory}
-          onCancel={() => {
-            setSelectedCategory(null);
-            setSelectedSubcategory(null);
-          }}
-          footer={null}
-          title={selectedCategory?.category}
-        >
-          {!selectedSubcategory ? (
-            <div>
-              <h4 className="font-semibold mb-4">Subcategories</h4>
-              <ul>
-                {selectedCategory?.subcategories.map((sub) => (
-                  <li
-                    key={sub.subcategory}
-                    className="cursor-pointer hover:text-[var(--primary)] py-2"
-                    onClick={() => setSelectedSubcategory(sub)}
-                  >
-                    {sub.subcategory}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : (
-            <div>
-              <button
-                className="mb-3 text-xs text-[var(--primary)] underline"
-                onClick={() => setSelectedSubcategory(null)}
-              >
-                &larr; Back to Subcategories
-              </button>
-              <h4 className="font-semibold mb-4">
-                {selectedSubcategory.subcategory} Services
-              </h4>
-              <ul>
-                {selectedSubcategory.services.map((service) => (
-                  <li
-                    key={service.name}
-                    className="cursor-pointer hover:text-[var(--primary)] py-2"
-                    onClick={() => {
-                      setSelectedCategory(null);
-                      setSelectedSubcategory(null);
-                      navigate(`/services/${encodeURIComponent(service.name)}`);
-                    }}
-                  >
-                    {service.name}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </Modal> */}
         <Modal
           open={!!selectedCategory}
           onCancel={() => {
@@ -375,7 +369,21 @@ export default function Home() {
             setSelectedSubcategory(null);
           }}
           footer={null}
-          title={selectedCategory?.category}
+title={
+  selectedCategory ? (
+    <div className="flex items-center gap-2">
+      <img
+        src={CATEGORY_ICONS[selectedCategory.category]}
+        alt={selectedCategory.category}
+        className="w-8 h-8 object-contain"
+      />
+      <span className="text-lg font-bold text-[var(--primary)]">
+        {selectedCategory.category}
+      </span>
+    </div>
+  ) : null
+}
+
         >
           {!selectedSubcategory ? (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -385,13 +393,15 @@ export default function Home() {
                   className="cursor-pointer border p-4 rounded-lg shadow hover:shadow-md transition bg-white text-center"
                   onClick={() => setSelectedSubcategory(sub)}
                 >
-                  <img
-                    src={sub.icon || sub.services[0].image}
-                    alt={sub.subcategory}
-                    className="w-full h-28 object-cover rounded mb-2"
-                  />
+                  <div className="w-full h-28 flex items-center justify-center rounded mb-2 overflow-hidden">
+                    <img
+                      src={sub.subcategoryIcon || sub.services[0].image}
+                      alt={sub.subcategory}
+                      className="h-full object-contain"
+                    />
+                  </div>
 
-                  <h4 className="text-sm font-semibold text-[var(--primary)]">
+                  <h4 className="text-xs text-[var(--primary)]">
                     {sub.subcategory}
                   </h4>
                 </div>
@@ -399,20 +409,37 @@ export default function Home() {
             </div>
           ) : (
             <div>
+              <div className="flex justify-between">
+              <div className="flex">
+                <img
+                  src={
+                    selectedSubcategory.subcategoryIcon ||
+                    selectedSubcategory.services[0]?.image
+                  }
+                  alt={selectedSubcategory.subcategory}
+                  className="w-8 h-6 object-contain"
+                />
+<h4 className="font-semibold mb-4 text-[var(--primary)]">
+                {selectedSubcategory.subcategory}
+              </h4>
+              </div>
+
+              
+
               <button
-                className="mb-3 text-xs text-[var(--primary)] underline"
+                className="mb-3 pl-1 text-sm text-[var(--primary)] hover:underline"
                 onClick={() => setSelectedSubcategory(null)}
               >
-                ← Back to Subcategories
+                <i class="fas fa-arrow-left text-xs"></i>
+               Back
               </button>
-              <h4 className="font-semibold mb-4 text-[var(--primary)]">
-                {selectedSubcategory.subcategory} Services
-              </h4>
+              </div>
+              
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {selectedSubcategory.services.map((service) => (
                   <div
                     key={service.name}
-                    className="cursor-pointer border p-4 rounded-lg shadow hover:shadow-md transition flex items-center justify-between"
+                    className="cursor-pointer border p-4 rounded-lg shadow hover:shadow-md transition flex gap-1 items-center justify-between"
                     onClick={() => {
                       setSelectedCategory(null);
                       setSelectedSubcategory(null);
@@ -428,7 +455,7 @@ export default function Home() {
                     <img
                       src={service.image}
                       alt={service.name}
-                      className="w-16 h-16 object-cover rounded"
+                      className="w-28 h-20 sm:w-24 sm:h-24 object-cover rounded"
                     />
                   </div>
                 ))}

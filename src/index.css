@@ -105,3 +105,26 @@ input:-webkit-autofill {
   display: block;
   text-align: center;
 }
+
+/* Swiper pagination */
+
+.swiper-pagination {
+  position: relative !important; 
+  bottom: auto !important;       
+  margin-top: 1rem;              
+  text-align: center;
+  z-index: 10;
+}
+
+.swiper-pagination-bullet {
+  background-color: #d1d5db !important; /* Light gray */
+  opacity: 1 !important;
+  width: 10px;
+  height: 10px;
+  margin: 0 6px !important;
+}
+
+.swiper-pagination-bullet-active {
+  background-color: var(--primary) !important; /* Active = dark blue */
+}
+

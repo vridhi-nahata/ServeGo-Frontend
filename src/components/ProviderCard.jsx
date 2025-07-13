@@ -1,5 +1,4 @@
 import StarRating from "./StarRating";
-import { assets } from "../assets/assets.js";
 import { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaHeart } from "react-icons/fa";
@@ -152,16 +151,16 @@ export default function ProviderCard({
         <div className="flex items-center justify-evenly mb-4">
           <button title="Voice Call" className="group">
             <img
-              src={assets.voice_call}
+              src="/icons/voice-call.png"
               alt="Voice Call"
-              className="w-7 h-7 transition-transform duration-200 group-hover:scale-125"
+              className="w-10 h-8 transition-transform duration-200 group-hover:scale-125"
             />
           </button>
           <button title="Video Call" className="group">
             <img
-              src={assets.video_call}
+              src="/icons/video-call.png"
               alt="Video Call"
-              className="w-7 h-7 transition-transform duration-200 group-hover:scale-125"
+              className="w-8 h-8 transition-transform duration-200 group-hover:scale-125"
             />
           </button>
           <button
@@ -170,9 +169,9 @@ export default function ProviderCard({
             className="group"
           >
             <img
-              src={assets.user}
+              src="/icons/user-info.webp"
               alt="View Profile"
-              className="w-7 h-7 transition-transform duration-200 group-hover:scale-125"
+              className="w-8 h-8 transition-transform duration-200 group-hover:scale-125"
             />
           </button>
         </div>

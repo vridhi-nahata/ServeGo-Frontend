@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { SERVICES } from "../constants/services";
 import Slider from "rc-slider";
 import "rc-slider/assets/index.css";
-import { assets } from "../assets/assets";
+// import { assets } from "../assets/assets";
 
 import {
   FaSearch,
@@ -21,7 +21,6 @@ import {
   MdOutlineCleaningServices,
   MdOutlinePestControl,
 } from "react-icons/md";
-import notFoundImg from "../assets/icons/not-found.webp";
 
 export default function Services() {
   const navigate = useNavigate();
@@ -534,7 +533,7 @@ export default function Services() {
               onClick={() => setShowSort(!showSort)}
               className="flex items-center gap-2 px-3 py-2 rounded-full border border-gray-300 shadow text-sm bg-white hover:bg-gray-50"
             >
-              <img src={assets.sort} alt="Filter" className="w-5 h-4" />
+              <img src="/icons/sort.png" alt="Filter" className="w-5 h-4" />
               <span className="hidden sm:inline">Sort</span>
             </button>
 
@@ -672,7 +671,7 @@ export default function Services() {
       {Object.keys(groupedServices).length === 0 && (
         <div className="text-center mt-10">
           <img
-            src={notFoundImg}
+            src="/icons/not-found.webp"
             alt="No results"
             className="w-52 mx-auto mb-4"
           />
