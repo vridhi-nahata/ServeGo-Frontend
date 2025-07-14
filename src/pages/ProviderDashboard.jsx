@@ -1,8 +1,22 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
+import BookingStatusTimeline from "../components/BookingStatusTimeline";
 import axios from "axios";
-import { FaCheck, FaTimes, FaClock, FaSyncAlt } from "react-icons/fa";
-import dayjs from "dayjs";
+import {
+  FaCheck,
+  FaTimes,
+  FaClock,
+  FaSyncAlt,
+  FaSearch,
+  FaFilter,
+  FaChevronDown,
+} from "react-icons/fa";
 import { motion } from "framer-motion";
+import dayjs from "dayjs";
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
 
 export default function ProviderDashboard() {
   const [bookings, setBookings] = useState([]);
@@ -12,11 +26,25 @@ export default function ProviderDashboard() {
   const [showTimeUpdate, setShowTimeUpdate] = useState(null);
   const [newFrom, setNewFrom] = useState("");
   const [newTo, setNewTo] = useState("");
-  const [filter, setFilter] = useState("all");
-  const [expanded, setExpanded] = useState({});
+  const [expandedStatuses, setExpandedStatuses] = useState({});
   const [otpInputs, setOtpInputs] = useState({});
   const [otpError, setOtpError] = useState({});
 
+  // Search and filter states
+  const [search, setSearch] = useState("");
+  const [selectedStatuses, setSelectedStatuses] = useState([]);
+  const [dateRange, setDateRange] = useState({ from: "", to: "" });
+  const [showFilter, setShowFilter] = useState(false);
+  const [showSort, setShowSort] = useState(false);
+  const [showStatusList, setShowStatusList] = useState(false);
+  const [sortBy, setSortBy] = useState("");
+  const [timeError, setTimeError] = useState("");
+
+  // Refs for outside click detection
+  const filterRef = useRef(null);
+  const sortRef = useRef(null);
+
+  // Fetch bookings from API (restored from original)
   useEffect(() => {
     setLoading(true);
     axios
@@ -33,6 +61,7 @@ export default function ProviderDashboard() {
       });
   }, []);
 
+  // Restored original handleStatus function
   const handleStatus = async (id, status, newTimeSlot) => {
     setActionLoading(id + status);
     try {
@@ -63,15 +92,134 @@ export default function ProviderDashboard() {
     cancelled: "bg-gray-200 text-gray-700",
   };
 
-  const grouped = bookings.reduce((acc, b) => {
+  const allStatuses = [
+    "pending",
+    "confirmed",
+    "rejected",
+    "update-time",
+    "in-progress",
+    "completed",
+    "cancelled",
+  ];
+
+  // Filter and search logic
+  let filteredBookings = bookings;
+
+  // Search
+  if (search.trim()) {
+    filteredBookings = filteredBookings.filter(
+      (b) =>
+        b.customer?.name?.toLowerCase().includes(search.toLowerCase()) ||
+        b.serviceName?.toLowerCase().includes(search.toLowerCase()) ||
+        b.address?.toLowerCase().includes(search.toLowerCase()) // New: Search by Address
+    );
+  }
+
+  // Status filter
+  if (selectedStatuses.length > 0) {
+    filteredBookings = filteredBookings.filter((b) => {
+      const currentStatus =
+        b.statusHistory?.[b.statusHistory.length - 1]?.status || "pending";
+      return selectedStatuses.includes(currentStatus);
+    });
+  }
+
+  // Date range filter
+  if (dateRange.from) {
+    const fromDate = dayjs(dateRange.from).startOf("day");
+    filteredBookings = filteredBookings.filter((b) =>
+      dayjs(b.date).isSameOrAfter(fromDate)
+    );
+  }
+  if (dateRange.to) {
+    const toDate = dayjs(dateRange.to).endOf("day");
+    filteredBookings = filteredBookings.filter((b) =>
+      dayjs(b.date).isSameOrBefore(toDate)
+    );
+  }
+
+  // Group by status
+  const grouped = filteredBookings.reduce((acc, b) => {
     const latest =
       b.statusHistory?.[b.statusHistory.length - 1]?.status || "pending";
-    if (filter !== "all" && latest !== filter) return acc;
     acc[latest] = acc[latest] || [];
     acc[latest].push(b);
     return acc;
   }, {});
 
+  // Sort groups - FIXED SORTING LOGIC
+  const sortedGroups = {};
+  Object.keys(grouped).forEach((status) => {
+    let sortedBookings = [...grouped[status]];
+
+    if (sortBy === "date-asc") {
+      sortedBookings.sort((a, b) => {
+        // First compare dates
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
+        const dateDiff = dateA.getTime() - dateB.getTime();
+
+        if (dateDiff !== 0) return dateDiff;
+
+        // If dates are same, compare times
+        // Convert time strings (e.g., "14:30") to comparable format
+        const timeA = a.timeSlot.from.split(":").map(Number);
+        const timeB = b.timeSlot.from.split(":").map(Number);
+
+        // Compare hours first, then minutes
+        const hourDiff = timeA[0] - timeB[0];
+        if (hourDiff !== 0) return hourDiff;
+
+        return timeA[1] - timeB[1]; // Compare minutes
+      });
+    } else if (sortBy === "date-desc") {
+      sortedBookings.sort((a, b) => {
+        // First compare dates (reversed for descending)
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
+        const dateDiff = dateB.getTime() - dateA.getTime();
+
+        if (dateDiff !== 0) return dateDiff;
+
+        // If dates are same, compare times (reversed for descending)
+        const timeA = a.timeSlot.from.split(":").map(Number);
+        const timeB = b.timeSlot.from.split(":").map(Number);
+
+        // Compare hours first, then minutes (reversed)
+        const hourDiff = timeB[0] - timeA[0];
+        if (hourDiff !== 0) return hourDiff;
+
+        return timeB[1] - timeA[1]; // Compare minutes (reversed)
+      });
+    } else if (sortBy === "name-asc") {
+      sortedBookings.sort((a, b) =>
+        (a.customer?.name || "").localeCompare(b.customer?.name || "")
+      );
+    } else if (sortBy === "name-desc") {
+      sortedBookings.sort((a, b) =>
+        (b.customer?.name || "").localeCompare(a.customer?.name || "")
+      );
+    } else if (sortBy === "service-asc") {
+      sortedBookings.sort((a, b) =>
+        (a.serviceName || "").localeCompare(b.serviceName || "")
+      );
+    } else if (sortBy === "service-desc") {
+      sortedBookings.sort((a, b) =>
+        (b.serviceName || "").localeCompare(a.serviceName || "")
+      );
+    }
+
+    sortedGroups[status] = sortedBookings;
+  });
+
+  // // Add empty arrays for statuses not present
+  // allStatuses.forEach((status) => {
+  //   if (!sortedGroups[status]) {
+  //     sortedGroups[status] = [];
+  //   }
+  // });
+
+  // Restored original markCompleted function
   const markCompleted = async (bookingId) => {
     try {
       console.log("Mark completed triggered");
@@ -88,295 +236,633 @@ export default function ProviderDashboard() {
     }
   };
 
+  // Initialize all statuses as expanded
+  useEffect(() => {
+    const initialExpanded = {};
+    allStatuses.forEach((status) => {
+      initialExpanded[status] = true;
+    });
+    setExpandedStatuses(initialExpanded);
+  }, []);
+
+  // Handle outside clicks
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (filterRef.current && !filterRef.current.contains(event.target)) {
+        setShowFilter(false);
+      }
+      if (sortRef.current && !sortRef.current.contains(event.target)) {
+        setShowSort(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const toggleStatus = (status) => {
+    setExpandedStatuses((prev) => ({ ...prev, [status]: !prev[status] }));
+  };
+
   return (
-    <div
-      className="min-h-screen py-20 px-4"
-      style={{ background: "var(--background-light)" }}
-    >
-      <div className="max-w-6xl mx-auto">
-        <h1
-          className="text-4xl font-bold text-center mb-6"
+    <div className="min-h-screen py-20 px-4 bg-gradient-to-br from-[var(--primary-light)] to-[var(--white)]">
+      
+      {/* Top Header */}
+      <div className="flex flex-wrap items-center justify-between px-2 mb-6">
+        <h2 className="py-3 text-2xl sm:text-3xl md:text-4xl font-extrabold text-[var(--primary)]">
+          My Bookings
+        </h2>
+
+        <div className="flex gap-2 items-center justify-center">
+          {/* Search */}
+          <div className="relative w-3/4 xs:w-28 sm:w-32 md:w-44 lg:w-52">
+            <FaSearch className="absolute left-3 top-2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10 pr-2 py-1.5 rounded-full border border-gray-300 shadow text-sm w-full outline-none focus:ring-2 focus:ring-[var(--primary)]"
+            />
+          </div>
+
+          {/* Filter */}
+          <div className="relative">
+            <button
+              onClick={() => setShowFilter(!showFilter)}
+              className="flex items-center gap-2 px-3 py-2 rounded-full border border-gray-300 shadow text-sm bg-white hover:bg-gray-50"
+            >
+              <FaFilter />
+              <span className="hidden sm:inline">Filter</span>
+            </button>
+
+            {showFilter && (
+              <div
+                ref={filterRef}
+                className="absolute z-50 right-0 mt-2 w-[300px] bg-white border shadow-xl rounded-xl p-4"
+              >
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-lg font-semibold">Filter</h3>
+                  <button
+                    onClick={() => setShowFilter(false)}
+                    className="text-gray-500 hover:text-red-600 cursor-pointer"
+                  >
+                    <FaTimes />
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  {/* Status Filter */}
+                  <div className="mb-4  border p-2 rounded">
+                    <button
+                      onClick={() => setShowStatusList(!showStatusList)}
+                      className="w-full flex justify-between items-center text-sm font-semibold text-[var(--primary)] mb-1"
+                    >
+                      <span>Status</span>
+                      <FaChevronDown
+                        className={`transition-transform ${
+                          showStatusList ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+
+                    {showStatusList && (
+                      <div className="flex flex-wrap gap-2 max-h-36 overflow-y-auto pr-1 border rounded bg-gray-50 p-2">
+                        {/* All Statuses Checkbox */}
+                        <label className="flex items-center gap-2 px-2 py-1 rounded hover:bg-[var(--primary-light)] cursor-pointer w-full">
+                          <input
+                            type="checkbox"
+                            checked={
+                              selectedStatuses.length === allStatuses.length
+                            }
+                            onChange={(e) => {
+                              const isChecked = e.target.checked;
+                              setSelectedStatuses(
+                                isChecked ? [...allStatuses] : []
+                              );
+                            }}
+                            className="accent-[var(--primary)]"
+                          />
+                          <span className="text-sm">All Statuses</span>
+                        </label>
+
+                        {allStatuses.map((status) => (
+                          <label
+                            key={status}
+                            className="flex items-center gap-2 px-2 py-1 rounded hover:bg-[var(--primary-light)] cursor-pointer w-full"
+                          >
+                            <input
+                              type="checkbox"
+                              value={status}
+                              checked={selectedStatuses.includes(status)}
+                              onChange={(e) => {
+                                const isChecked = e.target.checked;
+                                setSelectedStatuses((prev) =>
+                                  isChecked
+                                    ? [...prev, status]
+                                    : prev.filter((s) => s !== status)
+                                );
+                              }}
+                              className="accent-[var(--primary)]"
+                            />
+                            <span className="text-sm capitalize">
+                              {status.replace("-", " ")}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Date Range Filter */}
+                  <div className="mb-4 border p-2 rounded">
+                    <label className="block text-sm font-medium mb-2 text-[var(--primary)]">
+                      Date Range
+                    </label>
+                    <div className="space-y-2">
+                      <input
+                        type="date"
+                        value={dateRange.from}
+                        onChange={(e) =>
+                          setDateRange((prev) => ({
+                            ...prev,
+                            from: e.target.value,
+                          }))
+                        }
+                        className="w-full border px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+                        placeholder="From"
+                      />
+                      <input
+                        type="date"
+                        value={dateRange.to}
+                        onChange={(e) =>
+                          setDateRange((prev) => ({
+                            ...prev,
+                            to: e.target.value,
+                          }))
+                        }
+                        className="w-full border px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+                        placeholder="To"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Clear All */}
+                  <div className="flex justify-between mt-3">
+                    <button
+                      onClick={() => {
+                        setSelectedStatuses([]);
+                        setDateRange({ from: "", to: "" });
+                      }}
+                      className="text-sm text-[var(--gray)] hover:underline hover:scale-105 transition-transform duration-100 ease-linear"
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Sort */}
+          <div className="relative">
+            <button
+              onClick={() => setShowSort(!showSort)}
+              className="flex items-center gap-2 px-3 py-2 rounded-full border border-gray-300 shadow text-sm bg-white hover:bg-gray-50"
+            >
+              <img src="/icons/sort.png" alt="Filter" className="w-5 h-4" />
+              <span className="hidden sm:inline">Sort</span>
+            </button>
+
+            {showSort && (
+              <div
+                ref={sortRef}
+                className="absolute z-50 right-0 mt-2 w-[260px] bg-white border shadow-xl rounded-xl p-4"
+              >
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-lg font-semibold">Sort</h3>
+                  <button
+                    onClick={() => setShowSort(false)}
+                    className="text-gray-500 hover:text-red-600 cursor-pointer"
+                  >
+                    <FaTimes />
+                  </button>
+                </div>
+
+                <div className="space-y-2 text-sm text-[var(--primary)]">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="sort"
+                      value=""
+                      checked={sortBy === ""}
+                      onChange={() => setSortBy("")}
+                      className="accent-[var(--ternary)]"
+                    />
+                    Default
+                  </label>
+
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="sort"
+                      value="date-asc"
+                      checked={sortBy === "date-asc"}
+                      onChange={() => setSortBy("date-asc")}
+                      className="accent-[var(--ternary)]"
+                    />
+                    Date & Time: Earliest → Latest
+                  </label>
+
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="sort"
+                      value="date-desc"
+                      checked={sortBy === "date-desc"}
+                      onChange={() => setSortBy("date-desc")}
+                      className="accent-[var(--ternary)]"
+                    />
+                    Date & Time: Latest → Earliest
+                  </label>
+
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="sort"
+                      value="name-asc"
+                      checked={sortBy === "name-asc"}
+                      onChange={() => setSortBy("name-asc")}
+                      className="accent-[var(--ternary)]"
+                    />
+                    Customer Name: A → Z
+                  </label>
+
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="sort"
+                      value="name-desc"
+                      checked={sortBy === "name-desc"}
+                      onChange={() => setSortBy("name-desc")}
+                      className="accent-[var(--ternary)]"
+                    />
+                    Customer Name: Z → A
+                  </label>
+
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="sort"
+                      value="service-asc"
+                      checked={sortBy === "service-asc"}
+                      onChange={() => setSortBy("service-asc")}
+                      className="accent-[var(--ternary)]"
+                    />
+                    Service Name: A → Z
+                  </label>
+
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="sort"
+                      value="service-desc"
+                      checked={sortBy === "service-desc"}
+                      onChange={() => setSortBy("service-desc")}
+                      className="accent-[var(--ternary)]"
+                    />
+                    Service Name: Z → A
+                  </label>
+                </div>
+
+                <div className="flex justify-between mt-3">
+                  <button
+                    onClick={() => setSortBy("")}
+                    className="text-sm text-[var(--gray)] hover:underline hover:scale-105 transition-transform duration-100 ease-linear"
+                  >
+                    Clear All
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {loading ? (
+        <div
+          className="text-center text-xl"
           style={{ color: "var(--primary)" }}
         >
-          My Bookings
-        </h1>
-
-        <div className="flex justify-center gap-3 mb-8 flex-wrap">
-          {[
-            "all",
-            "pending",
-            "confirmed",
-            "updated",
-            "in-progress",
-            "rejected",
-            "cancelled",
-            "completed",
-          ].map((s) => (
-            <button
-              key={s}
-              onClick={() => setFilter(s)}
-              className="px-4 py-1.5 rounded-full text-sm font-medium border transition-all"
-              style={{
-                backgroundColor:
-                  filter === s ? "var(--primary)" : "var(--primary-light)",
-                color: filter === s ? "var(--white)" : "var(--primary)",
-              }}
-            >
-              {s.charAt(0).toUpperCase() + s.slice(1)}
-            </button>
-          ))}
+          Loading...
         </div>
-
-        {loading ? (
-          <div
-            className="text-center text-xl"
-            style={{ color: "var(--primary)" }}
-          >
-            Loading...
-          </div>
-        ) : Object.keys(grouped).length === 0 ? (
-          <div className="text-center text-gray-500 text-lg">
-            No bookings found
-          </div>
-        ) : (
-          Object.entries(grouped).map(([status, group]) => (
-            <div key={status} className="mb-8">
+      ) : Object.keys(sortedGroups).length === 0 ? (
+        <div className="text-center mt-10">
+          <img
+            src="/icons/no-booking.webp"
+            alt="No results"
+            className="w-52 mx-auto mb-2"
+          />
+          <h3 className="text-2xl text-[var(--primary)] font-semibold">
+            Oops! No bookings found
+          </h3>
+          <p className="text-xl text-[var(--gray)] mt-3">Try something else</p>
+        </div>
+      ) : (
+        <div className="max-w-7xl mx-auto space-y-6">
+          {Object.entries(sortedGroups).map(([status, group]) => {
+            const isStatusOpen = expandedStatuses[status];
+            return (
               <div
-                className="flex justify-between items-center cursor-pointer px-5 py-3 rounded-t-xl"
-                style={{
-                  backgroundColor: "var(--primary-light)",
-                  color: "var(--secondary)",
-                }}
-                onClick={() =>
-                  setExpanded((prev) => ({ ...prev, [status]: !prev[status] }))
-                }
+                key={status}
+                className="bg-white border shadow rounded-xl p-4 space-y-4"
               >
-                <h2 className="text-lg font-semibold">
-                  {status.toUpperCase()} ({group.length})
-                </h2>
-                <span>{expanded[status] ? "-" : "+"}</span>
-              </div>
+                <button
+                  onClick={() => toggleStatus(status)}
+                  className="w-full text-left text-2xl font-bold text-[var(--primary)] flex items-center justify-between"
+                >
+                  <span className="flex items-center gap-2">
+                    {status.replace("-", " ").toUpperCase()} ({group.length})
+                  </span>
+                  <FaChevronDown
+                    className={`transition-transform ${
+                      isStatusOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
 
-              {expanded[status] && (
-                <div className="grid md:grid-cols-2 gap-6 border p-4 rounded-b-xl">
-                  {group.map((b, idx) => (
-                    <motion.div
-                      key={b._id}
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.3, delay: idx * 0.05 }}
-                      className="bg-white shadow-lg rounded-xl p-5 border"
-                    >
-                      <div className="flex items-center gap-4 mb-3">
-                        {b.customer?.avatarUrl ? (
-                          <img
-                            src={b.customer.avatarUrl}
-                            className="w-12 h-12 rounded-full border shadow"
-                          />
-                        ) : (
-                          <div
-                            className="w-12 h-12 flex items-center justify-center rounded-full font-bold shadow"
-                            style={{
-                              backgroundColor: "var(--primary-light)",
-                              color: "var(--primary)",
-                            }}
-                          >
-                            {b.customer?.name?.[0]?.toUpperCase() || "U"}
-                          </div>
-                        )}
-                        <div>
-                          <div
-                            className="font-semibold"
-                            style={{ color: "var(--primary)" }}
-                          >
-                            {b.customer?.name}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {b.customer?.email}
-                          </div>
-                        </div>
-                      </div>
-                      <div
-                        className="text-sm mb-1"
-                        style={{ color: "var(--gray)" }}
+                {/* Cards */}
+                {isStatusOpen && (
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {group.map((b, idx) => (
+                      <motion.div
+                        key={b._id}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.3, delay: idx * 0.05 }}
+                        className="bg-white shadow-lg rounded-xl p-4 border"
                       >
-                        <strong>Service:</strong> {b.serviceName}
-                      </div>
-                      <div
-                        className="text-sm mb-1"
-                        style={{ color: "var(--gray)" }}
-                      >
-                        <strong>Date:</strong>{" "}
-                        {dayjs(b.date).format("DD MMM YYYY")}
-                      </div>
-                      <div
-                        className="text-sm mb-1"
-                        style={{ color: "var(--gray)" }}
-                      >
-                        <strong>Time:</strong> {b.timeSlot.from} -{" "}
-                        {b.timeSlot.to}
-                      </div>
-                      <div
-                        className="text-sm mb-3"
-                        style={{ color: "var(--gray)" }}
-                      >
-                        <strong>Notes:</strong> {b.notes || "—"}
-                      </div>
-
-                      <div
-                        className={`inline-block px-3 py-1 text-xs font-semibold rounded-full mb-4 ${statusColor[status]}`}
-                      >
-                        {status.replace("-", " ")}
-                      </div>
-
-                      {status === "pending" && (
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            className="flex items-center gap-1 text-sm px-3 py-1 rounded bg-green-500 text-white hover:bg-green-700"
-                            disabled={actionLoading === b._id + "confirmed"}
-                            onClick={() => handleStatus(b._id, "confirmed")}
-                          >
-                            <FaCheck /> Accept
-                          </button>
-                          <button
-                            className="flex items-center gap-1 text-sm px-3 py-1 rounded bg-red-500 text-white hover:bg-red-700"
-                            disabled={actionLoading === b._id + "rejected"}
-                            onClick={() => handleStatus(b._id, "rejected")}
-                          >
-                            <FaTimes /> Reject
-                          </button>
-                          <button
-                            className="flex items-center gap-1 text-sm px-3 py-1 rounded bg-blue-500 text-white hover:bg-blue-700"
-                            onClick={() => setShowTimeUpdate(b._id)}
-                          >
-                            <FaClock /> Update Time
-                          </button>
-                        </div>
-                      )}
-
-                      {status === "update-time" && (
-                        <div className="text-blue-600 text-sm flex items-center gap-2 mt-2">
-                          <FaSyncAlt /> Awaiting customer response
-                        </div>
-                      )}
-
-                      {showTimeUpdate === b._id && (
-                        <div className="mt-4 p-3 bg-gray-50 border rounded-lg shadow-sm">
-                          <div className="flex gap-2 mb-2 items-center">
-                            <input
-                              type="time"
-                              value={newFrom}
-                              onChange={(e) => setNewFrom(e.target.value)}
-                              className="border px-2 py-1 rounded text-sm"
-                            />
-                            <span>-</span>
-                            <input
-                              type="time"
-                              value={newTo}
-                              onChange={(e) => setNewTo(e.target.value)}
-                              className="border px-2 py-1 rounded text-sm"
-                            />
-                          </div>
-                          <div className="flex gap-2">
-                            <button
-                              className="bg-blue-500 text-white text-sm px-3 py-1 rounded hover:bg-blue-600"
-                              disabled={actionLoading === b._id + "update-time"}
-                              onClick={() =>
-                                handleStatus(b._id, "update-time", {
-                                  from: newFrom,
-                                  to: newTo,
-                                })
-                              }
-                            >
-                              Send Update
-                            </button>
-                            <button
-                              className="bg-gray-300 text-gray-800 text-sm px-3 py-1 rounded hover:bg-gray-400"
-                              onClick={() => setShowTimeUpdate(null)}
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        </div>
-                      )}
-
-                      {b.otp && !b.otpVerified && (
-                        <div className="mt-2">
-                          <form
-                            onSubmit={async (e) => {
-                              e.preventDefault();
-                              setOtpError((prev) => ({ ...prev, [b._id]: "" })); // reset error
-                              try {
-                                await axios.post(
-                                  `http://localhost:5000/api/bookings/verify-otp/${b._id}`,
-                                  { otp: otpInputs[b._id] },
-                                  { withCredentials: true }
-                                );
-
-                                // refresh bookings
-                                const res = await axios.get(
-                                  "http://localhost:5000/api/bookings/provider-requests",
-                                  {
-                                    withCredentials: true,
-                                  }
-                                );
-                                setBookings(res.data.bookings || []);
-                              } catch (error) {
-                                const msg =
-                                  error.response?.data?.message ||
-                                  "OTP verification failed";
-                                setOtpError((prev) => ({
-                                  ...prev,
-                                  [b._id]: msg,
-                                }));
-                              }
-                            }}
-                          >
-                            <input
-                              type="text"
-                              value={otpInputs[b._id] || ""}
-                              onChange={(e) =>
-                                setOtpInputs((prev) => ({
-                                  ...prev,
-                                  [b._id]: e.target.value,
-                                }))
-                              }
-                              placeholder="Enter OTP"
-                              className="border px-2 py-1 rounded w-32"
-                            />
-                            <button className="ml-2 px-3 py-1 bg-green-600 text-white rounded">
-                              Verify
-                            </button>
-
-                            {/* Styled error message */}
-                            {otpError[b._id] && (
-                              <div className="flex gap-2 text-sm text-red-600 mt-3">
-                                <i className="fas fa-exclamation-circle mt-1"></i>
-                                {otpError[b._id]}
+                        <div className="flex flex-col justify-between overflow-x-auto max-w-full">
+                          <div className="flex flex-row">
+                            <div className="w-3/5 mr-5">
+                              {/* Avatar */}
+                              <div className="flex items-center gap-4 mb-3">
+                                {b.customer?.avatarUrl ? (
+                                  <img
+                                    src={b.customer.avatarUrl}
+                                    alt={b.customer?.name || "User"}
+                                    className="w-12 h-12 rounded-full border shadow object-cover hover:scale-110"
+                                  />
+                                ) : (
+                                  <div
+                                    className="w-12 h-12 flex items-center justify-center rounded-full font-bold shadow"
+                                    style={{
+                                      backgroundColor: "var(--primary-light)",
+                                      color: "var(--primary)",
+                                    }}
+                                  >
+                                    {b.customer?.name?.[0]?.toUpperCase() ||
+                                      "U"}
+                                  </div>
+                                )}
+                                <div>
+                                  <div className="font-semibold text-[var(--primary)]">
+                                    {b.customer?.name || "Unknown User"}
+                                  </div>
+                                </div>
                               </div>
-                            )}
-                          </form>
+                              {/* Details */}
+                              <div className="space-y-1 mb-3">
+                                <div
+                                  className="text-sm"
+                                  style={{ color: "var(--gray)" }}
+                                >
+                                  <strong>Service:</strong> {b.serviceName}
+                                </div>
+                                <div
+                                  className="text-sm"
+                                  style={{ color: "var(--gray)" }}
+                                >
+                                  <strong>Date:</strong>{" "}
+                                  {dayjs(b.date).format("DD MMM YYYY")}
+                                </div>
+                                <div
+                                  className="text-sm"
+                                  style={{ color: "var(--gray)" }}
+                                >
+                                  <strong>Time:</strong> {b.timeSlot.from} -{" "}
+                                  {b.timeSlot.to}
+                                </div>
+                                <div
+                                  className="text-sm"
+                                  style={{ color: "var(--gray)" }}
+                                >
+                                  <strong>Address:</strong> {b.address || "—"}
+                                </div>
+                                <div
+                                  className="text-sm"
+                                  style={{ color: "var(--gray)" }}
+                                >
+                                  <strong>Notes:</strong> {b.notes || "—"}
+                                </div>
+                              </div>
+                              {/* Status */}
+                              <div
+                                className={`inline-block px-3 py-1 text-xs font-semibold rounded-full mb-4 ${statusColor[status]}`}
+                              >
+                                {status.replace("-", " ")}
+                              </div>
+                            </div>
+                            {/* Track */}
+                            <div className="w-2/5">
+                              <BookingStatusTimeline
+                                statusHistory={b.statusHistory}
+                              />
+                            </div>
+                          </div>
+                          {/* Actions */}
+                          {status === "pending" && (
+                            <div className="flex flex-wrap gap-4 p-1">
+                              <button
+                                className="flex items-center gap-1 text-sm px-3 py-1 rounded bg-gradient-to-b from-green-400 to-green-800 text-white hover:scale-105"
+                                disabled={actionLoading === b._id + "confirmed"}
+                                onClick={() => handleStatus(b._id, "confirmed")}
+                              >
+                                <FaCheck /> Accept
+                              </button>
+                              <button
+                                className="flex items-center gap-1 text-sm px-3 py-1 rounded bg-gradient-to-b from-red-400 to-red-800 text-white hover:scale-105"
+                                disabled={actionLoading === b._id + "rejected"}
+                                onClick={() => handleStatus(b._id, "rejected")}
+                              >
+                                <FaTimes /> Reject
+                              </button>
+                              <button
+                                className="flex items-center gap-1 text-sm px-3 py-1 rounded bg-gradient-to-b from-blue-400 to-blue-800 text-white hover:scale-105"
+                                onClick={() => setShowTimeUpdate(b._id)}
+                              >
+                                <FaClock /> Reschedule
+                              </button>
+                            </div>
+                          )}
+
+                          {status === "update-time" && (
+                            <div className="text-[var(--secondary)] text-sm flex items-center gap-2 mt-2">
+                              <FaSyncAlt /> Awaiting customer response
+                            </div>
+                          )}
+
+                          {showTimeUpdate === b._id && (
+                            <div className="mt-4 p-3 bg-gray-50 border rounded-lg shadow-sm">
+                              <div className="flex gap-3 mb-2 items-center">
+                                <input
+                                  type="time"
+                                  value={newFrom}
+                                  onChange={(e) => {
+                                    setNewFrom(e.target.value);
+                                    setTimeError(""); // Clear error on change
+                                  }}
+                                  className="border px-2 py-1 rounded text-sm"
+                                />
+                                <span> to </span>
+                                <input
+                                  type="time"
+                                  value={newTo}
+                                  onChange={(e) => {
+                                    setNewTo(e.target.value);
+                                    setTimeError(""); // Clear error on change
+                                  }}
+                                  className="border px-2 py-1 rounded text-sm"
+                                />
+                              </div>
+
+                              {timeError && (
+                                <div className="flex flex-row gap-2 text-red-500 ">
+                                  <i className="fas fa-exclamation-circle"></i>
+
+                                  <p className="text-xs mb-2">{timeError}</p>
+                                </div>
+                              )}
+
+                              <div className="flex gap-2">
+                                <button
+                                  className="bg-gradient-to-b from-blue-400 to-blue-800 text-white text-sm px-3 py-1 rounded hover:bg-blue-600"
+                                  disabled={
+                                    actionLoading === b._id + "update-time"
+                                  }
+                                  onClick={() => {
+                                    if (!newFrom || !newTo) {
+                                      setTimeError(
+                                        "Both 'from' and 'to' times are required."
+                                      );
+                                      return;
+                                    }
+                                    setTimeError(""); // Clear error if valid
+                                    handleStatus(b._id, "update-time", {
+                                      from: newFrom,
+                                      to: newTo,
+                                    });
+                                  }}
+                                >
+                                  Send Updated Time
+                                </button>
+
+                                <button
+                                  className="bg-gradient-to-b from-gray-400 to-gray-600 text-white text-sm px-3 py-1 rounded hover:bg-gray-400"
+                                  onClick={() => {
+                                    setShowTimeUpdate(null);
+                                    setTimeError("");
+                                  }}
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          {b.otp && !b.otpVerified && (
+                            <div className="mt-2">
+                              <form
+                                onSubmit={async (e) => {
+                                  e.preventDefault();
+                                  setOtpError((prev) => ({
+                                    ...prev,
+                                    [b._id]: "",
+                                  }));
+                                  try {
+                                    await axios.post(
+                                      `http://localhost:5000/api/bookings/verify-otp/${b._id}`,
+                                      { otp: otpInputs[b._id] },
+                                      { withCredentials: true }
+                                    );
+
+                                    // refresh bookings
+                                    const res = await axios.get(
+                                      "http://localhost:5000/api/bookings/provider-requests",
+                                      {
+                                        withCredentials: true,
+                                      }
+                                    );
+                                    setBookings(res.data.bookings || []);
+                                  } catch (error) {
+                                    const msg =
+                                      error.response?.data?.message ||
+                                      "OTP verification failed";
+                                    setOtpError((prev) => ({
+                                      ...prev,
+                                      [b._id]: msg,
+                                    }));
+                                  }
+                                }}
+                              >
+                                <input
+                                  type="text"
+                                  value={otpInputs[b._id] || ""}
+                                  onChange={(e) =>
+                                    setOtpInputs((prev) => ({
+                                      ...prev,
+                                      [b._id]: e.target.value,
+                                    }))
+                                  }
+                                  placeholder="Enter OTP"
+                                  className="border px-2 py-1 rounded w-32 text-sm"
+                                />
+                                <button className="ml-2 px-3 py-1 bg-gradient-to-r from-[var(--ternary)] to-[var(--secondary)] hover:scale-105 text-sm text-white rounded">
+                                  Verify OTP
+                                </button>
+
+                                {otpError[b._id] && (
+                                  <div className="flex gap-2 text-sm text-red-700 mt-3">
+                                    <i className="fas fa-exclamation-circle mt-1"></i>
+                                    {otpError[b._id]}
+                                  </div>
+                                )}
+                              </form>
+                            </div>
+                          )}
+
+                          {b.otpVerified && !b.completedByProvider && (
+                            <button
+                              onClick={() => markCompleted(b._id)}
+                              className="mt-2 px-3 py-1 bg-gradient-to-r from-[var(--ternary)] to-[var(--secondary)] text-white rounded w-full"
+                            >
+                              Mark Completed
+                            </button>
+                          )}
                         </div>
-                      )}
-                      <div>
-                        {b.otpVerified && !b.completedByProvider && (
-                          <button
-                            onClick={() => markCompleted(b._id)}
-                            className="mt-2 px-3 py-1 bg-[var(--ternary)] text-white rounded hover:bg-[var(--secondary)] w-full"
-                          >
-                            Mark Completed
-                          </button>
-                        )}
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))
-        )}
-        {error && <div className="text-center text-red-500 mt-6">{error}</div>}
-      </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {error && <div className="text-center text-red-500 mt-6">{error}</div>}
     </div>
   );
 }

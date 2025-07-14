@@ -14,6 +14,7 @@ export default function BookingForm({
   const [date, setDate] = useState("");
   const [fromTime, setFromTime] = useState("");
   const [toTime, setToTime] = useState("");
+  const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -134,8 +135,18 @@ export default function BookingForm({
         serviceName,
         date,
         timeSlot: { from: fromTime, to: toTime },
+        address,
         notes,
       });
+      console.log("Booking payload: ", {
+  provider: provider._id,
+  serviceName,
+  date,
+  timeSlot: { from: fromTime, to: toTime },
+  address,
+  notes,
+});
+
 
       if (response?.success) {
         setSuccess("Booking request sent to provider");
@@ -146,6 +157,7 @@ export default function BookingForm({
         setError(response?.message);
       }
     } catch (err) {
+      console.log(err);
       const message =
         err.response?.data?.message || err.message || "Something went wrong.";
       setError(message);
@@ -179,7 +191,7 @@ export default function BookingForm({
             onClick={() => setShowCalendar(!showCalendar)}
             className="group bg-white border border-gray-300 p-2 rounded-full hover:bg-gray-100 transition flex items-center gap-2"
           >
-            <CalendarDays className="w-5 h-5 text-blue-600 group-hover:scale-110 transition-transform" />
+            <CalendarDays className="w-5 h-5 text-[var(--secondary)] group-hover:scale-110 transition-transform" />
             <span className="text-sm font-medium">
               {showCalendar ? "Hide Availability" : "Check Availability"}
             </span>
@@ -214,7 +226,7 @@ export default function BookingForm({
           </div>
         )}
 
-        <form onSubmit={handleBooking} className="space-y-4">
+        <form onSubmit={handleBooking} className="space-y-2">
           <div>
             <label className="block text-sm font-medium text-[var(--secondary)] mb-1">
               Date <span className="text-red-500">*</span>
@@ -224,7 +236,7 @@ export default function BookingForm({
               value={date}
               onChange={(e) => setDate(e.target.value)}
               min={todayStr}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[var(--primary)] focus:outline-none"
+              className="w-full px-3 py-2 text-xs border border-gray-300 rounded-md focus:ring-2 focus:ring-[var(--primary)] focus:outline-none"
             />
           </div>
 
@@ -237,7 +249,7 @@ export default function BookingForm({
                 type="time"
                 value={fromTime}
                 onChange={(e) => setFromTime(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[var(--primary)] focus:outline-none"
+                className="w-full px-3 py-2 text-xs border border-gray-300 rounded-md focus:ring-2 focus:ring-[var(--primary)] focus:outline-none"
               />
             </div>
             <div className="w-1/2">
@@ -248,9 +260,22 @@ export default function BookingForm({
                 type="time"
                 value={toTime}
                 onChange={(e) => setToTime(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[var(--primary)] focus:outline-none"
+                className="w-full px-3 py-2 text-xs border border-gray-300 rounded-md focus:ring-2 focus:ring-[var(--primary)] focus:outline-none"
               />
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-[var(--secondary)] mb-1">
+              Address <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              required
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              className="w-full text-xs px-3 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[var(--primary)] focus:outline-none"
+              placeholder="Full address for service"
+            ></textarea>
           </div>
 
           <div>
@@ -260,15 +285,15 @@ export default function BookingForm({
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[var(--primary)] focus:outline-none"
+              className="w-full text-xs px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[var(--primary)] focus:outline-none"
             ></textarea>
           </div>
 
-          <div className="flex justify-end items-center gap-4 pt-4">
+          <div className="flex justify-end items-center gap-4 pt-3 text-sm">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-gradient-to-r from-[var(--accent)] to-[var(--secondary)] text-[var(--white)] font-bold shadow hover:scale-105 rounded-lg hover:from-red-400 hover:to-red-700 transition duration-200"
+              className="px-4 py-2 bg-gradient-to-b from-red-400 to-red-800 text-[var(--white)] font-bold shadow rounded-lg hover:scale-105 transition duration-200"
             >
               Cancel
             </button>
@@ -276,7 +301,7 @@ export default function BookingForm({
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 bg-gradient-to-r from-[var(--accent)] to-[var(--secondary)] text-[var(--white)] font-bold shadow hover:scale-105 rounded-lg hover:from-green-500 hover:to-green-700 transition duration-200"
+              className="px-4 py-2 bg-gradient-to-b from-green-400 to-green-800 text-[var(--white)] font-bold shadow rounded-lg hover:scale-105 transition duration-200"
             >
               Confirm
             </button>

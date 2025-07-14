@@ -1,4 +1,3 @@
-// changes
 import React, { useState, useContext, useEffect, useRef } from "react";
 import { SERVICES } from "../constants/services";
 
@@ -190,7 +189,7 @@ function Login() {
           uploadedDocUrls = await uploadFilesToCloudinary(serviceDocs);
         }
         // Upload avatar if selected
-        if (role === "provider" && avatar) {
+        if ((role === "provider" || role === "customer") && avatar) {
           avatarUrl = await uploadAvatarToCloudinary(avatar);
         }
 
@@ -212,17 +211,17 @@ function Login() {
             password,
             role,
             location,
+            avatarUrl, //Image Url
             ...(role === "provider" && {
               servicesOffered: serviceBundles,
               experiencePerService,
               availability: availabilityRef.current,
               serviceDocs: uploadedDocUrls, // Use uploaded URLs
             }),
-            avatarUrl, //Image Url
           },
           { withCredentials: true }
         );
-        
+
         if (data.success) {
           setIsLoggedIn(true);
           setFormSuccess("OTP sent to your email");
@@ -880,7 +879,7 @@ function Login() {
                   <span className="text-xs">
                     {serviceDocs.length > 0
                       ? `${serviceDocs.length} file(s) selected`
-                      : "Work Demo"}
+                      : "Identity Proof"}
                   </span>
                 </div>
 

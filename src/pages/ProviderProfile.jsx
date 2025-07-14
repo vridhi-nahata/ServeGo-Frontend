@@ -267,13 +267,14 @@ export default function ProviderProfile() {
           }}
           showCalendar={showCalendar}
           setShowCalendar={setShowCalendar}
-          onSubmit={async ({ date, timeSlot, notes }) => {
+          onSubmit={async ({ date, timeSlot, address, notes }) => {
             try {
               const bookingData = {
                 provider: provider._id,
                 serviceName: provider.servicesOffered?.[0] || "Service",
                 date,
                 timeSlot,
+                address,
                 notes: notes || "",
               };
 
