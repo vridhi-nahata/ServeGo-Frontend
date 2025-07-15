@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { SERVICES } from "../constants/services";
 import axios from "axios";
 import ProviderAvailabilityCalendar from "../components/ProviderAvailabilityCalendar";
 import { CalendarDays } from "lucide-react";
@@ -6,6 +7,7 @@ import { CalendarDays } from "lucide-react";
 export default function BookingForm({
   provider,
   serviceName,
+  serviceObj,
   onClose,
   onSubmit,
   showCalendar,
@@ -22,8 +24,36 @@ export default function BookingForm({
   const [availableTimeRanges, setAvailableTimeRanges] = useState([]);
   const [bookedSlots, setBookedSlots] = useState([]);
   const [preselectedSlot, setPreselectedSlot] = useState(null);
+  const [units, setUnits] = useState("1"); // quantity input
+  const [area, setArea] = useState(1); // ⬅️ at top of component
 
   const todayStr = new Date().toISOString().split("T")[0];
+
+  const getServiceByName = (serviceName) => {
+    for (const category of SERVICES) {
+      for (const subcategory of category) {
+        const service = subcategory.services.find(
+          (s) =>
+            s.name.trim().toLowerCase() === serviceName.trim().toLowerCase()
+        );
+        if (service) return service;
+      }
+    }
+    return null;
+  };
+
+  const selectedService = useMemo(
+    () => getServiceByName(serviceName),
+    [serviceName]
+  );
+
+  const parsedPrice = React.useMemo(() => {
+    if (!selectedService || !selectedService.price)
+      return { amount: 0, unit: "fixed" };
+    return parsePrice(selectedService.price);
+  }, [selectedService]);
+
+  const { amount, unit } = parsedPrice;
 
   useEffect(() => {
     if (date && provider) {
@@ -62,6 +92,16 @@ export default function BookingForm({
     }
   }, [success]);
 
+  function parsePrice(priceStr) {
+    const match = priceStr.match(/₹?(\d+)(?:\s*\/\s*(.+))?/);
+    if (!match) return { amount: 0, unit: "fixed" };
+
+    const amount = parseInt(match[1], 10);
+    const unit = match[2]?.toLowerCase().trim() || "fixed";
+
+    return { amount, unit };
+  }
+
   function timeToMinutes(timeStr) {
     const [h, m] = timeStr.split(":").map(Number);
     return h * 60 + m;
@@ -86,6 +126,12 @@ export default function BookingForm({
       return f < end && t > start;
     });
   }
+
+  const computeTotalAmount = () => {
+    if (unit === "fixed") return amount;
+    const count = parseInt(units);
+    return count > 0 ? amount * count : 0;
+  };
 
   const handleBooking = async (e) => {
     e.preventDefault();
@@ -129,6 +175,13 @@ export default function BookingForm({
       return;
     }
 
+    const totalAmount = computeTotalAmount();
+    if (unit !== "fixed" && totalAmount === 0) {
+      setError(`Please enter a valid number of ${unit}s`);
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await onSubmit({
         provider: provider._id,
@@ -137,16 +190,17 @@ export default function BookingForm({
         timeSlot: { from: fromTime, to: toTime },
         address,
         notes,
+        totalAmount: computeTotalAmount(),
       });
       console.log("Booking payload: ", {
-  provider: provider._id,
-  serviceName,
-  date,
-  timeSlot: { from: fromTime, to: toTime },
-  address,
-  notes,
-});
-
+        provider: provider._id,
+        serviceName,
+        date,
+        timeSlot: { from: fromTime, to: toTime },
+        address,
+        notes,
+        totalAmount,
+      });
 
       if (response?.success) {
         setSuccess("Booking request sent to provider");
@@ -203,7 +257,7 @@ export default function BookingForm({
             provider={provider}
             onClose={() => setShowCalendar(false)}
             onSlotSelect={(slot) => {
-              // Optional: Auto-fill the form when user selects a slot
+              //Auto-fill the form when user selects a slot
               setDate(slot.date);
               setFromTime(slot.from);
               setToTime(slot.to);
@@ -265,6 +319,23 @@ export default function BookingForm({
             </div>
           </div>
 
+          {parsedPrice.unit !== "fixed" && (
+            <div>
+              <label className="block text-sm font-medium text-[var(--secondary)] mb-1">
+                Number of {parsedPrice.unit}{" "}
+                <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="number"
+                value={units}
+                onChange={(e) => setUnits(e.target.value)}
+                min={1}
+                className="w-full px-3 py-2 text-xs border border-gray-300 rounded-md focus:ring-2 focus:ring-[var(--primary)] focus:outline-none"
+                placeholder={`e.g. 2`}
+              />
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-medium text-[var(--secondary)] mb-1">
               Address <span className="text-red-500">*</span>
@@ -288,6 +359,18 @@ export default function BookingForm({
               className="w-full text-xs px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[var(--primary)] focus:outline-none"
             ></textarea>
           </div>
+
+          {selectedService && (
+            <div className="text-sm text-[var(--secondary)] mt-2">
+              <span className="font-bold">Estimated Price:</span> ₹
+              {computeTotalAmount()}{" "}
+              {unit !== "fixed" && (
+                <span>
+                  ({parseInt(units) || 0} x ₹{amount}/{unit})
+                </span>
+              )}
+            </div>
+          )}
 
           <div className="flex justify-end items-center gap-4 pt-3 text-sm">
             <button

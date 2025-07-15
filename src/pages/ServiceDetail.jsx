@@ -21,8 +21,7 @@ export default function ServiceDetail() {
     )
   );
 
-  const service = allServices.find((s) => s.name === serviceName);
-
+  const serviceObj = allServices.find((s) => s.name === serviceName);
   const [providers, setProviders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedProvider, setSelectedProvider] = useState(null); // track booking state
@@ -51,24 +50,25 @@ export default function ServiceDetail() {
         {/* Left: Text Section */}
         <div className="w-full md:w-3/5 md:pr-6 flex flex-col mb-4 md:mb-0">
           <h2 className="text-3xl font-bold mb-2 text-[var(--primary)]">
-            {service?.name}
+            {serviceObj?.name}
           </h2>
           <p className="text-[var(--gray)] text-md">
-            {service?.description || "Service details coming soon."}
+            {serviceObj?.description || "Service details coming soon."}
           </p>
+          <p className="text-sm pt-2 text-[var(--gray)]"><span className="font-bold text-[var(--secondary)]">Price: </span>{serviceObj?.price}</p>
         </div>
 
         {/* Right: Full Height Image */}
         <div className="w-full md:w-2/5 h-64 md:h-full">
           <a
-            href={service?.image}
+            href={serviceObj?.image}
             target="_blank"
             rel="noopener noreferrer"
             className="block h-full"
           >
             <img
-              src={service?.image}
-              alt={service?.name}
+              src={serviceObj?.image}
+              alt={serviceObj?.name}
               className="w-full h-full object-cover rounded-xl"
             />
           </a>
@@ -117,6 +117,7 @@ export default function ServiceDetail() {
         <BookingForm
           provider={selectedProvider}
           serviceName={serviceName}
+           serviceObj={serviceObj}
           onClose={() => setSelectedProvider(null)}
           onSubmit={async ({ date, time }) => {
             const bookingData = {

@@ -5,6 +5,7 @@ import { FaHeart } from "react-icons/fa";
 import axios from "axios";
 import { AppContext } from "../context/AppContext.jsx";
 import BookingForm from "./BookingForm";
+// import AgoraCall from './AgoraCall.jsx'
 
 export default function ProviderCard({
   provider,
@@ -18,6 +19,10 @@ export default function ProviderCard({
   const [showCalendar, setShowCalendar] = useState(false);
 
   const [isWishlisted, setIsWishlisted] = useState(initialWishlisted);
+
+  const [showVideoCall, setShowVideoCall] = useState(false);
+  const [showVoiceCall, setShowVoiceCall] = useState(false);
+
   const { backendUrl,getUserData } = useContext(AppContext);
   useEffect(() => {
     setIsWishlisted(initialWishlisted);
@@ -176,6 +181,47 @@ export default function ProviderCard({
             />
           </button>
         </div>
+
+        {/* Quick action buttons */}
+{/* <div className="flex items-center justify-evenly mb-4">
+  <button
+    title="Voice Call"
+    className="group"
+    onClick={() => setShowVoiceCall(true)}
+  >
+    <img
+      src="/icons/voice-call.png"
+      alt="Voice Call"
+      className="w-10 h-8 transition-transform duration-200 group-hover:scale-125"
+    />
+  </button>
+
+  <button
+    title="Video Call"
+    className="group"
+    onClick={() => setShowVideoCall(true)}
+  >
+    <img
+      src="/icons/video-call.png"
+      alt="Video Call"
+      className="w-8 h-8 transition-transform duration-200 group-hover:scale-125"
+    />
+  </button>
+
+  <button
+    title="View Profile"
+    onClick={onProfileClick}
+    className="group"
+  >
+    <img
+      src="/icons/user-info.webp"
+      alt="View Profile"
+      className="w-8 h-8 transition-transform duration-200 group-hover:scale-125"
+    />
+  </button>
+</div> */}
+
+
         <div className="flex items-center justify-center">
           <button
             onClick={() => setShowBooking(true)}
@@ -196,6 +242,43 @@ export default function ProviderCard({
           setShowCalendar={setShowCalendar}
         />
       )}
+
+      {/* Video & voice Call Modal */}
+{/* {showVideoCall && (
+  <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center">
+    <div className="bg-white rounded-xl p-6 w-[90%] max-w-xl">
+      <h2 className="text-lg font-semibold mb-4 text-center">Video Call</h2>
+      <AgoraCall isVideo={true} onEnd={() => setShowVideoCall(false)} />
+      <div className="flex justify-center mt-4">
+        <button
+          onClick={() => setShowVideoCall(false)}
+          className="px-4 py-2 bg-red-600 text-white rounded-full"
+        >
+          End Call
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
+{showVoiceCall && (
+  <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center">
+    <div className="bg-white rounded-xl p-6 w-[90%] max-w-xl">
+      <h2 className="text-lg font-semibold mb-4 text-center">Voice Call</h2>
+      <AgoraCall isVideo={false} onEnd={() => setShowVoiceCall(false)} />
+      <div className="flex justify-center mt-4">
+        <button
+          onClick={() => setShowVoiceCall(false)}
+          className="px-4 py-2 bg-red-600 text-white rounded-full"
+        >
+          End Call
+        </button>
+      </div>
+    </div>
+  </div>
+)} */}
+
     </div>
   );
 }
