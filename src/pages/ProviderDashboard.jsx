@@ -14,6 +14,7 @@ import { motion } from "framer-motion";
 import dayjs from "dayjs";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+import { toast } from "react-toastify";
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
@@ -46,19 +47,20 @@ export default function ProviderDashboard() {
 
   // Fetch bookings from API (restored from original)
   useEffect(() => {
-    setLoading(true);
-    axios
-      .get("http://localhost:5000/api/bookings/provider-requests", {
-        withCredentials: true,
-      })
-      .then((res) => {
-        setBookings(res.data.bookings || []);
-        setLoading(false);
-      })
-      .catch(() => {
-        setError("Failed to load bookings");
-        setLoading(false);
-      });
+    fetchBookings();
+    // setLoading(true);
+    // axios
+    //   .get("http://localhost:5000/api/bookings/provider-requests", {
+    //     withCredentials: true,
+    //   })
+    //   .then((res) => {
+    //     setBookings(res.data.bookings || []);
+    //     setLoading(false);
+    //   })
+    //   .catch(() => {
+    //     setError("Failed to load bookings");
+    //     setLoading(false);
+    //   });
   }, []);
 
   // Restored original handleStatus function
@@ -212,13 +214,6 @@ export default function ProviderDashboard() {
     sortedGroups[status] = sortedBookings;
   });
 
-  // // Add empty arrays for statuses not present
-  // allStatuses.forEach((status) => {
-  //   if (!sortedGroups[status]) {
-  //     sortedGroups[status] = [];
-  //   }
-  // });
-
   // Restored original markCompleted function
   const markCompleted = async (bookingId) => {
     try {
@@ -266,9 +261,38 @@ export default function ProviderDashboard() {
     setExpandedStatuses((prev) => ({ ...prev, [status]: !prev[status] }));
   };
 
+  const handleConfirmCash = async (bookingId) => {
+    try {
+      await axios.patch(
+        `http://localhost:5000/api/bookings/${bookingId}/confirm-cash`,
+        {},
+        { withCredentials: true }
+      );
+      toast.success("Cash payment confirmed!");
+      await fetchBookings(); // refetch the provider bookings
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message || "Failed to confirm cash payment"
+      );
+    }
+  };
+
+  const fetchBookings = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get(
+        "http://localhost:5000/api/bookings/provider-requests",
+        { withCredentials: true }
+      );
+      setBookings(res.data.bookings || []);
+    } catch (err) {
+      setError("Failed to load bookings");
+    }
+    setLoading(false);
+  };
+
   return (
     <div className="min-h-screen py-20 px-4 bg-gradient-to-br from-[var(--primary-light)] to-[var(--white)]">
-      
       {/* Top Header */}
       <div className="flex flex-wrap items-center justify-between px-2 mb-6">
         <h2 className="py-3 text-2xl sm:text-3xl md:text-4xl font-extrabold text-[var(--primary)]">
@@ -605,7 +629,8 @@ export default function ProviderDashboard() {
                         className="bg-white shadow-lg rounded-xl p-4 border"
                       >
                         <div className="flex flex-col justify-between overflow-x-auto max-w-full">
-                          <div className="flex flex-row">
+                          <div className="flex flex-row overflow-x-auto">
+                            {/* Details */}
                             <div className="w-3/5 mr-5">
                               {/* Avatar */}
                               <div className="flex items-center gap-4 mb-3">
@@ -667,21 +692,75 @@ export default function ProviderDashboard() {
                                 >
                                   <strong>Notes:</strong> {b.notes || "—"}
                                 </div>
-                              </div>
-                              {/* Status */}
-                              <div
-                                className={`inline-block px-3 py-1 text-xs font-semibold rounded-full mb-4 ${statusColor[status]}`}
-                              >
-                                {status.replace("-", " ")}
+
+                                {/* Status */}
+                                <div className="flex flex-row gap-1">
+                                  <strong
+                                    className="text-sm"
+                                    style={{ color: "var(--gray)" }}
+                                  >
+                                    Booking Status:
+                                  </strong>
+                                  <div
+                                    className={`inline-block px-3 py-1 text-xs font-semibold rounded-full mb-4 ${statusColor[status]}`}
+                                  >
+                                    {status.replace("-", " ")}
+                                  </div>
+                                </div>
                               </div>
                             </div>
                             {/* Track */}
-                            <div className="w-2/5">
+                            <div className="w-2/5 pl-4">
                               <BookingStatusTimeline
                                 statusHistory={b.statusHistory}
                               />
                             </div>
                           </div>
+
+                          <div className="flex flex-col gap-1 w-3/5 mb-2">
+                            {/* Amount */}
+                            <div className="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-xl border border-green-200 w-4/5 max-w-xs">
+                              <div className="text-sm text-green-600 font-medium">
+                                Service Amount
+                              </div>
+
+                              {/* Show quantity for non-fixed units */}
+                              {b.unit && b.unit !== "fixed" && (
+                                <div className="text-xs text-green-600 mt-1">
+                                  {b.units || 1} × ₹
+                                  {b.serviceAmount / (b.units || 1)} per{" "}
+                                  {b.unit}
+                                </div>
+                              )}
+
+                              {/* Show fixed price or total */}
+                              <div className="text-2xl font-bold text-green-700 mt-1">
+                                ₹{b.serviceAmount || 0}
+                              </div>
+                            </div>
+                            {/* Payment Status */}
+                            <div className="flex flex-col gap-4 w-full">
+                              {b.paymentStatus && (
+                                <div className="flex flex-row gap-1">
+                                  <strong
+                                    className="text-sm"
+                                    style={{ color: "var(--gray)" }}
+                                  >
+                                    Payment Status:{" "}
+                                  </strong>
+                                  <div
+                                    className={`text-sm rounded-sm`}
+                                    style={{ color: "var(--gray)" }}
+                                  >
+                                    {b.paymentStatus === "paid"
+                                      ? "Paid"
+                                      : "Pending"}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
                           {/* Actions */}
                           {status === "pending" && (
                             <div className="flex flex-wrap gap-4 p-1">
@@ -799,13 +878,14 @@ export default function ProviderDashboard() {
                                     );
 
                                     // refresh bookings
-                                    const res = await axios.get(
-                                      "http://localhost:5000/api/bookings/provider-requests",
-                                      {
-                                        withCredentials: true,
-                                      }
-                                    );
-                                    setBookings(res.data.bookings || []);
+                                    // const res = await axios.get(
+                                    //   "http://localhost:5000/api/bookings/provider-requests",
+                                    //   {
+                                    //     withCredentials: true,
+                                    //   }
+                                    // );
+                                    // setBookings(res.data.bookings || []);
+                                    await fetchBookings();
                                   } catch (error) {
                                     const msg =
                                       error.response?.data?.message ||
@@ -849,6 +929,16 @@ export default function ProviderDashboard() {
                               className="mt-2 px-3 py-1 bg-gradient-to-r from-[var(--ternary)] to-[var(--secondary)] text-white rounded w-full"
                             >
                               Mark Completed
+                            </button>
+                          )}
+
+                          {/* Cash Received */}
+                          {b.paymentStatus === "cash_initiated" && (
+                            <button
+                              onClick={() => handleConfirmCash(b._id)}
+                              className="mt-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                            >
+                              Confirm Cash Received
                             </button>
                           )}
                         </div>

@@ -7,7 +7,6 @@ import { CalendarDays } from "lucide-react";
 export default function BookingForm({
   provider,
   serviceName,
-  serviceObj,
   onClose,
   onSubmit,
   showCalendar,
@@ -23,9 +22,8 @@ export default function BookingForm({
   const [loading, setLoading] = useState(false);
   const [availableTimeRanges, setAvailableTimeRanges] = useState([]);
   const [bookedSlots, setBookedSlots] = useState([]);
-  const [preselectedSlot, setPreselectedSlot] = useState(null);
   const [units, setUnits] = useState("1"); // quantity input
-  const [area, setArea] = useState(1); // ⬅️ at top of component
+  const [showBreakdown, setShowBreakdown] = useState(false);
 
   const todayStr = new Date().toISOString().split("T")[0];
 
@@ -127,11 +125,15 @@ export default function BookingForm({
     });
   }
 
-  const computeTotalAmount = () => {
+  const computeServiceAmount = () => {
     if (unit === "fixed") return amount;
     const count = parseInt(units);
     return count > 0 ? amount * count : 0;
   };
+
+  const serviceAmount = computeServiceAmount();
+  const platformFee = 5;
+  const totalAmount = serviceAmount + platformFee;
 
   const handleBooking = async (e) => {
     e.preventDefault();
@@ -175,8 +177,7 @@ export default function BookingForm({
       return;
     }
 
-    const totalAmount = computeTotalAmount();
-    if (unit !== "fixed" && totalAmount === 0) {
+    if (unit !== "fixed" && serviceAmount === 0) {
       setError(`Please enter a valid number of ${unit}s`);
       setLoading(false);
       return;
@@ -190,7 +191,11 @@ export default function BookingForm({
         timeSlot: { from: fromTime, to: toTime },
         address,
         notes,
-        totalAmount: computeTotalAmount(),
+        unit,
+        units,
+        serviceAmount,
+        platformFee,
+        totalAmount,
       });
       console.log("Booking payload: ", {
         provider: provider._id,
@@ -199,6 +204,10 @@ export default function BookingForm({
         timeSlot: { from: fromTime, to: toTime },
         address,
         notes,
+        unit,
+        units,
+        serviceAmount,
+        platformFee,
         totalAmount,
       });
 
@@ -226,7 +235,8 @@ export default function BookingForm({
       onClick={onClose}
     >
       <div
-        className="bg-[var(--white)] rounded-2xl shadow-2xl p-6 w-full max-w-md relative border border-[var(--primary-light)]"
+        className="bg-[var(--white)] rounded-2xl shadow-2xl p-6 w-full max-w-md relative border border-[var(--primary-light)] overflow-y-auto"
+        style={{ maxHeight: "95vh" }}
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-2xl font-semibold text-center text-[var(--primary)] mb-2">
@@ -360,14 +370,57 @@ export default function BookingForm({
             ></textarea>
           </div>
 
+          {/* Price display */}
           {selectedService && (
-            <div className="text-sm text-[var(--secondary)] mt-2">
-              <span className="font-bold">Estimated Price:</span> ₹
-              {computeTotalAmount()}{" "}
-              {unit !== "fixed" && (
-                <span>
-                  ({parseInt(units) || 0} x ₹{amount}/{unit})
-                </span>
+            <div className="mt-3">
+              <button
+                type="button"
+                onClick={() => setShowBreakdown((prev) => !prev)}
+                className="text-sm text-[var(--secondary)] font-medium underline hover:text-[var(--primary)] transition"
+              >
+                {showBreakdown ? "Hide Price Breakdown" : "See Price Breakdown"}
+              </button>
+
+              {showBreakdown && (
+                <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-xl border border-green-200 mt-2 space-y-1 animate-fade-in">
+                  <div className="text-green-700 text-sm font-medium">
+                    <span className="block font-bold text-lg text-green-800 mb-1">
+                      Price Breakdown
+                    </span>
+
+                    {unit === "fixed" ? (
+                      <div className="flex justify-between">
+                        <span>Fixed Service Price</span>
+                        <span>₹{amount}</span>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex justify-between">
+                          <span>Price per {unit}</span>
+                          <span>₹{amount}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Number of {unit}s</span>
+                          <span>{units}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Service Amount</span>
+                          <span>₹{serviceAmount}</span>
+                        </div>
+                      </>
+                    )}
+
+                    <div className="flex justify-between">
+                      <span>Platform Fee</span>
+                      <span>₹{platformFee}</span>
+                    </div>
+
+                    <div className="flex justify-between font-bold text-green-900 border-t border-green-300 pt-2 mt-2">
+                      <span>Total</span>
+                      <span>₹{totalAmount}</span>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
           )}
