@@ -45,22 +45,17 @@ export default function ProviderDashboard() {
   const filterRef = useRef(null);
   const sortRef = useRef(null);
 
+  // useEffect(() => {
+  //   fetchBookings(); // initial call
+
+  //   const interval = setInterval(fetchBookings, 10_000); // poll every 10 seconds
+
+  //   return () => clearInterval(interval); // cleanup
+  // }, []);
+
   // Fetch bookings from API (restored from original)
   useEffect(() => {
     fetchBookings();
-    // setLoading(true);
-    // axios
-    //   .get("http://localhost:5000/api/bookings/provider-requests", {
-    //     withCredentials: true,
-    //   })
-    //   .then((res) => {
-    //     setBookings(res.data.bookings || []);
-    //     setLoading(false);
-    //   })
-    //   .catch(() => {
-    //     setError("Failed to load bookings");
-    //     setLoading(false);
-    //   });
   }, []);
 
   // Restored original handleStatus function
@@ -739,26 +734,24 @@ export default function ProviderDashboard() {
                               </div>
                             </div>
                             {/* Payment Status */}
-                            <div className="flex flex-col gap-4 w-full">
-                              {b.paymentStatus && (
-                                <div className="flex flex-row gap-1">
-                                  <strong
-                                    className="text-sm"
-                                    style={{ color: "var(--gray)" }}
-                                  >
-                                    Payment Status:{" "}
-                                  </strong>
-                                  <div
-                                    className={`text-sm rounded-sm`}
-                                    style={{ color: "var(--gray)" }}
-                                  >
-                                    {b.paymentStatus === "paid"
-                                      ? "Paid"
-                                      : "Pending"}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
+                            {b.paymentStatus && (
+                              <div
+                                className={`text-sm w-4/5 font-medium px-3 py-1 rounded-full ${
+                                  b.paymentStatus === "paid"
+                                    ? "bg-green-100 text-green-700"
+                                    : b.paymentStatus === "partial"
+                                    ? "bg-yellow-100 text-yellow-700"
+                                    : "bg-red-100 text-red-700"
+                                }`}
+                              >
+                                Payment :{" "}
+                                {b.paymentStatus === "paid"
+                                  ? "Paid"
+                                  : b.paymentStatus === "partial"
+                                  ? "Partially Paid"
+                                  : "Pending"}
+                              </div>
+                            )}
                           </div>
 
                           {/* Actions */}
