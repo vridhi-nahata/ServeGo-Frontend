@@ -949,3 +949,231 @@ export default function ProviderDashboard() {
     </div>
   );
 }
+
+
+
+
+// Dashboard code 1
+// import React, { useEffect, useState } from "react";
+// import axios from "axios";
+// import { Bar, Pie } from "react-chartjs-2";
+// import {
+//   Chart as ChartJS,
+//   CategoryScale,
+//   LinearScale,
+//   BarElement,
+//   Title,
+//   Tooltip,
+//   Legend,
+//   ArcElement,
+// } from "chart.js";
+// import { format, subDays, startOfDay } from "date-fns";
+// import { FaClipboardList, FaCheckCircle, FaTimesCircle, FaHourglassHalf, FaMoneyBillWave, FaStar } from "react-icons/fa";
+// import { motion } from "framer-motion";
+
+// ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
+
+// export default function ProviderDashboard() {
+//   const [stats, setStats] = useState(null);        // aggregated numbers
+//   const [barData, setBarData]   = useState(null);   // last 7 days bookings
+//   const [pieData, setPieData]   = useState(null);   // status distribution
+//   const [loading, setLoading]   = useState(true);
+//   const [error, setError]       = useState("");
+
+//   /* ---------- Fetch provider bookings ---------- */
+//   const fetchData = async () => {
+//     try {
+//       const res = await axios.get("http://localhost:5000/api/bookings/provider-requests", {
+//         withCredentials: true,
+//       });
+//       const bookings = res.data.bookings || [];
+
+//       /* ---------- KPIs ---------- */
+//       const today = new Date();
+//       const sevenDaysAgo = startOfDay(subDays(today, 6));
+
+//       const counts = {
+//         total: bookings.length,
+//         pending: 0,
+//         confirmed: 0,
+//         "in-progress": 0,
+//         completed: 0,
+//         cancelled: 0,
+//         revenue: 0,
+//         avgRating: 0,
+//         rated: 0,
+//       };
+
+//       /* ---------- 7-day daily counts ---------- */
+//       const daily = Array.from({ length: 7 }, (_, i) => ({
+//         label: format(subDays(today, 6 - i), "EEE"),
+//         pending: 0,
+//         confirmed: 0,
+//         completed: 0,
+//       }));
+
+//       bookings.forEach((b) => {
+//         const status = b.statusHistory?.[b.statusHistory.length - 1]?.status || "pending";
+//         if (status) counts[status]++;
+
+//         if (status === "completed") counts.revenue += b.serviceAmount || 0;
+//         if (b.rating) {
+//           counts.avgRating += b.rating;
+//           counts.rated++;
+//         }
+
+//         /* fill daily buckets */
+//         const bookingDate = startOfDay(new Date(b.date));
+//         if (bookingDate >= sevenDaysAgo) {
+//           const idx = Math.floor((bookingDate - sevenDaysAgo) / (1000 * 60 * 60 * 24));
+//           if (daily[idx]) {
+//             if (status === "pending") daily[idx].pending++;
+//             else if (status === "confirmed") daily[idx].confirmed++;
+//             else if (status === "completed") daily[idx].completed++;
+//           }
+//         }
+//       });
+
+//       counts.avgRating = counts.rated ? (counts.avgRating / counts.rated).toFixed(1) : "0";
+
+//       setStats(counts);
+
+//       /* ---------- Bar chart ---------- */
+//       setBarData({
+//         labels: daily.map((d) => d.label),
+//         datasets: [
+//           {
+//             label: "Pending",
+//             data: daily.map((d) => d.pending),
+//             backgroundColor: "#FBBF24",
+//           },
+//           {
+//             label: "Confirmed",
+//             data: daily.map((d) => d.confirmed),
+//             backgroundColor: "#34D399",
+//           },
+//           {
+//             label: "Completed",
+//             data: daily.map((d) => d.completed),
+//             backgroundColor: "#8B5CF6",
+//           },
+//         ],
+//       });
+
+//       /* ---------- Pie chart ---------- */
+//       setPieData({
+//         labels: ["Pending", "Confirmed", "In-Progress", "Completed", "Cancelled"],
+//         datasets: [
+//           {
+//             data: [
+//               counts.pending,
+//               counts.confirmed,
+//               counts["in-progress"],
+//               counts.completed,
+//               counts.cancelled,
+//             ],
+//             backgroundColor: ["#FBBF24", "#34D399", "#F97316", "#8B5CF6", "#F87171"],
+//           },
+//         ],
+//       });
+
+//       setLoading(false);
+//     } catch (err) {
+//       setError(err.response?.data?.message || "Failed to load dashboard");
+//       setLoading(false);
+//     }
+//   };
+
+//   useEffect(() => {
+//     fetchData();
+//   }, []);
+
+//   if (loading)
+//     return (
+//       <div className="min-h-screen flex items-center justify-center text-xl text-[var(--primary)]">
+//         Loading dashboard...
+//       </div>
+//     );
+
+//   if (error)
+//     return (
+//       <div className="min-h-screen flex items-center justify-center text-red-500 text-xl">
+//         {error}
+//       </div>
+//     );
+
+//   /* ---------- KPI Card ---------- */
+//   const KpiCard = ({ icon: Icon, title, value, color }) => (
+//     <motion.div
+//       whileHover={{ scale: 1.05 }}
+//       className={`bg-white rounded-xl shadow p-4 flex items-center space-x-4 ${color}`}
+//     >
+//       <div className="p-3 rounded-full bg-opacity-20 bg-black">
+//         <Icon className="text-2xl" />
+//       </div>
+//       <div>
+//         <p className="text-sm text-gray-600">{title}</p>
+//         <p className="text-2xl font-bold">{value}</p>
+//       </div>
+//     </motion.div>
+//   );
+
+//   /* ---------- Render ---------- */
+//   return (
+//     <div className="min-h-screen py-20 px-4 bg-gradient-to-br from-[var(--primary-light)] to-[var(--white)]">
+//       <h2 className="text-3xl md:text-4xl font-extrabold text-[var(--primary)] mb-6">
+//         Provider Dashboard
+//       </h2>
+
+//       {/* KPI Row */}
+//       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+//         <KpiCard icon={FaClipboardList} title="Total Bookings" value={stats.total} color="text-blue-600" />
+//         <KpiCard icon={FaHourglassHalf} title="Pending" value={stats.pending} color="text-yellow-500" />
+//         <KpiCard icon={FaCheckCircle} title="Completed" value={stats.completed} color="text-green-500" />
+//         <KpiCard icon={FaMoneyBillWave} title="Revenue (₹)" value={stats.revenue.toLocaleString()} color="text-purple-600" />
+//       </div>
+
+//       {/* Charts Row */}
+//       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+//         {/* Bar Chart */}
+//         <div className="lg:col-span-2 bg-white rounded-xl shadow p-4">
+//           <h3 className="text-lg font-semibold mb-2">Last 7 Days Bookings</h3>
+//           <Bar
+//             data={barData}
+//             options={{
+//               responsive: true,
+//               plugins: { legend: { position: "top" } },
+//               scales: { y: { beginAtZero: true } },
+//             }}
+//           />
+//         </div>
+
+//         {/* Pie Chart */}
+//         <div className="bg-white rounded-xl shadow p-4">
+//           <h3 className="text-lg font-semibold mb-2">Status Distribution</h3>
+//           <Pie
+//             data={pieData}
+//             options={{
+//               plugins: {
+//                 legend: { position: "bottom" },
+//               },
+//             }}
+//           />
+//         </div>
+//       </div>
+
+//       {/* Recent Activity */}
+//       <div className="bg-white rounded-xl shadow p-4">
+//         <h3 className="text-lg font-semibold mb-3">Recent Completed Services</h3>
+//         <div className="space-y-3 max-h-60 overflow-y-auto">
+//           {stats.completed === 0 ? (
+//             <p className="text-gray-500">No completed bookings yet.</p>
+//           ) : (
+//             /* In real life you can slice the latest 5-10 */
+//             <p className="text-sm text-gray-600">Display latest here (hook up with sorted bookings).</p>
+//           )}
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
