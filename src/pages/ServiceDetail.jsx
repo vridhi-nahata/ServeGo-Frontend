@@ -55,7 +55,10 @@ export default function ServiceDetail() {
           <p className="text-[var(--gray)] text-md">
             {serviceObj?.description || "Service details coming soon."}
           </p>
-          <p className="text-sm pt-2 text-[var(--gray)]"><span className="font-bold text-[var(--secondary)]">Price: </span>{serviceObj?.price}</p>
+          <p className="text-sm pt-2 text-[var(--gray)]">
+            <span className="font-bold text-[var(--secondary)]">Price: </span>
+            {serviceObj?.price}
+          </p>
         </div>
 
         {/* Right: Full Height Image */}
@@ -92,22 +95,34 @@ export default function ServiceDetail() {
           <h3 className="text-2xl text-[var(--primary)] font-semibold">
             Oops! No provider available
           </h3>
-          <p className="text-xl text-[var(--gray)] mt-3">No provider found for this service</p>
+          <p className="text-xl text-[var(--gray)] mt-3">
+            No provider found for this service
+          </p>
         </div>
       ) : (
         <div className="w-full px-4">
           <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 mx-auto justify-center">
-            {providers.map((provider) => (
-              <div className="flex justify-center" key={provider._id}>
-                <ProviderCard
-                  provider={provider}
-                  serviceName={serviceName}
-                  isWishlisted={userData?.wishlist?.includes(provider._id)}
-                  onProfileClick={() => navigate(`/provider/${provider._id}`)}
-                  onBook={() => setSelectedProvider(provider)}
-                />
-              </div>
-            ))}
+            {providers.map((provider) => {
+              const reviews = provider.reviews || [];
+              const avgRating = reviews.length
+                ? reviews.reduce(
+                    (sum, r) => sum + (r.customerFeedback?.rating || 0),
+                    0
+                  ) / reviews.length
+                : 0;
+
+              return (
+                <div className="flex justify-center" key={provider._id}>
+                  <ProviderCard
+                    provider={{ ...provider, rating: avgRating }}
+                    serviceName={serviceName}
+                    isWishlisted={userData?.wishlist?.includes(provider._id)}
+                    onProfileClick={() => navigate(`/provider/${provider._id}`)}
+                    onBook={() => setSelectedProvider(provider)}
+                  />
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
@@ -117,7 +132,7 @@ export default function ServiceDetail() {
         <BookingForm
           provider={selectedProvider}
           serviceName={serviceName}
-           serviceObj={serviceObj}
+          serviceObj={serviceObj}
           onClose={() => setSelectedProvider(null)}
           onSubmit={async ({ date, time }) => {
             const bookingData = {

@@ -6,6 +6,7 @@ import { FaCheck, FaTimes } from "react-icons/fa";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import { useAppContext } from "../context/AppContext";
 import { toast } from "react-toastify";
+import ReactStars from "react-rating-stars-component";
 
 dayjs.extend(isSameOrAfter);
 
@@ -23,6 +24,10 @@ export default function CustomerBookings() {
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [splitCount, setSplitCount] = useState(1);
   const [splitUsers, setSplitUsers] = useState([{ email: "" }]);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [selectedBookingId, setSelectedBookingId] = useState(null);
+  const [rating, setRating] = useState(0);
+  const [review, setReview] = useState("");
 
   const modalRef = useRef();
 
@@ -303,6 +308,32 @@ export default function CustomerBookings() {
     setSplitModalOpen(true);
   };
 
+  // Feedback
+  const handleSubmitFeedback = async () => {
+    try {
+      const res = await axios.post(
+        `${backendUrl}/api/bookings/${selectedBookingId}/feedback`,
+        { rating, review },
+        { withCredentials: true }
+      );
+      console.log("Feedback submitted for booking:", selectedBookingId);
+
+      console.log("Feedback submitted for booking:", selectedBookingId, {
+        rating,
+        review,
+      });
+
+      toast.success("Feedback submitted!");
+      setShowFeedbackModal(false);
+      setRating(0);
+      setReview("");
+      getBookings(); // refresh data
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to submit feedback");
+    }
+  };
+
   return (
     <div className="min-h-screen py-16 px-4 bg-[var(--background-light)]">
       <div className="w-full mx-auto bg-white shadow-md rounded-xl p-6 max-w-4xl">
@@ -513,12 +544,39 @@ export default function CustomerBookings() {
 
                       {/* Mark Complete */}
                       {b.otpVerified && !b.completedByCustomer && (
+                        // <button
+                        //   onClick={() => markCompleted(b._id)}
+                        //   className="mt-2 px-3 py-1 bg-[var(--ternary)] text-white rounded hover:bg-[var(--secondary)]"
+                        // >
+                        //   Mark Completed
+                        // </button>
                         <button
-                          onClick={() => markCompleted(b._id)}
-                          className="mt-2 px-3 py-1 bg-[var(--ternary)] text-white rounded hover:bg-[var(--secondary)]"
+                          onClick={() => {
+                            setSelectedBookingId(b._id);
+                            setShowFeedbackModal(true);
+                          }}
+                          className="px-4 py-2 bg-green-600 text-white rounded-md"
                         >
-                          Mark Completed
+                          Mark as Complete
                         </button>
+                      )}
+
+                      {/* Display feedback */}
+                      {b.customerFeedback?.rating && (
+                        <div className="mt-2 text-sm text-gray-700">
+                          <div className="flex items-center gap-1">
+                            <span className="font-medium text-yellow-500">
+                              {"★".repeat(b.customerFeedback.rating)}
+                              {"☆".repeat(5 - b.customerFeedback.rating)}
+                            </span>
+                            <span className="text-xs text-gray-500 ml-2">
+                              ({b.customerFeedback.rating}/5)
+                            </span>
+                          </div>
+                          <p className="mt-1 italic">
+                            “{b.customerFeedback.review}”
+                          </p>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -627,11 +685,57 @@ export default function CustomerBookings() {
           </div>
         </div>
       )}
+
+      {/* Feedback Modal */}
+      {showFeedbackModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-xl w-[90%] max-w-md shadow-lg">
+            <h2 className="text-xl font-semibold mb-4 text-center">
+              Rate Your Experience
+            </h2>
+
+            <div className="flex justify-center mb-3">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <span
+                  key={i}
+                  onClick={() => setRating(i)}
+                  className={`cursor-pointer text-2xl ${
+                    i <= rating ? "text-yellow-500" : "text-gray-300"
+                  }`}
+                >
+                  ★
+                </span>
+              ))}
+            </div>
+
+            <textarea
+              rows={3}
+              className="w-full border border-gray-300 rounded-md p-2"
+              placeholder="Write a short review..."
+              value={review}
+              onChange={(e) => setReview(e.target.value)}
+            />
+
+            <div className="flex justify-end gap-3 mt-4">
+              <button
+                className="px-4 py-2 bg-gray-200 rounded-md"
+                onClick={() => setShowFeedbackModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 bg-blue-600 text-white rounded-md"
+                onClick={handleSubmitFeedback}
+              >
+                Submit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-
-
 
 // ***************************version 2*************************************
 // import React, { useEffect, useState, useRef } from "react";
@@ -998,7 +1102,7 @@ export default function CustomerBookings() {
 //             {filteredBookings.map((b) => {
 //               const status = latestStatus(b.statusHistory);
 //               const isExpanded = expandedBookings[b._id];
-              
+
 //               return (
 //                 <div
 //                   key={b._id}
@@ -1016,7 +1120,7 @@ export default function CustomerBookings() {
 //                             {status.replace("-", " ").toUpperCase()}
 //                           </div>
 //                         </div>
-                        
+
 //                         <div className="flex items-center gap-4 text-sm text-gray-600">
 //                           <div className="flex items-center gap-1">
 //                             <FaCalendarAlt className="w-3 h-3" />
@@ -1032,7 +1136,7 @@ export default function CustomerBookings() {
 //                           </div>
 //                         </div>
 //                       </div>
-                      
+
 //                       <button
 //                         onClick={() => toggleBookingExpansion(b._id)}
 //                         className="p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -1138,7 +1242,7 @@ export default function CustomerBookings() {
 //                           {/* Payment Section */}
 //                           <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
 //                             <h4 className="font-medium text-green-800 mb-3">Payment Details</h4>
-                            
+
 //                             <div className="space-y-2 text-sm">
 //                               <div className="flex justify-between">
 //                                 <span>Service Amount:</span>
@@ -1163,13 +1267,13 @@ export default function CustomerBookings() {
 //                                   ? "bg-yellow-200 text-yellow-800"
 //                                   : "bg-red-200 text-red-800"
 //                               }`}>
-//                                 {b.paymentStatus === "paid" ? "Paid" : 
+//                                 {b.paymentStatus === "paid" ? "Paid" :
 //                                  b.paymentStatus === "partial" ? "Partially Paid" : "Payment Pending"}
 //                               </div>
 //                             )}
 
 //                             {/* Payment Options */}
-//                             {["confirmed", "in-progress", "completed"].includes(status) && 
+//                             {["confirmed", "in-progress", "completed"].includes(status) &&
 //                              b.paymentStatus !== "paid" && (
 //                               <div className="mt-4 space-y-2">
 //                                 <button
@@ -1179,7 +1283,7 @@ export default function CustomerBookings() {
 //                                   <FaCreditCard className="w-4 h-4" />
 //                                   Pay Online
 //                                 </button>
-                                
+
 //                                 <button
 //                                   onClick={() => handleCashOption(b)}
 //                                   className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors text-sm font-medium"
@@ -1187,7 +1291,7 @@ export default function CustomerBookings() {
 //                                   <FaMoneyBillWave className="w-4 h-4" />
 //                                   Pay Cash
 //                                 </button>
-                                
+
 //                                 <button
 //                                   onClick={() => openSplitModal(b)}
 //                                   className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-colors text-sm font-medium"
@@ -1256,7 +1360,7 @@ export default function CustomerBookings() {
 //             <h3 className="text-xl font-semibold mb-4 text-[var(--primary)]">
 //               Split Payment
 //             </h3>
-            
+
 //             <div className="mb-4 p-3 bg-gray-50 rounded-lg">
 //               <p className="text-sm text-gray-600">
 //                 <span className="font-medium">Total Amount:</span> ₹{selectedBooking?.totalAmount}
@@ -1320,8 +1424,6 @@ export default function CustomerBookings() {
 //   );
 // }
 
-
-
 // **********************************version 3*******************************
 // import React, { useEffect, useState, useRef } from "react";
 // import axios from "axios";
@@ -1364,10 +1466,10 @@ export default function CustomerBookings() {
 //   // Add StatusTimelineSection component
 //   const StatusTimelineSection = ({ statusHistory, bookingId }) => {
 //     const isTimelineExpanded = expandedTimelines[bookingId];
-    
+
 //     return (
 //       <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border border-gray-200 overflow-hidden shadow-sm">
-//         <div 
+//         <div
 //           className="bg-gradient-to-r from-gray-600 to-gray-700 text-white p-3 cursor-pointer hover:from-gray-700 hover:to-gray-800 transition-all"
 //           onClick={() => toggleTimelineExpansion(bookingId)}
 //         >
@@ -1386,7 +1488,7 @@ export default function CustomerBookings() {
 //             </div>
 //           </div>
 //         </div>
-        
+
 //         {isTimelineExpanded && (
 //           <div className="p-4 bg-white">
 //             <BookingStatusTimeline statusHistory={statusHistory} />
@@ -1731,7 +1833,7 @@ export default function CustomerBookings() {
 //             {filteredBookings.map((b) => {
 //               const status = latestStatus(b.statusHistory);
 //               const isExpanded = expandedBookings[b._id];
-              
+
 //               return (
 //                 <div
 //                   key={b._id}
@@ -1749,7 +1851,7 @@ export default function CustomerBookings() {
 //                             {status.replace("-", " ").toUpperCase()}
 //                           </div>
 //                         </div>
-                        
+
 //                         <div className="flex items-center gap-4 text-sm text-gray-600">
 //                           <div className="flex items-center gap-1">
 //                             <FaCalendarAlt className="w-3 h-3" />
@@ -1765,7 +1867,7 @@ export default function CustomerBookings() {
 //                           </div>
 //                         </div>
 //                       </div>
-                      
+
 //                       <button
 //                         onClick={() => toggleBookingExpansion(b._id)}
 //                         className="p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -1789,7 +1891,7 @@ export default function CustomerBookings() {
 //                             </h4>
 //                             <div className="bg-white rounded-md p-3 border border-gray-200">
 //                               <p className="text-sm text-gray-700">
-//                                 <span className="font-medium text-gray-800">Notes:</span> 
+//                                 <span className="font-medium text-gray-800">Notes:</span>
 //                                 <span className="ml-2 italic">{b.notes || "No additional notes provided"}</span>
 //                               </p>
 //                             </div>
@@ -1899,7 +2001,7 @@ export default function CustomerBookings() {
 //                                 <h4 className="font-semibold">Payment Information</h4>
 //                               </div>
 //                             </div>
-                            
+
 //                             <div className="p-4">
 //                               <div className="bg-white rounded-lg p-4 border border-green-200 mb-4">
 //                                 <div className="space-y-3">
@@ -1931,21 +2033,21 @@ export default function CustomerBookings() {
 //                                       : "bg-red-100 text-red-800 border-red-300"
 //                                   }`}>
 //                                     <div className={`w-2 h-2 rounded-full mr-2 ${
-//                                       b.paymentStatus === "paid" ? "bg-green-500" : 
+//                                       b.paymentStatus === "paid" ? "bg-green-500" :
 //                                       b.paymentStatus === "partial" ? "bg-yellow-500" : "bg-red-500"
 //                                     }`}></div>
-//                                     {b.paymentStatus === "paid" ? "Payment Complete" : 
+//                                     {b.paymentStatus === "paid" ? "Payment Complete" :
 //                                      b.paymentStatus === "partial" ? "Partially Paid" : "Payment Pending"}
 //                                   </div>
 //                                 </div>
 //                               )}
 
 //                               {/* Payment Options */}
-//                               {["confirmed", "in-progress", "completed"].includes(status) && 
+//                               {["confirmed", "in-progress", "completed"].includes(status) &&
 //                                b.paymentStatus !== "paid" && (
 //                                 <div className="space-y-3">
 //                                   <h5 className="font-medium text-gray-800 mb-3">Choose Payment Method:</h5>
-                                  
+
 //                                   <button
 //                                     onClick={() => handlePayOnline(b)}
 //                                     className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105 shadow-lg font-medium"
@@ -1954,7 +2056,7 @@ export default function CustomerBookings() {
 //                                     <span>Pay Online</span>
 //                                     <div className="ml-auto bg-blue-400 px-2 py-1 rounded text-xs">Instant</div>
 //                                   </button>
-                                  
+
 //                                   <button
 //                                     onClick={() => handleCashOption(b)}
 //                                     className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all transform hover:scale-105 shadow-lg font-medium"
@@ -1963,7 +2065,7 @@ export default function CustomerBookings() {
 //                                     <span>Pay with Cash</span>
 //                                     <div className="ml-auto bg-green-400 px-2 py-1 rounded text-xs">On Service</div>
 //                                   </button>
-                                  
+
 //                                   <button
 //                                     onClick={() => openSplitModal(b)}
 //                                     className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg hover:from-purple-600 hover:to-indigo-700 transition-all transform hover:scale-105 shadow-lg font-medium"
@@ -1978,8 +2080,8 @@ export default function CustomerBookings() {
 //                           </div>
 
 //                           {/* Timeline */}
-//                           <StatusTimelineSection 
-//                             statusHistory={b.statusHistory} 
+//                           <StatusTimelineSection
+//                             statusHistory={b.statusHistory}
 //                             bookingId={b._id}
 //                           />
 //                         </div>
@@ -2034,7 +2136,7 @@ export default function CustomerBookings() {
 //             <h3 className="text-xl font-semibold mb-4 text-[var(--primary)]">
 //               Split Payment
 //             </h3>
-            
+
 //             <div className="mb-4 p-3 bg-gray-50 rounded-lg">
 //               <p className="text-sm text-gray-600">
 //                 <span className="font-medium">Total Amount:</span> ₹{selectedBooking?.totalAmount}

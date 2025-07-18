@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useContext } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import StarRating from "../components/StarRating";
 import BookingForm from "../components/BookingForm";
+import ReactStars from "react-rating-stars-component";
 
 export default function ProviderProfile() {
   const { providerId } = useParams();
@@ -12,20 +12,53 @@ export default function ProviderProfile() {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [showCalendar, setShowCalendar] = useState(false);
+  const [reviews, setReviews] = useState([]);
+
+  const FractionalStars = ({ rating }) => {
+    const percent = (Math.max(0, Math.min(5, rating)) / 5) * 100;
+    return (
+      <div className="flex justify-end items-center mt-1">
+        <div
+          className="flex text-2xl text-yellow-400"
+          style={{
+            background: `linear-gradient(90deg, #facc15 ${percent}%, #e5e7eb ${percent}%)`,
+            backgroundClip: "text",
+            WebkitBackgroundClip: "text",
+            color: "transparent",
+          }}
+        >
+          ★★★★★
+        </div>
+      </div>
+    );
+  };
 
   useEffect(() => {
-    axios
-      .get(`http://localhost:5000/api/user/provider-profile?id=${providerId}`, {
-        withCredentials: true,
-      })
-      .then((res) => {
-        setProvider(res.data.provider);
+    const loadData = async () => {
+      try {
+        const [profileRes, reviewsRes] = await Promise.all([
+          axios.get(
+            `http://localhost:5000/api/user/provider-profile?id=${providerId}`,
+            {
+              withCredentials: true,
+            }
+          ),
+          axios.get(
+            `http://localhost:5000/api/user/provider-reviews/${providerId}`,
+            {
+              withCredentials: true,
+            }
+          ),
+        ]);
+        setProvider(profileRes.data.provider);
+        setReviews(reviewsRes.data.reviews || []);
+      } catch (err) {
+        console.error(err);
+      } finally {
         setLoading(false);
-      })
-      .catch((err) => {
-        // setErrorMessage("Error loading provider details");
-        setLoading(false);
-      });
+      }
+    };
+    loadData();
   }, [providerId]);
 
   if (loading) {
@@ -75,11 +108,6 @@ export default function ProviderProfile() {
             >
               {provider.isAccountVerified ? "Verified" : "Not Verified"}
             </span>
-
-            {/* Rating */}
-            <div className="pt-1">
-              <StarRating rating={provider.rating || 0} />
-            </div>
 
             {/* Action Buttons */}
             <div className="flex justify-center sm:justify-start gap-6 pt-5">
@@ -148,7 +176,7 @@ export default function ProviderProfile() {
               : "Not specified"}
           </p>
 
-         {/* Services Offered */}
+          {/* Services Offered */}
           <div className="sm:col-span-2 mt-4">
             <strong>Services Offered With Experience:</strong>
             <ul className="list-disc pl-6 mt-1 text-[var(--secondary)] space-y-2">
@@ -198,9 +226,10 @@ export default function ProviderProfile() {
             </ul>
           </div>
         </div>
+        <hr className="my-8 border-gray-300" />
 
         {/* Documents section */}
-        <div>
+        {/* <div>
           {provider.serviceDocs?.length > 0 && (
             <div className="w-full mt-6">
               <h3 className="text-xl font-semibold text-[var(--primary)] mb-3">
@@ -250,7 +279,154 @@ export default function ProviderProfile() {
               </div>
             </div>
           )}
-        </div>
+        </div> */}
+
+        {/* Rating overview*/}
+        {reviews.length > 0 && (
+          <div className="mt-8">
+            <h3 className="text-2xl font-bold text-[var(--primary)] mb-6">
+              Ratings Overview
+            </h3>
+            {/* --- STATS BAR --- */}
+            <div className="flex justify-between items-center mb-4">
+              {/* left: star breakdown */}
+              <div className="text-sm text-gray-700 space-y-1">
+                {[5, 4, 3, 2, 1].map((stars) => {
+                  const count = reviews.filter(
+                    (r) => r.customerFeedback.rating === stars
+                  ).length;
+                  return (
+                    <div key={stars} className="flex items-center gap-2">
+                      <span className="w-12">{stars} star</span>
+                      <div className="w-20 sm:w-40 md:w-60 bg-gray-200 rounded-full h-2 transition">
+                        <div
+                          className="bg-yellow-400 h-2 rounded-full"
+                          style={{
+                            width: `${(count / reviews.length) * 100}%`,
+                          }}
+                        />
+                      </div>
+                      <span className="w-6 text-right">{count}</span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* right: total & average */}
+              <div className="text-right">
+                <div className="text-3xl font-bold text-gray-800">
+                  {(
+                    reviews.reduce(
+                      (sum, r) => sum + r.customerFeedback.rating,
+                      0
+                    ) / reviews.length
+                  ).toFixed(1)}
+                  <span className="text-lg text-gray-500">/5</span>
+                </div>
+
+                {/* Average stars */}
+                {reviews.length > 0 && (
+                  <FractionalStars
+                    rating={
+                      reviews.reduce(
+                        (s, r) => s + r.customerFeedback.rating,
+                        0
+                      ) / reviews.length
+                    }
+                  />
+                )}
+
+                <div className="flex justify-end items-center mt-1">
+                  <ReactStars
+                    count={5}
+                    value={
+                      reviews.reduce(
+                        (s, r) => s + r.customerFeedback.rating,
+                        0
+                      ) / reviews.length
+                    }
+                    size={20}
+                    activeColor="#facc15"
+                    isHalf={true}
+                    edit={false}
+                  />
+                </div>
+
+                <div className="text-sm text-gray-500">
+                  {reviews.length} reviews
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        <hr className="my-8 border-gray-300" />
+
+        {/* Customer Reviews */}
+        {reviews.length > 0 && (
+          <div className="mt-8 h-120 overflow-y-auto">
+            <h3 className="text-xl font-semibold text-[var(--primary)] mb-4">
+              Customer Reviews
+            </h3>
+            <div className="space-y-4">
+              {reviews.map(({ customerFeedback, customer }, idx) => {
+                console.log("customer", customer); // <- debug
+                return (
+                  <div
+                    key={idx}
+                    className="border rounded-xl p-4 bg-gradient-to-br from-gray-50 to-white shadow"
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center gap-2 mb-2">
+                        {customer?.avatarUrl ? (
+                          <img
+                            src={customer.avatarUrl}
+                            alt={customer.name}
+                            className="w-6 h-6 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-6 h-6 rounded-full bg-[var(--primary)] text-white flex items-center justify-center text-xs font-bold">
+                            {customer?.name?.[0]?.toUpperCase() || "?"}
+                          </div>
+                        )}
+                        <span className="text-sm font-medium">
+                          {customer.name}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1 mb-1">
+                      {[...Array(5)].map((_, i) => (
+                        <span
+                          key={i}
+                          className={`text-lg ${
+                            i < (customerFeedback?.rating || 0)
+                              ? "text-yellow-400"
+                              : "text-gray-300"
+                          }`}
+                        >
+                          ★
+                        </span>
+                      ))}
+                      <span className="ml-2 text-sm text-gray-600">
+                        {customerFeedback?.rating}/5
+                      </span>
+                    </div>
+
+                    <p className="text-sm italic text-gray-700">
+                      “{customerFeedback?.review || "No comment"}”
+                    </p>
+
+                    <p className="text-xs text-gray-400 mt-2">
+                      {customerFeedback?.date
+                        ? new Date(customerFeedback.date).toLocaleDateString()
+                        : ""}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Booking Form Modal */}

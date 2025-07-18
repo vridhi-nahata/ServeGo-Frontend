@@ -1,4 +1,3 @@
-import StarRating from "./StarRating";
 import { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaHeart } from "react-icons/fa";
@@ -23,7 +22,7 @@ export default function ProviderCard({
   const [showVideoCall, setShowVideoCall] = useState(false);
   const [showVoiceCall, setShowVoiceCall] = useState(false);
 
-  const { backendUrl,getUserData } = useContext(AppContext);
+  const { backendUrl, getUserData } = useContext(AppContext);
   useEffect(() => {
     setIsWishlisted(initialWishlisted);
   }, [initialWishlisted]);
@@ -112,7 +111,10 @@ export default function ProviderCard({
           <h3 className="font-bold text-lg text-[var(--primary)]">
             {provider.name}
           </h3>
-          <StarRating rating={provider.rating} />
+          <p className="text-yellow-500 font-thin">
+            ⭐
+            {provider.averageRating !== "N/A" ? provider.averageRating : "0.0"}
+          </p>
         </div>
 
         <div className="flex flex-col gap-1 text-sm text-[var(--secondary)] mb-4 ">
@@ -183,7 +185,7 @@ export default function ProviderCard({
         </div>
 
         {/* Quick action buttons */}
-{/* <div className="flex items-center justify-evenly mb-4">
+        {/* <div className="flex items-center justify-evenly mb-4">
   <button
     title="Voice Call"
     className="group"
@@ -221,7 +223,6 @@ export default function ProviderCard({
   </button>
 </div> */}
 
-
         <div className="flex items-center justify-center">
           <button
             onClick={() => setShowBooking(true)}
@@ -244,7 +245,7 @@ export default function ProviderCard({
       )}
 
       {/* Video & voice Call Modal */}
-{/* {showVideoCall && (
+      {/* {showVideoCall && (
   <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center">
     <div className="bg-white rounded-xl p-6 w-[90%] max-w-xl">
       <h2 className="text-lg font-semibold mb-4 text-center">Video Call</h2>
@@ -278,7 +279,6 @@ export default function ProviderCard({
     </div>
   </div>
 )} */}
-
     </div>
   );
 }
