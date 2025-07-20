@@ -364,7 +364,7 @@ export default function ProviderProfile() {
         {/* Customer Reviews */}
         {reviews.length > 0 && (
           <div className="mt-8 h-120 overflow-y-auto">
-            <h3 className="text-xl font-semibold text-[var(--primary)] mb-4">
+            <h3 className="text-2xl font-bold text-[var(--primary)] mb-6">
               Customer Reviews
             </h3>
             <div className="space-y-4">

@@ -393,7 +393,7 @@ title={
                 className="mb-3 pl-1 text-sm text-[var(--primary)] hover:underline"
                 onClick={() => setSelectedSubcategory(null)}
               >
-                <i class="fas fa-arrow-left text-xs"></i>
+                <i className="fas fa-arrow-left text-xs"></i>
                Back
               </button>
               </div>

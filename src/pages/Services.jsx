@@ -5,12 +5,7 @@ import Slider from "rc-slider";
 import "rc-slider/assets/index.css";
 import { CATEGORY_NAMES, CATEGORY_ICONS } from "../constants/categoryData";
 
-import {
-  FaSearch,
-  FaFilter,
-  FaChevronDown,
-  FaTimes,
-} from "react-icons/fa";
+import { FaSearch, FaFilter, FaChevronDown, FaTimes } from "react-icons/fa";
 
 export default function Services() {
   const navigate = useNavigate();
@@ -734,13 +729,13 @@ export default function Services() {
                                   alt={service.name}
                                   className="object-contain w-full h-full"
                                 />
-                                <span className="absolute bottom-1 right-1 bg-[var(--secondary)] text-white text-xs px-2 py-0.5 rounded">
-                                  {service.price}
-                                </span>
                               </div>
                               <p className="mt-2 text-sm font-medium text-[var(--ternary)]">
                                 {service.name}
                               </p>
+                              <span className="bg-[var(--secondary)] text-white text-xs px-2 py-0.5 rounded">
+                                {service.price}
+                              </span>
                             </div>
                           ))}
                         </div>

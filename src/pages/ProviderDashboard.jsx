@@ -1,1179 +1,703 @@
-import React, { useEffect, useState, useRef } from "react";
-import BookingStatusTimeline from "../components/BookingStatusTimeline";
+import React, { useMemo, useState, useEffect } from "react";
 import axios from "axios";
 import {
-  FaCheck,
-  FaTimes,
-  FaClock,
-  FaSyncAlt,
-  FaSearch,
-  FaFilter,
-  FaChevronDown,
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+} from "recharts";
+import {
+  FaClipboardList,
+  FaDollarSign,
+  FaClipboardCheck,
+  FaStar,
 } from "react-icons/fa";
-import { motion } from "framer-motion";
+import { FiChevronDown } from "react-icons/fi";
+
 import dayjs from "dayjs";
+import isBetween from "dayjs/plugin/isBetween";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
-import { toast } from "react-toastify";
 
+dayjs.extend(isBetween);
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 
-export default function ProviderDashboard() {
-  const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState("");
-  const [error, setError] = useState("");
-  const [showTimeUpdate, setShowTimeUpdate] = useState(null);
+const COLORS = [
+  "#10b981",
+  "#f59e0b",
+  "#ef4444",
+  "#3b82f6",
+  "#8b5cf6",
+  "#6b7280",
+];
+
+const fmt = (d, g) => {
+  const date = dayjs(d);
+  switch (g) {
+    case "daily":
+      return date.format("DD MMM");
+    case "weekly":
+      return `W${date.week()}`;
+    case "monthly":
+      return date.format("MMM YY");
+    case "yearly":
+      return date.format("YYYY");
+    default:
+      return date.format("DD MMM");
+  }
+};
+
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 640); // Tailwind's `sm`
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+  return isMobile;
+};
+
+function ProviderAnalytics({ bookings, setBookings }) {
+  const isMobile = useIsMobile();
+
+  const [from, setFrom] = useState("2025-01-01"); // Set to a very early date
+  const [to, setTo] = useState(dayjs().format("YYYY-MM-DD"));
+  const [granularity, setGranularity] = useState("daily"); // daily | weekly | monthly
   const [newFrom, setNewFrom] = useState("");
   const [newTo, setNewTo] = useState("");
-  const [expandedStatuses, setExpandedStatuses] = useState({});
-  const [otpInputs, setOtpInputs] = useState({});
-  const [otpError, setOtpError] = useState({});
+  const [selectedBookingId, setSelectedBookingId] = useState(null);
 
-  // Search and filter states
-  const [search, setSearch] = useState("");
-  const [selectedStatuses, setSelectedStatuses] = useState([]);
-  const [dateRange, setDateRange] = useState({ from: "", to: "" });
-  const [showFilter, setShowFilter] = useState(false);
-  const [showSort, setShowSort] = useState(false);
-  const [showStatusList, setShowStatusList] = useState(false);
-  const [sortBy, setSortBy] = useState("");
-  const [timeError, setTimeError] = useState("");
-
-  // Refs for outside click detection
-  const filterRef = useRef(null);
-  const sortRef = useRef(null);
-
-  // useEffect(() => {
-  //   fetchBookings(); // initial call
-
-  //   const interval = setInterval(fetchBookings, 10_000); // poll every 10 seconds
-
-  //   return () => clearInterval(interval); // cleanup
-  // }, []);
-
-  // Fetch bookings from API (restored from original)
-  useEffect(() => {
-    fetchBookings();
-  }, []);
-
-  // Restored original handleStatus function
-  const handleStatus = async (id, status, newTimeSlot) => {
-    setActionLoading(id + status);
-    try {
-      const res = await axios.patch(
-        `http://localhost:5000/api/bookings/${id}/status`,
-        status === "update-time" ? { status, newTimeSlot } : { status },
-        { withCredentials: true }
-      );
-      setBookings((prev) =>
-        prev.map((b) => (b._id === id ? res.data.booking : b))
-      );
-      setShowTimeUpdate(null);
-      setNewFrom("");
-      setNewTo("");
-    } catch (err) {
-      alert(err.response?.data?.message || "Failed to update status");
-    }
-    setActionLoading("");
-  };
-
-  const statusColor = {
-    pending: "bg-yellow-100 text-yellow-700",
-    confirmed: "bg-green-100 text-green-700",
-    rejected: "bg-red-100 text-red-700",
-    "update-time": "bg-blue-100 text-blue-700",
-    "in-progress": "bg-orange-100 text-orange-700",
-    completed: "bg-purple-100 text-purple-700",
-    cancelled: "bg-gray-200 text-gray-700",
-  };
-
-  const allStatuses = [
-    "pending",
-    "confirmed",
-    "rejected",
-    "update-time",
-    "in-progress",
-    "completed",
-    "cancelled",
-  ];
-
-  // Filter and search logic
-  let filteredBookings = bookings;
-
-  // Search
-  if (search.trim()) {
-    filteredBookings = filteredBookings.filter(
-      (b) =>
-        b.customer?.name?.toLowerCase().includes(search.toLowerCase()) ||
-        b.serviceName?.toLowerCase().includes(search.toLowerCase()) ||
-        b.address?.toLowerCase().includes(search.toLowerCase()) // New: Search by Address
-    );
-  }
-
-  // Status filter
-  if (selectedStatuses.length > 0) {
-    filteredBookings = filteredBookings.filter((b) => {
-      const currentStatus =
-        b.statusHistory?.[b.statusHistory.length - 1]?.status || "pending";
-      return selectedStatuses.includes(currentStatus);
+  const filtered = useMemo(() => {
+    console.log("Filtering bookings with from:", from, "to:", to);
+    // Add one day to the 'to' date to make it inclusive
+    const toDate = dayjs(to).add(1, "day");
+    return bookings.filter((b) => {
+      const createdAt = dayjs(b.createdAt);
+      console.log("Booking createdAt:", createdAt.format());
+      return createdAt.isBetween(from, toDate, null, "[]");
     });
-  }
+  }, [bookings, from, to]);
 
-  // Date range filter
-  if (dateRange.from) {
-    const fromDate = dayjs(dateRange.from).startOf("day");
-    filteredBookings = filteredBookings.filter((b) =>
-      dayjs(b.date).isSameOrAfter(fromDate)
+  const kpis = useMemo(() => {
+    console.log("Computing KPIs with filtered data:", filtered);
+    const completed = filtered.filter((b) =>
+      b.statusHistory?.some((s) => s.status === "completed")
     );
-  }
-  if (dateRange.to) {
-    const toDate = dayjs(dateRange.to).endOf("day");
-    filteredBookings = filteredBookings.filter((b) =>
-      dayjs(b.date).isSameOrBefore(toDate)
-    );
-  }
+    const revenue = completed.reduce((s, b) => s + (b.totalAmount || 0), 0);
+    const rated = filtered.filter((b) => b.customerFeedback?.rating);
+    const avg = rated.length
+      ? rated.reduce((s, b) => s + b.customerFeedback.rating, 0) / rated.length
+      : 0;
+    return { revenue, completed: completed.length, avg: avg.toFixed(1) };
+  }, [filtered]);
 
-  // Group by status
-  const grouped = filteredBookings.reduce((acc, b) => {
-    const latest =
-      b.statusHistory?.[b.statusHistory.length - 1]?.status || "pending";
-    acc[latest] = acc[latest] || [];
-    acc[latest].push(b);
-    return acc;
-  }, {});
-
-  // Sort groups - FIXED SORTING LOGIC
-  const sortedGroups = {};
-  Object.keys(grouped).forEach((status) => {
-    let sortedBookings = [...grouped[status]];
-
-    if (sortBy === "date-asc") {
-      sortedBookings.sort((a, b) => {
-        // First compare dates
-        const dateA = new Date(a.date);
-        const dateB = new Date(b.date);
-        const dateDiff = dateA.getTime() - dateB.getTime();
-
-        if (dateDiff !== 0) return dateDiff;
-
-        // If dates are same, compare times
-        // Convert time strings (e.g., "14:30") to comparable format
-        const timeA = a.timeSlot.from.split(":").map(Number);
-        const timeB = b.timeSlot.from.split(":").map(Number);
-
-        // Compare hours first, then minutes
-        const hourDiff = timeA[0] - timeB[0];
-        if (hourDiff !== 0) return hourDiff;
-
-        return timeA[1] - timeB[1]; // Compare minutes
-      });
-    } else if (sortBy === "date-desc") {
-      sortedBookings.sort((a, b) => {
-        // First compare dates (reversed for descending)
-        const dateA = new Date(a.date);
-        const dateB = new Date(b.date);
-        const dateDiff = dateB.getTime() - dateA.getTime();
-
-        if (dateDiff !== 0) return dateDiff;
-
-        // If dates are same, compare times (reversed for descending)
-        const timeA = a.timeSlot.from.split(":").map(Number);
-        const timeB = b.timeSlot.from.split(":").map(Number);
-
-        // Compare hours first, then minutes (reversed)
-        const hourDiff = timeB[0] - timeA[0];
-        if (hourDiff !== 0) return hourDiff;
-
-        return timeB[1] - timeA[1]; // Compare minutes (reversed)
-      });
-    } else if (sortBy === "name-asc") {
-      sortedBookings.sort((a, b) =>
-        (a.customer?.name || "").localeCompare(b.customer?.name || "")
-      );
-    } else if (sortBy === "name-desc") {
-      sortedBookings.sort((a, b) =>
-        (b.customer?.name || "").localeCompare(a.customer?.name || "")
-      );
-    } else if (sortBy === "service-asc") {
-      sortedBookings.sort((a, b) =>
-        (a.serviceName || "").localeCompare(b.serviceName || "")
-      );
-    } else if (sortBy === "service-desc") {
-      sortedBookings.sort((a, b) =>
-        (b.serviceName || "").localeCompare(a.serviceName || "")
-      );
-    }
-
-    sortedGroups[status] = sortedBookings;
-  });
-
-  // Restored original markCompleted function
-  const markCompleted = async (bookingId) => {
-    try {
-      console.log("Mark completed triggered");
-      const res = await axios.patch(
-        `http://localhost:5000/api/bookings/mark-complete/${bookingId}`,
-        {},
-        { withCredentials: true }
-      );
-      setBookings((prev) =>
-        prev.map((b) => (b._id === bookingId ? res.data.booking : b))
-      );
-    } catch (err) {
-      alert(err.response?.data?.message || "Failed to mark as complete");
-    }
-  };
-
-  // Initialize all statuses as expanded
-  useEffect(() => {
-    const initialExpanded = {};
-    allStatuses.forEach((status) => {
-      initialExpanded[status] = true;
+  const statusData = useMemo(() => {
+    console.log("Computing statusData with filtered data:", filtered);
+    const counts = {};
+    filtered.forEach((b) => {
+      const latest = b.statusHistory?.at(-1)?.status || "pending";
+      counts[latest] = (counts[latest] || 0) + 1;
     });
-    setExpandedStatuses(initialExpanded);
-  }, []);
+    return Object.entries(counts).map(([name, value]) => ({ name, value }));
+  }, [filtered]);
 
-  // Handle outside clicks
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (filterRef.current && !filterRef.current.contains(event.target)) {
-        setShowFilter(false);
-      }
-      if (sortRef.current && !sortRef.current.contains(event.target)) {
-        setShowSort(false);
-      }
-    };
+  const serviceRevenueData = useMemo(() => {
+    console.log("Computing serviceRevenueData with filtered data:", filtered);
+    const map = {};
+    filtered
+      .filter((b) => b.statusHistory?.some((s) => s.status === "completed"))
+      .forEach((b) => {
+        map[b.serviceName] = (map[b.serviceName] || 0) + (b.totalAmount || 0);
+      });
+    return Object.entries(map).map(([name, value]) => ({ name, value }));
+  }, [filtered]);
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+  const serviceData = useMemo(() => {
+    console.log("Computing serviceData with filtered data:", filtered);
+    const map = {};
+    filtered
+      .filter((b) => b.statusHistory?.some((s) => s.status === "completed"))
+      .forEach((b) => {
+        map[b.serviceName] = (map[b.serviceName] || 0) + 1;
+      });
+    return Object.entries(map)
+      .map(([service, count]) => ({ service, count }))
+      .sort((a, b) => b.count - a.count);
+  }, [filtered]);
 
-  const toggleStatus = (status) => {
-    setExpandedStatuses((prev) => ({ ...prev, [status]: !prev[status] }));
-  };
+  const trendData = useMemo(() => {
+    console.log("Computing trendData with filtered data:", filtered);
+    const map = {};
+    filtered
+      .filter((b) => b.statusHistory?.some((s) => s.status === "completed"))
+      .forEach((b) => {
+        const key = fmt(b.createdAt, granularity);
+        map[key] = (map[key] || 0) + (b.totalAmount || 0);
+      });
+    return Object.entries(map)
+      .map(([date, revenue]) => ({ date, revenue }))
+      .sort((a, b) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf());
+  }, [filtered, granularity]);
 
-  const handleConfirmCash = async (bookingId) => {
+  const ratingStats = useMemo(() => {
+    console.log("Computing ratingStats with bookings data:", bookings);
+    const reviews = bookings.filter((b) => b.customerFeedback?.rating);
+    const total = reviews.length;
+    if (!total) return null;
+    const avg = (
+      reviews.reduce((s, b) => s + b.customerFeedback.rating, 0) / total
+    ).toFixed(1);
+    const counts = [5, 4, 3, 2, 1].map((star) => ({
+      star,
+      count: reviews.filter((b) => b.customerFeedback.rating === star).length,
+      percent: (
+        (reviews.filter((b) => b.customerFeedback.rating === star).length /
+          total) *
+        100
+      ).toFixed(0),
+    }));
+    return { avg, counts, total };
+  }, [bookings]);
+
+  const reviews = useMemo(() => {
+    console.log("Computing reviews with bookings data:", bookings);
+    return bookings
+      .filter((b) => b.customerFeedback?.rating)
+      .map((b) => ({
+        rating: b.customerFeedback.rating,
+        review: b.customerFeedback.review || "",
+        date: b.customerFeedback.date,
+        customer: b.customer,
+      }))
+      .sort((a, b) => dayjs(b.date).valueOf() - dayjs(a.date).valueOf());
+  }, [bookings]);
+
+  const handleStatus = async (id, status) => {
     try {
       await axios.patch(
-        `http://localhost:5000/api/bookings/${bookingId}/confirm-cash`,
-        {},
+        `http://localhost:5000/api/bookings/${id}/status`,
+        { status },
         { withCredentials: true }
       );
-      toast.success("Cash payment confirmed!");
-      await fetchBookings(); // refetch the provider bookings
-    } catch (err) {
-      toast.error(
-        err.response?.data?.message || "Failed to confirm cash payment"
-      );
-    }
-  };
-
-  const fetchBookings = async () => {
-    setLoading(true);
-    try {
-      const res = await axios.get(
+      const { data } = await axios.get(
         "http://localhost:5000/api/bookings/provider-requests",
         { withCredentials: true }
       );
-      setBookings(res.data.bookings || []);
+      setBookings(data.bookings || []);
     } catch (err) {
-      setError("Failed to load bookings");
+      console.error("Failed to update status", err);
     }
-    setLoading(false);
   };
 
-  return (
-    <div className="min-h-screen py-20 px-4 bg-gradient-to-br from-[var(--primary-light)] to-[var(--white)]">
-      {/* Top Header */}
-      <div className="flex flex-wrap items-center justify-between px-2 mb-6">
-        <h2 className="py-3 text-2xl sm:text-3xl md:text-4xl font-extrabold text-[var(--primary)]">
-          My Bookings
-        </h2>
+  const handleReschedule = (bookingId) => {
+    setSelectedBookingId(bookingId);
+  };
 
-        <div className="flex gap-2 items-center justify-center">
-          {/* Search */}
-          <div className="relative w-3/4 xs:w-28 sm:w-32 md:w-44 lg:w-52">
-            <FaSearch className="absolute left-3 top-2 text-gray-400" />
+  const isValidTime = (time) => {
+    const regex = /^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/;
+    return regex.test(time);
+  };
+
+  const handleRescheduleSubmit = async () => {
+    if (!newFrom || !newTo || !selectedBookingId) {
+      console.error("New time slot or booking ID is missing.");
+      return;
+    }
+
+    if (!isValidTime(newFrom) || !isValidTime(newTo)) {
+      console.error("Invalid time format. Please use HH:MM.");
+      return;
+    }
+
+    try {
+      const url = `http://localhost:5000/api/bookings/${selectedBookingId}/status`;
+      const payload = {
+        status: "update-time",
+        newTimeSlot: {
+          from: newFrom,
+          to: newTo,
+        },
+      };
+      console.log("Reschedule Payload:", payload); // Debugging log
+
+      const response = await axios.patch(url, payload, {
+        withCredentials: true,
+      });
+      console.log("Reschedule successful:", response.data);
+
+      // Refresh bookings after successful update
+      const { data } = await axios.get(
+        "http://localhost:5000/api/bookings/provider-requests",
+        { withCredentials: true }
+      );
+      setBookings(data.bookings || []);
+
+      // Clear form and selection
+      setSelectedBookingId(null);
+      setNewFrom("");
+      setNewTo("");
+    } catch (err) {
+      console.error("Failed to reschedule booking:", err);
+    }
+  };
+
+  const upcomingBookings = useMemo(() => {
+    console.log("Computing upcomingBookings with bookings data:", bookings);
+    const now = dayjs();
+    const next7Days = now.add(7, "day");
+
+    return bookings
+      .filter((b) => b.statusHistory?.some((s) => s.status === "confirmed"))
+      .filter((b) => {
+        const bookingDate = dayjs(b.date);
+        return bookingDate.isAfter(now) && bookingDate.isBefore(next7Days);
+      });
+  }, [bookings]);
+
+  return (
+    <div className="min-h-screen py-20 bg-gradient-to-br from-[var(--primary-light)] to-white p-6">
+      <div className="flex flex-wrap justify-between gap-4">
+        <h1 className="text-3xl font-bold text-[var(--primary)] mb-2">
+          Dashboard
+        </h1>
+
+        <div className="flex items-center gap-4 mb-4 text-xs">
+          <div className="flex flex-col">
+            <label
+              htmlFor="from"
+              className="text-sm text-[var(--primary)] mb-1"
+            >
+              From
+            </label>
             <input
-              type="text"
-              placeholder="Search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-10 pr-2 py-1.5 rounded-full border border-gray-300 shadow text-sm w-full outline-none focus:ring-2 focus:ring-[var(--primary)]"
+              id="from"
+              type="date"
+              value={from}
+              onChange={(e) => setFrom(e.target.value)}
+              className="border w-32 border-gray-300 rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700"
             />
           </div>
 
-          {/* Filter */}
-          <div className="relative">
-            <button
-              onClick={() => setShowFilter(!showFilter)}
-              className="flex items-center gap-2 px-3 py-2 rounded-full border border-gray-300 shadow text-sm bg-white hover:bg-gray-50"
-            >
-              <FaFilter />
-              <span className="hidden sm:inline">Filter</span>
-            </button>
-
-            {showFilter && (
-              <div
-                ref={filterRef}
-                className="absolute z-50 right-0 mt-2 w-[300px] bg-white border shadow-xl rounded-xl p-4"
-              >
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="text-lg font-semibold">Filter</h3>
-                  <button
-                    onClick={() => setShowFilter(false)}
-                    className="text-gray-500 hover:text-red-600 cursor-pointer"
-                  >
-                    <FaTimes />
-                  </button>
-                </div>
-
-                <div className="space-y-2">
-                  {/* Status Filter */}
-                  <div className="mb-4  border p-2 rounded">
-                    <button
-                      onClick={() => setShowStatusList(!showStatusList)}
-                      className="w-full flex justify-between items-center text-sm font-semibold text-[var(--primary)] mb-1"
-                    >
-                      <span>Status</span>
-                      <FaChevronDown
-                        className={`transition-transform ${
-                          showStatusList ? "rotate-180" : ""
-                        }`}
-                      />
-                    </button>
-
-                    {showStatusList && (
-                      <div className="flex flex-wrap gap-2 max-h-36 overflow-y-auto pr-1 border rounded bg-gray-50 p-2">
-                        {/* All Statuses Checkbox */}
-                        <label className="flex items-center gap-2 px-2 py-1 rounded hover:bg-[var(--primary-light)] cursor-pointer w-full">
-                          <input
-                            type="checkbox"
-                            checked={
-                              selectedStatuses.length === allStatuses.length
-                            }
-                            onChange={(e) => {
-                              const isChecked = e.target.checked;
-                              setSelectedStatuses(
-                                isChecked ? [...allStatuses] : []
-                              );
-                            }}
-                            className="accent-[var(--primary)]"
-                          />
-                          <span className="text-sm">All Statuses</span>
-                        </label>
-
-                        {allStatuses.map((status) => (
-                          <label
-                            key={status}
-                            className="flex items-center gap-2 px-2 py-1 rounded hover:bg-[var(--primary-light)] cursor-pointer w-full"
-                          >
-                            <input
-                              type="checkbox"
-                              value={status}
-                              checked={selectedStatuses.includes(status)}
-                              onChange={(e) => {
-                                const isChecked = e.target.checked;
-                                setSelectedStatuses((prev) =>
-                                  isChecked
-                                    ? [...prev, status]
-                                    : prev.filter((s) => s !== status)
-                                );
-                              }}
-                              className="accent-[var(--primary)]"
-                            />
-                            <span className="text-sm capitalize">
-                              {status.replace("-", " ")}
-                            </span>
-                          </label>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Date Range Filter */}
-                  <div className="mb-4 border p-2 rounded">
-                    <label className="block text-sm font-medium mb-2 text-[var(--primary)]">
-                      Date Range
-                    </label>
-                    <div className="space-y-2">
-                      <input
-                        type="date"
-                        value={dateRange.from}
-                        onChange={(e) =>
-                          setDateRange((prev) => ({
-                            ...prev,
-                            from: e.target.value,
-                          }))
-                        }
-                        className="w-full border px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
-                        placeholder="From"
-                      />
-                      <input
-                        type="date"
-                        value={dateRange.to}
-                        onChange={(e) =>
-                          setDateRange((prev) => ({
-                            ...prev,
-                            to: e.target.value,
-                          }))
-                        }
-                        className="w-full border px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
-                        placeholder="To"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Clear All */}
-                  <div className="flex justify-between mt-3">
-                    <button
-                      onClick={() => {
-                        setSelectedStatuses([]);
-                        setDateRange({ from: "", to: "" });
-                      }}
-                      className="text-sm text-[var(--gray)] hover:underline hover:scale-105 transition-transform duration-100 ease-linear"
-                    >
-                      Clear All
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Sort */}
-          <div className="relative">
-            <button
-              onClick={() => setShowSort(!showSort)}
-              className="flex items-center gap-2 px-3 py-2 rounded-full border border-gray-300 shadow text-sm bg-white hover:bg-gray-50"
-            >
-              <img src="/icons/sort.png" alt="Filter" className="w-5 h-4" />
-              <span className="hidden sm:inline">Sort</span>
-            </button>
-
-            {showSort && (
-              <div
-                ref={sortRef}
-                className="absolute z-50 right-0 mt-2 w-[260px] bg-white border shadow-xl rounded-xl p-4"
-              >
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="text-lg font-semibold">Sort</h3>
-                  <button
-                    onClick={() => setShowSort(false)}
-                    className="text-gray-500 hover:text-red-600 cursor-pointer"
-                  >
-                    <FaTimes />
-                  </button>
-                </div>
-
-                <div className="space-y-2 text-sm text-[var(--primary)]">
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="sort"
-                      value=""
-                      checked={sortBy === ""}
-                      onChange={() => setSortBy("")}
-                      className="accent-[var(--ternary)]"
-                    />
-                    Default
-                  </label>
-
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="sort"
-                      value="date-asc"
-                      checked={sortBy === "date-asc"}
-                      onChange={() => setSortBy("date-asc")}
-                      className="accent-[var(--ternary)]"
-                    />
-                    Date & Time: Earliest → Latest
-                  </label>
-
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="sort"
-                      value="date-desc"
-                      checked={sortBy === "date-desc"}
-                      onChange={() => setSortBy("date-desc")}
-                      className="accent-[var(--ternary)]"
-                    />
-                    Date & Time: Latest → Earliest
-                  </label>
-
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="sort"
-                      value="name-asc"
-                      checked={sortBy === "name-asc"}
-                      onChange={() => setSortBy("name-asc")}
-                      className="accent-[var(--ternary)]"
-                    />
-                    Customer Name: A → Z
-                  </label>
-
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="sort"
-                      value="name-desc"
-                      checked={sortBy === "name-desc"}
-                      onChange={() => setSortBy("name-desc")}
-                      className="accent-[var(--ternary)]"
-                    />
-                    Customer Name: Z → A
-                  </label>
-
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="sort"
-                      value="service-asc"
-                      checked={sortBy === "service-asc"}
-                      onChange={() => setSortBy("service-asc")}
-                      className="accent-[var(--ternary)]"
-                    />
-                    Service Name: A → Z
-                  </label>
-
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="sort"
-                      value="service-desc"
-                      checked={sortBy === "service-desc"}
-                      onChange={() => setSortBy("service-desc")}
-                      className="accent-[var(--ternary)]"
-                    />
-                    Service Name: Z → A
-                  </label>
-                </div>
-
-                <div className="flex justify-between mt-3">
-                  <button
-                    onClick={() => setSortBy("")}
-                    className="text-sm text-[var(--gray)] hover:underline hover:scale-105 transition-transform duration-100 ease-linear"
-                  >
-                    Clear All
-                  </button>
-                </div>
-              </div>
-            )}
+          <div className="flex flex-col">
+            <label htmlFor="to" className="text-sm text-[var(--primary)] mb-1">
+              To
+            </label>
+            <input
+              id="to"
+              type="date"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+              className="border w-32 border-gray-300 rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700"
+            />
           </div>
         </div>
       </div>
 
-      {loading ? (
-        <div
-          className="text-center text-xl"
-          style={{ color: "var(--primary)" }}
-        >
-          Loading...
-        </div>
-      ) : Object.keys(sortedGroups).length === 0 ? (
-        <div className="text-center mt-10">
-          <img
-            src="/icons/no-booking.webp"
-            alt="No results"
-            className="w-52 mx-auto mb-2"
-          />
-          <h3 className="text-2xl text-[var(--primary)] font-semibold">
-            Oops! No bookings found
-          </h3>
-          <p className="text-xl text-[var(--gray)] mt-3">Try something else</p>
-        </div>
-      ) : (
-        <div className="max-w-7xl mx-auto space-y-6">
-          {Object.entries(sortedGroups).map(([status, group]) => {
-            const isStatusOpen = expandedStatuses[status];
-            return (
-              <div
-                key={status}
-                className="bg-white border shadow rounded-xl p-4 space-y-4"
-              >
-                <button
-                  onClick={() => toggleStatus(status)}
-                  className="w-full text-left text-2xl font-bold text-[var(--primary)] flex items-center justify-between"
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <KpiCard
+          icon={<FaClipboardList />}
+          label="Total Bookings"
+          value={filtered.length}
+        />
+        <KpiCard
+          icon={<FaClipboardCheck />}
+          label="Completed"
+          value={kpis.completed}
+        />
+        <KpiCard
+          icon={<FaDollarSign />}
+          label="Revenue"
+          value={`₹${kpis.revenue.toLocaleString()}`}
+        />
+        <KpiCard icon={<FaStar />} label="Avg Rating" value={kpis.avg} />
+      </div>
+
+      <div className="my-6">
+        <ChartBox title="Pending Requests">
+          {filtered.filter(
+            (b) => (b.statusHistory?.at(-1)?.status || "pending") === "pending"
+          ).length === 0 ? (
+            <p className="text-gray-500 text-center">No pending requests</p>
+          ) : (
+            filtered
+              .filter(
+                (b) =>
+                  (b.statusHistory?.at(-1)?.status || "pending") === "pending"
+              )
+              .map((b) => (
+                <div
+                  key={b._id}
+                  className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 bg-white rounded shadow"
                 >
-                  <span className="flex items-center gap-2">
-                    {status.replace("-", " ").toUpperCase()} ({group.length})
-                  </span>
-                  <FaChevronDown
-                    className={`transition-transform ${
-                      isStatusOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-
-                {/* Cards */}
-                {isStatusOpen && (
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {group.map((b, idx) => (
-                      <motion.div
-                        key={b._id}
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.3, delay: idx * 0.05 }}
-                        className="bg-white shadow-lg rounded-xl p-4 border"
-                      >
-                        <div className="flex flex-col justify-between overflow-x-auto max-w-full">
-                          <div className="flex flex-row overflow-x-auto">
-                            {/* Details */}
-                            <div className="w-3/5 mr-5">
-                              {/* Avatar */}
-                              <div className="flex items-center gap-4 mb-3">
-                                {b.customer?.avatarUrl ? (
-                                  <img
-                                    src={b.customer.avatarUrl}
-                                    alt={b.customer?.name || "User"}
-                                    className="w-12 h-12 rounded-full border shadow object-cover hover:scale-110"
-                                  />
-                                ) : (
-                                  <div
-                                    className="w-12 h-12 flex items-center justify-center rounded-full font-bold shadow"
-                                    style={{
-                                      backgroundColor: "var(--primary-light)",
-                                      color: "var(--primary)",
-                                    }}
-                                  >
-                                    {b.customer?.name?.[0]?.toUpperCase() ||
-                                      "U"}
-                                  </div>
-                                )}
-                                <div>
-                                  <div className="font-semibold text-[var(--primary)]">
-                                    {b.customer?.name || "Unknown User"}
-                                  </div>
-                                </div>
-                              </div>
-                              {/* Details */}
-                              <div className="space-y-1 mb-3">
-                                <div
-                                  className="text-sm"
-                                  style={{ color: "var(--gray)" }}
-                                >
-                                  <strong>Service:</strong> {b.serviceName}
-                                </div>
-                                <div
-                                  className="text-sm"
-                                  style={{ color: "var(--gray)" }}
-                                >
-                                  <strong>Date:</strong>{" "}
-                                  {dayjs(b.date).format("DD MMM YYYY")}
-                                </div>
-                                <div
-                                  className="text-sm"
-                                  style={{ color: "var(--gray)" }}
-                                >
-                                  <strong>Time:</strong> {b.timeSlot.from} -{" "}
-                                  {b.timeSlot.to}
-                                </div>
-                                <div
-                                  className="text-sm"
-                                  style={{ color: "var(--gray)" }}
-                                >
-                                  <strong>Address:</strong> {b.address || "—"}
-                                </div>
-                                <div
-                                  className="text-sm"
-                                  style={{ color: "var(--gray)" }}
-                                >
-                                  <strong>Notes:</strong> {b.notes || "—"}
-                                </div>
-
-                                {/* Status */}
-                                <div className="flex flex-row gap-1">
-                                  <strong
-                                    className="text-sm"
-                                    style={{ color: "var(--gray)" }}
-                                  >
-                                    Booking Status:
-                                  </strong>
-                                  <div
-                                    className={`inline-block px-3 py-1 text-xs font-semibold rounded-full mb-4 ${statusColor[status]}`}
-                                  >
-                                    {status.replace("-", " ")}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                            {/* Track */}
-                            <div className="w-2/5 pl-4">
-                              <BookingStatusTimeline
-                                statusHistory={b.statusHistory}
-                              />
-                            </div>
-                          </div>
-
-                          <div className="flex flex-col gap-1 w-3/5 mb-2">
-                            {/* Amount */}
-                            <div className="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-xl border border-green-200 w-4/5 max-w-xs">
-                              <div className="text-sm text-green-600 font-medium">
-                                Service Amount
-                              </div>
-
-                              {/* Show quantity for non-fixed units */}
-                              {b.unit && b.unit !== "fixed" && (
-                                <div className="text-xs text-green-600 mt-1">
-                                  {b.units || 1} × ₹
-                                  {b.serviceAmount / (b.units || 1)} per{" "}
-                                  {b.unit}
-                                </div>
-                              )}
-
-                              {/* Show fixed price or total */}
-                              <div className="text-2xl font-bold text-green-700 mt-1">
-                                ₹{b.serviceAmount || 0}
-                              </div>
-                            </div>
-                            {/* Payment Status */}
-                            {b.paymentStatus && (
-                              <div
-                                className={`text-sm w-4/5 font-medium px-3 py-1 rounded-full ${
-                                  b.paymentStatus === "paid"
-                                    ? "bg-green-100 text-green-700"
-                                    : b.paymentStatus === "partial"
-                                    ? "bg-yellow-100 text-yellow-700"
-                                    : "bg-red-100 text-red-700"
-                                }`}
-                              >
-                                Payment :{" "}
-                                {b.paymentStatus === "paid"
-                                  ? "Paid"
-                                  : b.paymentStatus === "partial"
-                                  ? "Partially Paid"
-                                  : "Pending"}
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Actions */}
-                          {status === "pending" && (
-                            <div className="flex flex-wrap gap-4 p-1">
-                              <button
-                                className="flex items-center gap-1 text-sm px-3 py-1 rounded bg-gradient-to-b from-green-400 to-green-800 text-white hover:scale-105"
-                                disabled={actionLoading === b._id + "confirmed"}
-                                onClick={() => handleStatus(b._id, "confirmed")}
-                              >
-                                <FaCheck /> Accept
-                              </button>
-                              <button
-                                className="flex items-center gap-1 text-sm px-3 py-1 rounded bg-gradient-to-b from-red-400 to-red-800 text-white hover:scale-105"
-                                disabled={actionLoading === b._id + "rejected"}
-                                onClick={() => handleStatus(b._id, "rejected")}
-                              >
-                                <FaTimes /> Reject
-                              </button>
-                              <button
-                                className="flex items-center gap-1 text-sm px-3 py-1 rounded bg-gradient-to-b from-blue-400 to-blue-800 text-white hover:scale-105"
-                                onClick={() => setShowTimeUpdate(b._id)}
-                              >
-                                <FaClock /> Reschedule
-                              </button>
-                            </div>
-                          )}
-
-                          {status === "update-time" && (
-                            <div className="text-[var(--secondary)] text-sm flex items-center gap-2 mt-2">
-                              <FaSyncAlt /> Awaiting customer response
-                            </div>
-                          )}
-
-                          {showTimeUpdate === b._id && (
-                            <div className="mt-4 p-3 bg-gray-50 border rounded-lg shadow-sm">
-                              <div className="flex gap-3 mb-2 items-center">
-                                <input
-                                  type="time"
-                                  value={newFrom}
-                                  onChange={(e) => {
-                                    setNewFrom(e.target.value);
-                                    setTimeError(""); // Clear error on change
-                                  }}
-                                  className="border px-2 py-1 rounded text-sm"
-                                />
-                                <span> to </span>
-                                <input
-                                  type="time"
-                                  value={newTo}
-                                  onChange={(e) => {
-                                    setNewTo(e.target.value);
-                                    setTimeError(""); // Clear error on change
-                                  }}
-                                  className="border px-2 py-1 rounded text-sm"
-                                />
-                              </div>
-
-                              {timeError && (
-                                <div className="flex flex-row gap-2 text-red-500 ">
-                                  <i className="fas fa-exclamation-circle"></i>
-
-                                  <p className="text-xs mb-2">{timeError}</p>
-                                </div>
-                              )}
-
-                              <div className="flex gap-2">
-                                <button
-                                  className="bg-gradient-to-b from-blue-400 to-blue-800 text-white text-sm px-3 py-1 rounded hover:bg-blue-600"
-                                  disabled={
-                                    actionLoading === b._id + "update-time"
-                                  }
-                                  onClick={() => {
-                                    if (!newFrom || !newTo) {
-                                      setTimeError(
-                                        "Both 'from' and 'to' times are required."
-                                      );
-                                      return;
-                                    }
-                                    setTimeError(""); // Clear error if valid
-                                    handleStatus(b._id, "update-time", {
-                                      from: newFrom,
-                                      to: newTo,
-                                    });
-                                  }}
-                                >
-                                  Send Updated Time
-                                </button>
-
-                                <button
-                                  className="bg-gradient-to-b from-gray-400 to-gray-600 text-white text-sm px-3 py-1 rounded hover:bg-gray-400"
-                                  onClick={() => {
-                                    setShowTimeUpdate(null);
-                                    setTimeError("");
-                                  }}
-                                >
-                                  Cancel
-                                </button>
-                              </div>
-                            </div>
-                          )}
-
-                          {b.otp && !b.otpVerified && (
-                            <div className="mt-2">
-                              <form
-                                onSubmit={async (e) => {
-                                  e.preventDefault();
-                                  setOtpError((prev) => ({
-                                    ...prev,
-                                    [b._id]: "",
-                                  }));
-                                  try {
-                                    await axios.post(
-                                      `http://localhost:5000/api/bookings/verify-otp/${b._id}`,
-                                      { otp: otpInputs[b._id] },
-                                      { withCredentials: true }
-                                    );
-
-                                    // refresh bookings
-                                    // const res = await axios.get(
-                                    //   "http://localhost:5000/api/bookings/provider-requests",
-                                    //   {
-                                    //     withCredentials: true,
-                                    //   }
-                                    // );
-                                    // setBookings(res.data.bookings || []);
-                                    await fetchBookings();
-                                  } catch (error) {
-                                    const msg =
-                                      error.response?.data?.message ||
-                                      "OTP verification failed";
-                                    setOtpError((prev) => ({
-                                      ...prev,
-                                      [b._id]: msg,
-                                    }));
-                                  }
-                                }}
-                              >
-                                <input
-                                  type="text"
-                                  value={otpInputs[b._id] || ""}
-                                  onChange={(e) =>
-                                    setOtpInputs((prev) => ({
-                                      ...prev,
-                                      [b._id]: e.target.value,
-                                    }))
-                                  }
-                                  placeholder="Enter OTP"
-                                  className="border px-2 py-1 rounded w-32 text-sm"
-                                />
-                                <button className="ml-2 px-3 py-1 bg-gradient-to-r from-[var(--ternary)] to-[var(--secondary)] hover:scale-105 text-sm text-white rounded">
-                                  Verify OTP
-                                </button>
-
-                                {otpError[b._id] && (
-                                  <div className="flex gap-2 text-sm text-red-700 mt-3">
-                                    <i className="fas fa-exclamation-circle mt-1"></i>
-                                    {otpError[b._id]}
-                                  </div>
-                                )}
-                              </form>
-                            </div>
-                          )}
-
-                          {b.otpVerified && !b.completedByProvider && (
-                            <button
-                              onClick={() => markCompleted(b._id)}
-                              className="mt-2 px-3 py-1 bg-gradient-to-r from-[var(--ternary)] to-[var(--secondary)] text-white rounded w-full"
-                            >
-                              Mark Completed
-                            </button>
-                          )}
-
-                          {/* Cash Received */}
-                          {b.paymentStatus === "cash_initiated" && (
-                            <button
-                              onClick={() => handleConfirmCash(b._id)}
-                              className="mt-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                            >
-                              Confirm Cash Received
-                            </button>
-                          )}
-                        </div>
-                      </motion.div>
-                    ))}
+                  <div className="flex-1">
+                    <p className="font-semibold">{b.serviceName}</p>
+                    <p className="text-sm text-gray-600">
+                      {b.customer.name} • {dayjs(b.date).format("DD MMM")} •{" "}
+                      {b.timeSlot.from}-{b.timeSlot.to}
+                    </p>
                   </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
 
-      {error && <div className="text-center text-red-500 mt-6">{error}</div>}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleStatus(b._id, "confirmed")}
+                      className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700"
+                    >
+                      Accept
+                    </button>
+                    <button
+                      onClick={() => handleStatus(b._id, "rejected")}
+                      className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700"
+                    >
+                      Reject
+                    </button>
+                    <button
+                      onClick={() => handleReschedule(b._id)}
+                      className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                    >
+                      Reschedule
+                    </button>
+                  </div>
+
+                  {selectedBookingId === b._id && (
+                    <div className="mt-4 w-full sm:w-1/2">
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium mb-2">
+                          New From Time
+                        </label>
+                        <input
+                          type="time"
+                          value={newFrom}
+                          onChange={(e) => setNewFrom(e.target.value)}
+                          className="w-full border rounded py-2 px-3"
+                        />
+                      </div>
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium mb-2">
+                          New To Time
+                        </label>
+                        <input
+                          type="time"
+                          value={newTo}
+                          onChange={(e) => setNewTo(e.target.value)}
+                          className="w-full border rounded py-2 px-3"
+                        />
+                      </div>
+                      <div className="flex justify-end">
+                        <button
+                          onClick={() => {
+                            setSelectedBookingId(null);
+                            setNewFrom("");
+                            setNewTo("");
+                          }}
+                          className="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500 mr-2"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleRescheduleSubmit}
+                          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                        >
+                          Reschedule
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))
+          )}
+        </ChartBox>
+      </div>
+
+      <div className="my-6">
+        <ChartBox title="Upcoming Bookings">
+          {upcomingBookings.length === 0 ? (
+            <p className="text-gray-500 text-center">No upcoming bookings</p>
+          ) : (
+            <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
+              {upcomingBookings.map((b, i) => (
+                <div
+                  key={i}
+                  className="flex gap-3 p-3 rounded-lg border bg-white shadow-sm"
+                >
+                  <div className="flex-1">
+                    <p className="font-semibold">{b.serviceName}</p>
+                    <p className="text-sm text-gray-600">
+                      {b.customer.name} • {dayjs(b.date).format("DD MMM")} •{" "}
+                      {b.timeSlot.from}-{b.timeSlot.to}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </ChartBox>
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-6">
+        <ChartBox title="Top Services">
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={serviceData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="service" />
+              <YAxis allowDecimals={false} />
+              <Tooltip
+                cursor={{ fill: "transparent" }}
+                contentStyle={{
+                  backgroundColor: "white",
+                  border: "1px solid #ccc",
+                }}
+              />
+              <Bar
+                dataKey="count"
+                fill="#3b82f6"
+                activeBar={{ fill: "#3b82f6", strokeWidth: 0, stroke: "none" }}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartBox>
+
+        <ChartBox title="Bookings by Status">
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={statusData}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius={100}
+                label={false}
+                isAnimationActive={true}
+              >
+                {statusData.map((_, i) => (
+                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend
+                layout={isMobile ? "horizontal" : "vertical"}
+                align={isMobile ? "left" : "right"}
+                verticalAlign={isMobile ? "bottom" : "middle"}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </ChartBox>
+
+        <ChartBox
+          title={
+            <div className="flex justify-between items-center w-full">
+              <h2 className="text-lg">Revenue Trend</h2>
+              <div className="relative w-28 ml-auto">
+                <select
+                  id="granularity"
+                  value={granularity}
+                  onChange={(e) => setGranularity(e.target.value)}
+                  className="w-full font-thin text-sm appearance-none border rounded-md px-3 pr-10 py-2 shadow-sm focus:outline-none text-gray-700"
+                >
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                  <option value="yearly">Yearly</option>
+                </select>
+
+                {/* Chevron icon on right */}
+                <div className="absolute inset-y-0 right-2 flex items-center pointer-events-none text-gray-500">
+                  <FiChevronDown className="w-4 h-4" />
+                </div>
+              </div>
+            </div>
+          }
+        >
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={trendData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" />
+              <YAxis tickFormatter={(v) => "₹" + v.toLocaleString()} />
+              <Tooltip
+                formatter={(v) => "₹" + v.toLocaleString()}
+                cursor={{ fill: "transparent" }}
+                contentStyle={{
+                  backgroundColor: "white",
+                  border: "1px solid #ccc",
+                }}
+              />
+              <Bar
+                dataKey="revenue"
+                fill="#10b981"
+                activeBar={{ fill: "#10b981", stroke: "none", strokeWidth: 0 }}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartBox>
+
+        <ChartBox title="Revenue by Service">
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={serviceRevenueData}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius={100}
+                label={false}
+                isAnimationActive={true}
+              >
+                {serviceRevenueData.map((_, idx) => (
+                  <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip formatter={(v) => `₹${v.toLocaleString()}`} />
+              <Legend
+                layout={isMobile ? "horizontal" : "vertical"}
+                align={isMobile ? "left" : "right"}
+                verticalAlign={isMobile ? "bottom" : "middle"}
+              />{" "}
+            </PieChart>
+          </ResponsiveContainer>
+        </ChartBox>
+      </div>
+
+      <div className="mt-6">
+        {ratingStats && (
+          <ChartBox title="Customer Ratings Overview">
+            <div className="flex items-center gap-6">
+              <div className="text-center">
+                <div className="text-4xl font-bold text-[var(--primary)]">
+                  {ratingStats.avg}
+                  <i className="fa-solid fa-star text-yellow-500 text-xl pl-2 mb-2"></i>
+                </div>
+                <div className="text-sm text-gray-500">
+                  {ratingStats.total} reviews
+                </div>
+              </div>
+
+              <div className="flex-1 space-y-1">
+                {ratingStats.counts.map(({ star, count, percent }) => (
+                  <div key={star} className="flex items-center gap-2 text-sm">
+                    <span className="w-12">{star}★</span>
+                    <div className="flex-1 bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-yellow-400 h-2 rounded-full"
+                        style={{ width: `${percent}%` }}
+                      />
+                    </div>
+                    <span className="w-10 text-right">{count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </ChartBox>
+        )}
+      </div>
+
+      <div className="mt-6">
+        <ChartBox title="Customer Reviews">
+          {reviews.length === 0 ? (
+            <p className="text-gray-500 text-center">No reviews yet.</p>
+          ) : (
+            <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
+              {reviews.map((r, i) => (
+                <div
+                  key={i}
+                  className="flex gap-3 p-3 rounded-lg border bg-white shadow-sm"
+                >
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0
+                      ${r.customer.avatarUrl ? "" : "bg-[var(--primary)]"}`}
+                  >
+                    {r.customer.avatarUrl ? (
+                      <img
+                        src={r.customer.avatarUrl}
+                        alt={r.customer.name}
+                        className="w-full h-full rounded-full object-cover"
+                      />
+                    ) : (
+                      (r.customer.name || "?").charAt(0).toUpperCase()
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-[var(--primary)]">
+                        {r.customer.name}
+                      </span>
+                      <span className="text-sm text-yellow-500">
+                        {"★".repeat(r.rating)}
+                        {"☆".repeat(5 - r.rating)}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-700 mt-1">{r.review}</p>
+                    <p className="text-xs text-gray-400">
+                      {dayjs(r.date).format("DD MMM YYYY")}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </ChartBox>
+      </div>
     </div>
   );
 }
 
+const KpiCard = ({ icon, label, value }) => (
+  <div className="flex items-center gap-4 p-4 bg-white rounded shadow">
+    <div className="p-3 bg-[var(--primary-light)] text-[var(--primary)] rounded-full text-xl">
+      {icon}
+    </div>
+    <div>
+      <p className="text-sm text-gray-600">{label}</p>
+      <p className="text-2xl font-bold text-[var(--primary)]">{value}</p>
+    </div>
+  </div>
+);
 
+const ChartBox = ({ title, children }) => (
+  <div className="bg-white p-4 rounded shadow">
+    <h3 className="text-lg font-semibold text-[var(--primary)] mb-2">
+      {title}
+    </h3>
+    {children}
+  </div>
+);
 
+export default function ProviderAnalyticsPage() {
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-// Dashboard code 1
-// import React, { useEffect, useState } from "react";
-// import axios from "axios";
-// import { Bar, Pie } from "react-chartjs-2";
-// import {
-//   Chart as ChartJS,
-//   CategoryScale,
-//   LinearScale,
-//   BarElement,
-//   Title,
-//   Tooltip,
-//   Legend,
-//   ArcElement,
-// } from "chart.js";
-// import { format, subDays, startOfDay } from "date-fns";
-// import { FaClipboardList, FaCheckCircle, FaTimesCircle, FaHourglassHalf, FaMoneyBillWave, FaStar } from "react-icons/fa";
-// import { motion } from "framer-motion";
+  useEffect(() => {
+    axios
+      .get("http://localhost:5000/api/bookings/provider-requests", {
+        withCredentials: true,
+      })
+      .then((res) => {
+        console.log("API Response:", res.data);
+        setBookings(res.data.bookings || []);
+      })
+      .catch((error) => {
+        console.error("API Error:", error);
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
-// ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
+  if (loading)
+    return (
+      <div className="flex h-screen justify-center items-center text-[var(--primary)]">
+        Loading…
+      </div>
+    );
 
-// export default function ProviderDashboard() {
-//   const [stats, setStats] = useState(null);        // aggregated numbers
-//   const [barData, setBarData]   = useState(null);   // last 7 days bookings
-//   const [pieData, setPieData]   = useState(null);   // status distribution
-//   const [loading, setLoading]   = useState(true);
-//   const [error, setError]       = useState("");
-
-//   /* ---------- Fetch provider bookings ---------- */
-//   const fetchData = async () => {
-//     try {
-//       const res = await axios.get("http://localhost:5000/api/bookings/provider-requests", {
-//         withCredentials: true,
-//       });
-//       const bookings = res.data.bookings || [];
-
-//       /* ---------- KPIs ---------- */
-//       const today = new Date();
-//       const sevenDaysAgo = startOfDay(subDays(today, 6));
-
-//       const counts = {
-//         total: bookings.length,
-//         pending: 0,
-//         confirmed: 0,
-//         "in-progress": 0,
-//         completed: 0,
-//         cancelled: 0,
-//         revenue: 0,
-//         avgRating: 0,
-//         rated: 0,
-//       };
-
-//       /* ---------- 7-day daily counts ---------- */
-//       const daily = Array.from({ length: 7 }, (_, i) => ({
-//         label: format(subDays(today, 6 - i), "EEE"),
-//         pending: 0,
-//         confirmed: 0,
-//         completed: 0,
-//       }));
-
-//       bookings.forEach((b) => {
-//         const status = b.statusHistory?.[b.statusHistory.length - 1]?.status || "pending";
-//         if (status) counts[status]++;
-
-//         if (status === "completed") counts.revenue += b.serviceAmount || 0;
-//         if (b.rating) {
-//           counts.avgRating += b.rating;
-//           counts.rated++;
-//         }
-
-//         /* fill daily buckets */
-//         const bookingDate = startOfDay(new Date(b.date));
-//         if (bookingDate >= sevenDaysAgo) {
-//           const idx = Math.floor((bookingDate - sevenDaysAgo) / (1000 * 60 * 60 * 24));
-//           if (daily[idx]) {
-//             if (status === "pending") daily[idx].pending++;
-//             else if (status === "confirmed") daily[idx].confirmed++;
-//             else if (status === "completed") daily[idx].completed++;
-//           }
-//         }
-//       });
-
-//       counts.avgRating = counts.rated ? (counts.avgRating / counts.rated).toFixed(1) : "0";
-
-//       setStats(counts);
-
-//       /* ---------- Bar chart ---------- */
-//       setBarData({
-//         labels: daily.map((d) => d.label),
-//         datasets: [
-//           {
-//             label: "Pending",
-//             data: daily.map((d) => d.pending),
-//             backgroundColor: "#FBBF24",
-//           },
-//           {
-//             label: "Confirmed",
-//             data: daily.map((d) => d.confirmed),
-//             backgroundColor: "#34D399",
-//           },
-//           {
-//             label: "Completed",
-//             data: daily.map((d) => d.completed),
-//             backgroundColor: "#8B5CF6",
-//           },
-//         ],
-//       });
-
-//       /* ---------- Pie chart ---------- */
-//       setPieData({
-//         labels: ["Pending", "Confirmed", "In-Progress", "Completed", "Cancelled"],
-//         datasets: [
-//           {
-//             data: [
-//               counts.pending,
-//               counts.confirmed,
-//               counts["in-progress"],
-//               counts.completed,
-//               counts.cancelled,
-//             ],
-//             backgroundColor: ["#FBBF24", "#34D399", "#F97316", "#8B5CF6", "#F87171"],
-//           },
-//         ],
-//       });
-
-//       setLoading(false);
-//     } catch (err) {
-//       setError(err.response?.data?.message || "Failed to load dashboard");
-//       setLoading(false);
-//     }
-//   };
-
-//   useEffect(() => {
-//     fetchData();
-//   }, []);
-
-//   if (loading)
-//     return (
-//       <div className="min-h-screen flex items-center justify-center text-xl text-[var(--primary)]">
-//         Loading dashboard...
-//       </div>
-//     );
-
-//   if (error)
-//     return (
-//       <div className="min-h-screen flex items-center justify-center text-red-500 text-xl">
-//         {error}
-//       </div>
-//     );
-
-//   /* ---------- KPI Card ---------- */
-//   const KpiCard = ({ icon: Icon, title, value, color }) => (
-//     <motion.div
-//       whileHover={{ scale: 1.05 }}
-//       className={`bg-white rounded-xl shadow p-4 flex items-center space-x-4 ${color}`}
-//     >
-//       <div className="p-3 rounded-full bg-opacity-20 bg-black">
-//         <Icon className="text-2xl" />
-//       </div>
-//       <div>
-//         <p className="text-sm text-gray-600">{title}</p>
-//         <p className="text-2xl font-bold">{value}</p>
-//       </div>
-//     </motion.div>
-//   );
-
-//   /* ---------- Render ---------- */
-//   return (
-//     <div className="min-h-screen py-20 px-4 bg-gradient-to-br from-[var(--primary-light)] to-[var(--white)]">
-//       <h2 className="text-3xl md:text-4xl font-extrabold text-[var(--primary)] mb-6">
-//         Provider Dashboard
-//       </h2>
-
-//       {/* KPI Row */}
-//       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-//         <KpiCard icon={FaClipboardList} title="Total Bookings" value={stats.total} color="text-blue-600" />
-//         <KpiCard icon={FaHourglassHalf} title="Pending" value={stats.pending} color="text-yellow-500" />
-//         <KpiCard icon={FaCheckCircle} title="Completed" value={stats.completed} color="text-green-500" />
-//         <KpiCard icon={FaMoneyBillWave} title="Revenue (₹)" value={stats.revenue.toLocaleString()} color="text-purple-600" />
-//       </div>
-
-//       {/* Charts Row */}
-//       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-//         {/* Bar Chart */}
-//         <div className="lg:col-span-2 bg-white rounded-xl shadow p-4">
-//           <h3 className="text-lg font-semibold mb-2">Last 7 Days Bookings</h3>
-//           <Bar
-//             data={barData}
-//             options={{
-//               responsive: true,
-//               plugins: { legend: { position: "top" } },
-//               scales: { y: { beginAtZero: true } },
-//             }}
-//           />
-//         </div>
-
-//         {/* Pie Chart */}
-//         <div className="bg-white rounded-xl shadow p-4">
-//           <h3 className="text-lg font-semibold mb-2">Status Distribution</h3>
-//           <Pie
-//             data={pieData}
-//             options={{
-//               plugins: {
-//                 legend: { position: "bottom" },
-//               },
-//             }}
-//           />
-//         </div>
-//       </div>
-
-//       {/* Recent Activity */}
-//       <div className="bg-white rounded-xl shadow p-4">
-//         <h3 className="text-lg font-semibold mb-3">Recent Completed Services</h3>
-//         <div className="space-y-3 max-h-60 overflow-y-auto">
-//           {stats.completed === 0 ? (
-//             <p className="text-gray-500">No completed bookings yet.</p>
-//           ) : (
-//             /* In real life you can slice the latest 5-10 */
-//             <p className="text-sm text-gray-600">Display latest here (hook up with sorted bookings).</p>
-//           )}
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
+  return <ProviderAnalytics bookings={bookings} setBookings={setBookings} />;
+}

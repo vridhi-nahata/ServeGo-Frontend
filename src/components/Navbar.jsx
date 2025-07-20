@@ -11,7 +11,7 @@ function Navbar() {
   const role = userData?.role;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const logout = async () => { 
+  const logout = async () => {
     try {
       axios.defaults.withCredentials = true;
       const { data } = await axios.post(backendUrl + "/api/auth/logout");
@@ -64,6 +64,14 @@ function Navbar() {
           className="hidden md:flex items-center gap-6 text-md"
           style={{ color: "var(--ternary)" }}
         >
+          {role === "provider" && (
+            <Link
+              to="/provider/provider-dashboard"
+              className="hover:text-[color:var(--primary)] font-medium hover:font-extrabold focus:outline-none"
+            >
+              Dashboard
+            </Link>
+          )}
           <Link
             to="/"
             className="hover:text-[color:var(--primary)] font-medium hover:font-extrabold focus:outline-none"
@@ -88,7 +96,6 @@ function Navbar() {
         <div className="flex items-center gap-3">
           {userData ? (
             <div className="relative group">
-              
               {userData.avatarUrl ? (
                 <img
                   src={userData.avatarUrl}
@@ -112,7 +119,7 @@ function Navbar() {
                   {role === "provider" && (
                     <li>
                       <Link
-                        to="/provider/dashboard"
+                        to="/provider/provider-booking"
                         className="block px-3 py-2 hover:bg-[var(--primary-light)] rounded"
                       >
                         My Bookings
@@ -129,6 +136,7 @@ function Navbar() {
                       </Link>
                     </li>
                   )}
+
                   <li
                     onClick={logout}
                     className="block px-3 py-2 hover:bg-[var(--primary-light)] rounded"
@@ -163,6 +171,16 @@ function Navbar() {
           className="md:hidden px-4 py-2 space-y-2 text-sm shadow-lg"
           style={{ color: "var(--ternary)", background: "var(--white)" }}
         >
+          {role === "provider" && (
+            <Link
+              to="/provider/provider-dashboard"
+              className="font-medium block hover:text-[color:var(--primary)] hover:font-extrabold focus:outline-none"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Dashboard
+            </Link>
+          )}
+
           <Link
             to="/"
             className="font-medium block hover:text-[color:var(--primary)] hover:font-extrabold focus:outline-none"
