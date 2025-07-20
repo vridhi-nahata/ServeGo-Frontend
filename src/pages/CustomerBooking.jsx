@@ -9,6 +9,9 @@ import { toast } from "react-toastify";
 import { FaCalendarAlt, FaClock } from "react-icons/fa";
 import ReactStars from "react-rating-stars-component";
 
+
+
+
 dayjs.extend(isSameOrAfter);
 
 export default function CustomerBookings() {
@@ -34,6 +37,10 @@ export default function CustomerBookings() {
   const [splitLinks, setSplitLinks] = useState({});
   const [shareAmount, setShareAmount] = useState("");
   const [splitModalBooking, setSplitModalBooking] = useState(null);
+
+
+
+
 
   const modalRef = useRef();
 
@@ -112,6 +119,27 @@ export default function CustomerBookings() {
       setError("Failed to load bookings");
       setLoading(false);
     }
+  };
+
+  const applyFilters = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.post(
+        "http://localhost:5000/api/bookings/filter",
+        {
+          search,
+          statuses: selectedStatuses,
+          paymentStatuses: selectedPaymentStatuses,
+          dateRange,
+          sortBy,
+        },
+        { withCredentials: true }
+      );
+      setBookings(res.data.bookings || []);
+    } catch (err) {
+      setError("Failed to load bookings");
+    }
+    setLoading(false);
   };
 
   // split payment fuctions
@@ -339,6 +367,9 @@ export default function CustomerBookings() {
           My Bookings
         </h2>
 
+
+        
+
         <div className="flex flex-wrap justify-center gap-2 mb-6">
           {statusOptions.map((opt) => (
             <button
@@ -358,9 +389,9 @@ export default function CustomerBookings() {
         {loading ? (
           <p className="text-center text-gray-500">Loading...</p>
         ) : error ? (
-          <p className="text-center text-red-500">{error}</p>
+          <p className="text-center text-red-700">{error}</p>
         ) : filteredBookings.length === 0 ? (
-          <p className="text-center text-gray-500">No bookings found.</p>
+          <p className="text-center text-gray-500">No bookings found</p>
         ) : (
           <div className="space-y-6">
             {/* collapsed version */}

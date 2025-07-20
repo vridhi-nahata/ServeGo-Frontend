@@ -9,6 +9,7 @@ import {
   FaSearch,
   FaFilter,
   FaChevronDown,
+  FaCalendarAlt,
 } from "react-icons/fa";
 import { motion } from "framer-motion";
 import dayjs from "dayjs";
@@ -42,6 +43,12 @@ export default function ProviderBookings() {
   const [showPaymentStatusList, setShowPaymentStatusList] = useState(false);
   const [sortBy, setSortBy] = useState("");
   const [timeError, setTimeError] = useState("");
+
+  const [expandedCardId, setExpandedCardId] = useState(null);
+  const [openedBookingId, setOpenedBookingId] = useState(null);
+  const toggleExpand = (id) => {
+    setExpandedCardId((prev) => (prev === id ? null : id));
+  };
 
   // Refs for outside click detection
   const filterRef = useRef(null);
@@ -102,8 +109,9 @@ export default function ProviderBookings() {
     filteredBookings = filteredBookings.filter(
       (b) =>
         b.customer?.name?.toLowerCase().includes(search.toLowerCase()) ||
+      b.provider?.name?.toLowerCase().includes(search.toLowerCase()) ||
         b.serviceName?.toLowerCase().includes(search.toLowerCase()) ||
-        b.address?.toLowerCase().includes(search.toLowerCase()) // New: Search by Address
+        b.address?.toLowerCase().includes(search.toLowerCase()) 
     );
   }
 
@@ -704,239 +712,206 @@ export default function ProviderBookings() {
           {Object.entries(sortedGroups).map(([status, group]) => {
             const isStatusOpen = expandedStatuses[status];
             return (
-              <div
-                key={status}
-                className="bg-white border shadow rounded-xl p-4 space-y-4"
-              >
-                <button
-                  onClick={() => toggleStatus(status)}
-                  className="w-full text-left text-2xl font-bold text-[var(--primary)] flex items-center justify-between"
-                >
-                  <span className="flex items-center gap-2">
-                    {status.replace("-", " ").toUpperCase()} ({group.length})
-                  </span>
-                  <FaChevronDown
-                    className={`transition-transform ${
-                      isStatusOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
+              <div key={status}>
+                <div className="space-y-6">
+                  {/* Collapsible cards matching customer booking style */}
+                  {group.map((b, idx) => {
+                    const isOpen = openedBookingId === b._id;
+                    const toggleOpen = () => {
+                      setOpenedBookingId((prev) =>
+                        prev === b._id ? null : b._id
+                      );
+                    };
 
-                {/* Cards */}
-                {isStatusOpen && (
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {group.map((b, idx) => (
-                      <motion.div
+                    return (
+                      <div
                         key={b._id}
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.3, delay: idx * 0.05 }}
-                        className="bg-white shadow-lg rounded-xl p-4 border"
+                        className="border rounded-xl shadow-lg bg-white transition-all duration-300"
                       >
-                        <div className="flex flex-col justify-between overflow-x-auto max-w-full">
-                          <div className="flex flex-row justify-between">
-                            <div className="flex flex-row overflow-x-auto">
-                              {/* Details */}
-                              <div className="w-full mr-5">
-                                {/* Avatar */}
-                                <div className="flex items-center gap-4 mb-3">
-                                  {b.customer?.avatarUrl ? (
-                                    <img
-                                      src={b.customer.avatarUrl}
-                                      alt={b.customer?.name || "User"}
-                                      className="w-12 h-12 rounded-full border shadow object-cover hover:scale-110"
-                                    />
-                                  ) : (
-                                    <div
-                                      className="w-12 h-12 flex items-center justify-center rounded-full font-bold shadow"
-                                      style={{
-                                        backgroundColor: "var(--primary-light)",
-                                        color: "var(--primary)",
-                                      }}
-                                    >
-                                      {b.customer?.name?.[0]?.toUpperCase() ||
-                                        "U"}
-                                    </div>
-                                  )}
-                                  <div>
-                                    <div className="font-semibold text-[var(--primary)]">
-                                      {b.customer?.name || "Unknown User"}
-                                    </div>
-                                  </div>
-                                </div>
-                                {/* Details */}
-                                <div className="space-y-1 mb-3">
-                                  <div
-                                    className="text-sm"
-                                    style={{ color: "var(--gray)" }}
-                                  >
-                                    <strong>Service:</strong> {b.serviceName}
-                                  </div>
-                                  <div
-                                    className="text-sm"
-                                    style={{ color: "var(--gray)" }}
-                                  >
-                                    <strong>Date:</strong>{" "}
-                                    {dayjs(b.date).format("DD MMM YYYY")}
-                                  </div>
-                                  <div
-                                    className="text-sm"
-                                    style={{ color: "var(--gray)" }}
-                                  >
-                                    <strong>Time:</strong> {b.timeSlot.from} -{" "}
-                                    {b.timeSlot.to}
-                                  </div>
-                                  <div
-                                    className="text-sm"
-                                    style={{ color: "var(--gray)" }}
-                                  >
-                                    <strong>Address:</strong> {b.address || "—"}
-                                  </div>
-                                  <div
-                                    className="text-sm"
-                                    style={{ color: "var(--gray)" }}
-                                  >
-                                    <strong>Notes:</strong> {b.notes || "—"}
-                                  </div>
-
-                                  {/* Status */}
-                                  <div className="flex flex-row gap-1">
-                                    <strong
-                                      className="text-sm"
-                                      style={{ color: "var(--gray)" }}
-                                    >
-                                      Booking Status:
-                                    </strong>
-                                    <div
-                                      className={`inline-block px-3 py-1 text-xs font-semibold rounded-full mb-4 ${statusColor[status]}`}
-                                    >
-                                      {status.replace("-", " ")}
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="flex flex-col gap-1 w-2/5 mb-2 text-right">
-                              {/* Amount */}
-                              <div className="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-xl border border-green-200 w-4/5 max-w-xs">
-                                <div className="text-sm text-green-600 font-medium">
-                                  Service Amount
-                                </div>
-
-                                {/* Show quantity for non-fixed units */}
-                                {b.unit && b.unit !== "fixed" && (
-                                  <div className="text-xs text-green-600 mt-1">
-                                    {b.units || 1} × ₹
-                                    {b.serviceAmount / (b.units || 1)} per{" "}
-                                    {b.unit}
-                                  </div>
-                                )}
-
-                                {/* Show fixed price or total */}
-                                <div className="text-2xl font-bold text-green-700 mt-1">
-                                  ₹{b.serviceAmount || 0}
-                                </div>
-                              </div>
-
-                              {/* Payment Status */}
-                              {b.paymentStatus && (
+                        {/* Collapsed Header */}
+                        <div
+                          className="flex justify-between items-center p-4 cursor-pointer hover:bg-gray-50"
+                          onClick={toggleOpen}
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-4 mb-3">
+                              {b.customer?.avatarUrl ? (
+                                <img
+                                  src={b.customer.avatarUrl}
+                                  alt={b.customer?.name || "User"}
+                                  className="w-16 h-16 rounded-full border shadow object-cover hover:scale-110"
+                                />
+                              ) : (
                                 <div
-                                  className={`text-sm w-4/5 font-medium px-3 py-1 rounded-full ${
-                                    b.paymentStatus === "paid"
-                                      ? "bg-green-100 text-green-700"
-                                      : b.paymentStatus === "partial"
-                                      ? "bg-yellow-100 text-yellow-700"
-                                      : "bg-red-100 text-red-700"
-                                  }`}
+                                  className="w-16 h-16 flex items-center justify-center rounded-full font-bold shadow"
+                                  style={{
+                                    backgroundColor: "var(--primary-light)",
+                                    color: "var(--primary)",
+                                  }}
                                 >
-                                  Payment :{" "}
-                                  {b.paymentStatus === "paid"
-                                    ? "Paid"
-                                    : b.paymentStatus === "partial"
-                                    ? "Partially Paid"
-                                    : "Pending"}
+                                  {b.customer?.name?.[0]?.toUpperCase() || "U"}
                                 </div>
                               )}
                             </div>
+
+                            <div>
+                              <div className="font-bold text-[var(--primary)]">
+                                {b.customer?.name || "Unknown User"}
+                              </div>
+
+                              <div className="text-sm text-gray-500 flex flex-col">
+                                <div>{b.serviceName}</div>
+
+                                <div className="flex items-left gap-2 mt-1 flex-col md:flex-row">
+                                  <div className="flex items-center gap-1">
+                                    <FaCalendarAlt className="text-[var(--secondary)]" />
+                                    <span>
+                                      {dayjs(b.date).format("DD MMM YYYY")}
+                                    </span>
+                                  </div>
+
+                                  <div className="flex items-center gap-1">
+                                    <FaClock className="text-[var(--secondary)]" />
+                                    <span>
+                                      {b.timeSlot.from} - {b.timeSlot.to}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
                           </div>
 
-                          <div>
-                            {/* Actions */}
-                            {status === "pending" && (
-                              <div className="flex flex-wrap gap-4 p-1">
-                                <button
-                                  className="flex items-center gap-1 text-sm px-3 py-1 rounded bg-gradient-to-b from-green-400 to-green-800 text-white hover:scale-105"
-                                  disabled={
-                                    actionLoading === b._id + "confirmed"
-                                  }
-                                  onClick={() =>
-                                    handleStatus(b._id, "confirmed")
-                                  }
-                                >
-                                  <FaCheck /> Accept
-                                </button>
-                                <button
-                                  className="flex items-center gap-1 text-sm px-3 py-1 rounded bg-gradient-to-b from-red-400 to-red-800 text-white hover:scale-105"
-                                  disabled={
-                                    actionLoading === b._id + "rejected"
-                                  }
-                                  onClick={() =>
-                                    handleStatus(b._id, "rejected")
-                                  }
-                                >
-                                  <FaTimes /> Reject
-                                </button>
-                                <button
-                                  className="flex items-center gap-1 text-sm px-3 py-1 rounded bg-gradient-to-b from-blue-400 to-blue-800 text-white hover:scale-105"
-                                  onClick={() => setShowTimeUpdate(b._id)}
-                                >
-                                  <FaClock /> Reschedule
-                                </button>
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`text-xs font-semibold px-2 py-1 rounded-full ${statusColor[status]}`}
+                            >
+                              {status.replace("-", " ")}
+                            </span>
+                            <i
+                              className={`fas fa-chevron-${
+                                isOpen ? "up" : "down"
+                              } text-gray-500 transition-transform`}
+                            ></i>
+                          </div>
+                        </div>
+
+                        {/* Expanded Details */}
+                        {isOpen && (
+                          <div className="px-6 pb-6 pt-2 space-y-4">
+                            {/* Booking Details */}
+                            <div className="bg-gradient-to-r from-[var(--primary-light)] to-[var(--secondary)] border-l-4 border-[var(--secondary)] rounded-lg p-4 shadow-sm">
+                              <h4 className="font-semibold text-[var(--secondary)] mb-3">
+                                Booking Details
+                              </h4>
+
+                              <div className="bg-white rounded-lg p-4 border-2 border-[var(--secondary)] text-sm text-gray-700 space-y-2">
+                                <p>
+                                  <strong className="text-gray-800">
+                                    Address:
+                                  </strong>{" "}
+                                  {b.address || "No address specified"}
+                                </p>
+                                <p>
+                                  <strong className="text-gray-800">
+                                    Notes:
+                                  </strong>{" "}
+                                  {b.notes || "No additional notes"}
+                                </p>
                               </div>
-                            )}
-
-                            {/* Reschedule */}
-                            {status === "update-time" && (
-                              <div className="text-[var(--secondary)] text-sm flex items-center gap-2 mt-2">
-                                <FaSyncAlt /> Awaiting customer response
-                              </div>
-                            )}
-                            {showTimeUpdate === b._id && (
-                              <div className="mt-4 p-3 bg-gray-50 border rounded-lg shadow-sm">
-                                <div className="flex gap-3 mb-2 items-center">
-                                  <input
-                                    type="time"
-                                    value={newFrom}
-                                    onChange={(e) => {
-                                      setNewFrom(e.target.value);
-                                      setTimeError(""); // Clear error on change
-                                    }}
-                                    className="border px-2 py-1 rounded text-sm"
-                                  />
-                                  <span> to </span>
-                                  <input
-                                    type="time"
-                                    value={newTo}
-                                    onChange={(e) => {
-                                      setNewTo(e.target.value);
-                                      setTimeError(""); // Clear error on change
-                                    }}
-                                    className="border px-2 py-1 rounded text-sm"
-                                  />
-                                </div>
-
-                                {timeError && (
-                                  <div className="flex flex-row gap-2 text-red-500 ">
-                                    <i className="fas fa-exclamation-circle"></i>
-
-                                    <p className="text-xs mb-2">{timeError}</p>
+                              <div>
+                                {status === "pending" && (
+                                  <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                                    <button
+                                      className="flex items-center justify-center gap-2 w-full sm:w-1/3 py-3 bg-gradient-to-b from-emerald-400 to-emerald-700 text-white font-semibold rounded hover:scale-105 shadow-lg transition duration-300"
+                                      disabled={
+                                        actionLoading === b._id + "confirmed"
+                                      }
+                                      onClick={() =>
+                                        handleStatus(b._id, "confirmed")
+                                      }
+                                    >
+                                      <FaCheck /> Accept
+                                    </button>
+                                    <button
+                                      className="flex items-center justify-center gap-2 w-full sm:w-1/3 py-3 bg-gradient-to-b from-red-400 to-red-700 text-white font-semibold rounded hover:scale-105 shadow-lg transition duration-300"
+                                      disabled={
+                                        actionLoading === b._id + "rejected"
+                                      }
+                                      onClick={() =>
+                                        handleStatus(b._id, "rejected")
+                                      }
+                                    >
+                                      <FaTimes /> Reject
+                                    </button>
+                                    <button
+                                      className="flex items-center justify-center gap-2 w-full sm:w-1/3 py-3 bg-gradient-to-b from-blue-400 to-blue-700 text-white font-semibold rounded hover:scale-105 shadow-lg transition duration-300"
+                                      onClick={() => setShowTimeUpdate(b._id)}
+                                    >
+                                      <FaClock /> Reschedule
+                                    </button>
                                   </div>
                                 )}
+                              </div>
+                            </div>
 
-                                <div className="flex gap-2">
+                            {/* Reschedule section */}
+                            {status === "update-time" && (
+                              <div className="bg-gradient-to-r from-[var(--primary-light)] to-[var(--secondary)] border-l-4 border-[var(--secondary)] rounded-lg p-4 shadow-sm">
+                                <div className="flex items-center gap-2 mb-3">
+                                  <FaSyncAlt className="text-[var(--secondary)]" />
+                                  <h4 className="font-semibold text-[var(--secondary)]">
+                                    Awaiting Customer Response
+                                  </h4>
+                                </div>
+                                <div className="bg-white rounded-lg p-4 border-2 border-[var(--secondary)]">
+                                  <div className="text-sm text-gray-600">
+                                    Time update request has been sent to the
+                                    customer
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Time update form */}
+                            {showTimeUpdate === b._id && (
+                              <div className="bg-gradient-to-r from-[var(--primary-light)] to-[var(--secondary)] border-l-4 border-[var(--secondary)] rounded-lg p-4 shadow-sm">
+                                <h4 className="font-semibold text-[var(--secondary)] mb-3">
+                                  Reschedule Time
+                                </h4>
+                                <div className="bg-white rounded-lg p-4 border-2 border-[var(--secondary)]">
+                                  <div className="flex gap-3 mb-2 items-center">
+                                    <input
+                                      type="time"
+                                      value={newFrom}
+                                      onChange={(e) => {
+                                        setNewFrom(e.target.value);
+                                        setTimeError(""); // Clear error on change
+                                      }}
+                                      className="border px-6 py-3 rounded text-sm"
+                                    />
+                                    <span> to </span>
+                                    <input
+                                      type="time"
+                                      value={newTo}
+                                      onChange={(e) => {
+                                        setNewTo(e.target.value);
+                                        setTimeError(""); // Clear error on change
+                                      }}
+                                      className="border px-6 py-2 rounded text-sm"
+                                    />
+                                  </div>
+
+                                  {timeError && (
+                                    <div className="flex flex-row gap-2 text-red-500 mb-2">
+                                      <i className="fas fa-exclamation-circle"></i>
+                                      <p className="text-xs">{timeError}</p>
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div className="flex flex-col sm:flex-row gap-4 mt-4">
                                   <button
-                                    className="bg-gradient-to-b from-blue-400 to-blue-800 text-white text-sm px-3 py-1 rounded hover:bg-blue-600"
+                                    className="bg-gradient-to-b from-[var(--ternary)] to-[var(--secondary)] text-white w-full sm:w-1/2 text-md font-semibold px-6 py-3 rounded hover:scale-105 transition-all transform shadow-md"
                                     disabled={
                                       actionLoading === b._id + "update-time"
                                     }
@@ -958,7 +933,7 @@ export default function ProviderBookings() {
                                   </button>
 
                                   <button
-                                    className="bg-gradient-to-b from-gray-400 to-gray-600 text-white text-sm px-3 py-1 rounded hover:bg-gray-400"
+                                    className="bg-gradient-to-b from-gray-400 to-gray-600 text-white text-md font-semibold w-full sm:w-1/2 px-6 py-3 rounded hover:scale-105 transition-all transform shadow-md"
                                     onClick={() => {
                                       setShowTimeUpdate(null);
                                       setTimeError("");
@@ -970,101 +945,192 @@ export default function ProviderBookings() {
                               </div>
                             )}
 
-                            {/* OTP */}
-                            {b.otp && !b.otpVerified && (
-                              <div className="mt-2">
-                                <form
-                                  onSubmit={async (e) => {
-                                    e.preventDefault();
-                                    setOtpError((prev) => ({
-                                      ...prev,
-                                      [b._id]: "",
-                                    }));
-                                    try {
-                                      await axios.post(
-                                        `http://localhost:5000/api/bookings/verify-otp/${b._id}`,
-                                        { otp: otpInputs[b._id] },
-                                        { withCredentials: true }
-                                      );
+                            {/* Payment details */}
+                            <div className="bg-gradient-to-r from-[var(--primary-light)] to-[var(--secondary)] border-l-4 border-[var(--secondary)] rounded-lg p-4 shadow-sm">
+                              <div className="flex items-center gap-2 mb-3">
+                                <h4 className="font-semibold text-[var(--secondary)]">
+                                  Payment Details
+                                </h4>
+                              </div>
 
-                                      // refresh bookings
-                                      // const res = await axios.get(
-                                      //   "http://localhost:5000/api/bookings/provider-requests",
-                                      //   {
-                                      //     withCredentials: true,
-                                      //   }
-                                      // );
-                                      // setBookings(res.data.bookings || []);
-                                      await fetchBookings();
-                                    } catch (error) {
-                                      const msg =
-                                        error.response?.data?.message ||
-                                        "OTP verification failed";
+                              <div className="bg-white rounded-lg p-4 border-2 border-[var(--secondary)] text-sm space-y-3">
+                                {/* Service Amount Breakdown */}
+
+                                {/* Unit */}
+                                {b.unit && b.unit !== "fixed" && (
+                                  <div className="flex justify-between">
+                                    <span>No. of {b.unit}:</span>
+
+                                    <span className="font-medium text-gray-700">
+                                      {b.units}
+                                    </span>
+                                  </div>
+                                )}
+
+                                {/* Service Amount */}
+                                <div className="flex justify-between">
+                                  <span>Service Amount:</span>
+
+                                  <span className="font-medium text-gray-700">
+                                    ₹{b.serviceAmount || 0}
+                                  </span>
+                                </div>
+
+                                {/* Platform Fee */}
+                                <div className="flex justify-between">
+                                  <span>Platform Fee:</span>
+                                  <span className="font-medium text-gray-700">
+                                    ₹{b.platformFee || 0}
+                                  </span>
+                                </div>
+
+                                {/* Total Amount */}
+                                <div className="flex justify-between font-bold border-t border-gray-300 pt-2 text-base">
+                                  <span>Total Amount:</span>
+                                  <span>
+                                    ₹{(b.totalAmount || 0).toFixed(2)}
+                                  </span>
+                                </div>
+
+                                {/* Commission Charge */}
+                                <div className="flex justify-between">
+                                  <span>Commission Charge (15%):</span>
+                                  <span className="font-medium text-gray-700">
+                                    ₹
+                                    {((b.serviceAmount || 0) * 0.15).toFixed(2)}
+                                  </span>
+                                </div>
+
+                                {/* Net Amount */}
+                                <div className="flex justify-between font-bold text-[var(--secondary)] border-t border-[var(--secondary)] pt-2 text-base">
+                                  <span>Net Amount:</span>
+                                  <span>
+                                    ₹
+                                    {(
+                                      (b.serviceAmount || 0) +
+                                      (b.platformFee || 0) -
+                                      (b.serviceAmount || 0) * 0.15
+                                    ).toFixed(2)}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Payment Status */}
+                              {b.paymentStatus && (
+                                <div className="mt-4">
+                                  <div
+                                    className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border-2 ${
+                                      b.paymentStatus === "paid"
+                                        ? "bg-green-100 text-green-800 border-green-300"
+                                        : b.paymentStatus === "partial"
+                                        ? "bg-yellow-100 text-yellow-800 border-yellow-300"
+                                        : "bg-red-100 text-red-800 border-red-300"
+                                    }`}
+                                  >
+                                    {b.paymentStatus === "paid"
+                                      ? "Payment Complete"
+                                      : b.paymentStatus === "partial"
+                                      ? "Partially Paid"
+                                      : "Payment Pending"}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* OTP Section */}
+                            {b.otp && !b.otpVerified && (
+                              <div className="bg-gradient-to-r from-[var(--primary-light)] to-[var(--secondary)] border-l-4 border-[var(--secondary)] rounded-lg p-4 shadow-sm">
+                                <h4 className="font-semibold text-[var(--secondary)] mb-3">
+                                  OTP Verification
+                                </h4>
+                                <div className="bg-white rounded-lg p-4 border-2 border-[var(--secondary)]">
+                                  <form
+                                    onSubmit={async (e) => {
+                                      e.preventDefault();
                                       setOtpError((prev) => ({
                                         ...prev,
-                                        [b._id]: msg,
+                                        [b._id]: "",
                                       }));
-                                    }
-                                  }}
-                                >
-                                  <input
-                                    type="text"
-                                    value={otpInputs[b._id] || ""}
-                                    onChange={(e) =>
-                                      setOtpInputs((prev) => ({
-                                        ...prev,
-                                        [b._id]: e.target.value,
-                                      }))
-                                    }
-                                    placeholder="Enter OTP"
-                                    className="border px-2 py-1 rounded w-32 text-sm"
-                                  />
-                                  <button className="ml-2 px-3 py-1 bg-gradient-to-r from-[var(--ternary)] to-[var(--secondary)] hover:scale-105 text-sm text-white rounded">
-                                    Verify OTP
-                                  </button>
+                                      try {
+                                        await axios.post(
+                                          `http://localhost:5000/api/bookings/verify-otp/${b._id}`,
+                                          { otp: otpInputs[b._id] },
+                                          { withCredentials: true }
+                                        );
 
-                                  {otpError[b._id] && (
-                                    <div className="flex gap-2 text-sm text-red-700 mt-3">
-                                      <i className="fas fa-exclamation-circle mt-1"></i>
-                                      {otpError[b._id]}
+                                        await fetchBookings();
+                                      } catch (error) {
+                                        const msg =
+                                          error.response?.data?.message ||
+                                          "OTP verification failed";
+                                        setOtpError((prev) => ({
+                                          ...prev,
+                                          [b._id]: msg,
+                                        }));
+                                      }
+                                    }}
+                                  >
+                                    <div className="flex gap-2 items-center">
+                                      <input
+                                        type="text"
+                                        value={otpInputs[b._id] || ""}
+                                        onChange={(e) =>
+                                          setOtpInputs((prev) => ({
+                                            ...prev,
+                                            [b._id]: e.target.value,
+                                          }))
+                                        }
+                                        placeholder="Enter OTP"
+                                        className="border px-6 py-3 rounded flex-1 text-sm"
+                                      />
+                                      <button className="px-6 py-3 bg-gradient-to-r from-[var(--ternary)] to-[var(--secondary)] hover:scale-105 text-sm text-white rounded transition-all transform shadow-md">
+                                        Verify OTP
+                                      </button>
                                     </div>
-                                  )}
-                                </form>
+
+                                    {otpError[b._id] && (
+                                      <div className="flex gap-2 text-sm text-red-700 mt-3">
+                                        <i className="fas fa-exclamation-circle mt-1"></i>
+                                        {otpError[b._id]}
+                                      </div>
+                                    )}
+                                  </form>
+                                </div>
                               </div>
                             )}
 
-                            {/* Mark complete */}
+                            {/* Cash Received button */}
+                            {b.paymentStatus === "cash_initiated" && (
+                              <button
+                                onClick={() => handleConfirmCash(b._id)}
+                                className="flex items-center justify-center gap-2 px-6 py-3 w-full bg-gradient-to-b from-[var(--ternary)] to-[var(--secondary)] text-white font-semibold rounded hover:scale-105 shadow-lg transition duration-300"
+                              >
+                                Confirm Cash Received
+                              </button>
+                            )}
+
+                            {/* Mark complete button */}
                             {b.otpVerified && !b.completedByProvider && (
                               <button
                                 onClick={() => markCompleted(b._id)}
-                                className="mt-2 px-3 py-1 bg-gradient-to-r from-[var(--ternary)] to-[var(--secondary)] text-white rounded w-full"
+                                className="flex items-center justify-center gap-2 px-6 py-3 w-full bg-gradient-to-r from-[var(--ternary)] to-[var(--secondary)] text-white hover:scale-105 font-semibold rounded transform hover:shadow-xl transition duration-300"
                               >
                                 Mark Completed
                               </button>
                             )}
 
-                            {/* Cash Received */}
-                            {b.paymentStatus === "cash_initiated" && (
-                              <button
-                                onClick={() => handleConfirmCash(b._id)}
-                                className="mt-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                              >
-                                Confirm Cash Received
-                              </button>
-                            )}
+                            {/* Timeline */}
+                            <div className="pt-2">
+                              <BookingStatusTimeline
+                                statusHistory={b.statusHistory}
+                              />
+                            </div>
                           </div>
-                          {/* Track */}
-                          <div className="w-full pl-4">
-                            <BookingStatusTimeline
-                              statusHistory={b.statusHistory}
-                            />
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
-
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             );
           })}
