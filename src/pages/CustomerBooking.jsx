@@ -6,11 +6,14 @@ import { FaCheck, FaTimes } from "react-icons/fa";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import { useAppContext } from "../context/AppContext";
 import { toast } from "react-toastify";
-import { FaCalendarAlt, FaClock } from "react-icons/fa";
+import {
+  FaCalendarAlt,
+  FaClock,
+  FaSearch,
+  FaFilter,
+  FaChevronDown,
+} from "react-icons/fa";
 import ReactStars from "react-rating-stars-component";
-
-
-
 
 dayjs.extend(isSameOrAfter);
 
@@ -38,9 +41,30 @@ export default function CustomerBookings() {
   const [shareAmount, setShareAmount] = useState("");
   const [splitModalBooking, setSplitModalBooking] = useState(null);
 
+  const allStatuses = [
+    "pending",
+    "confirmed",
+    "rejected",
+    "update-time",
+    "in-progress",
+    "completed",
+    "cancelled",
+  ];
 
+  // Search and filter states
+  const [search, setSearch] = useState("");
+  const [selectedStatuses, setSelectedStatuses] = useState([]);
+  const [selectedPaymentStatuses, setSelectedPaymentStatuses] = useState([]);
+  const [dateRange, setDateRange] = useState({ from: "", to: "" });
+  const [showFilter, setShowFilter] = useState(false);
+  const [showSort, setShowSort] = useState(false);
+  const [showStatusList, setShowStatusList] = useState(false);
+  const [showPaymentStatusList, setShowPaymentStatusList] = useState(false);
+  const [sortBy, setSortBy] = useState("");
 
-
+  // Refs for outside click detection
+  const filterRef = useRef(null);
+  const sortRef = useRef(null);
 
   const modalRef = useRef();
 
@@ -214,10 +238,10 @@ export default function CustomerBookings() {
   const latestStatus = (history) =>
     history?.[history.length - 1]?.status || "pending";
 
-  const filteredBookings =
-    filter === "all"
-      ? bookings
-      : bookings.filter((b) => latestStatus(b.statusHistory) === filter);
+  // const filteredBookings =
+  //   filter === "all"
+  //     ? bookings
+  //     : bookings.filter((b) => latestStatus(b.statusHistory) === filter);
 
   const isTooCloseToBooking = (b) => {
     const bookingDateTime = dayjs(
@@ -360,17 +384,497 @@ export default function CustomerBookings() {
     }
   };
 
+  // header
+  // Filter and search logic
+  let filteredBookings = bookings;
+
+  // Search
+  if (search.trim()) {
+    filteredBookings = filteredBookings.filter(
+      (b) =>
+        b.customer?.name?.toLowerCase().includes(search.toLowerCase()) ||
+        b.provider?.name?.toLowerCase().includes(search.toLowerCase()) ||
+        b.serviceName?.toLowerCase().includes(search.toLowerCase()) ||
+        b.address?.toLowerCase().includes(search.toLowerCase())
+    );
+  }
+
+  // Booking status filter
+  if (selectedStatuses.length > 0) {
+    filteredBookings = filteredBookings.filter((b) => {
+      const currentStatus =
+        b.statusHistory?.[b.statusHistory.length - 1]?.status || "pending";
+      return selectedStatuses.includes(currentStatus);
+    });
+  }
+
+  // Payment status filter
+  if (selectedPaymentStatuses.length > 0) {
+    filteredBookings = filteredBookings.filter((b) =>
+      selectedPaymentStatuses.includes(b.paymentStatus)
+    );
+  }
+
+  // Date range filter
+  if (dateRange.from) {
+    const fromDate = dayjs(dateRange.from).startOf("day");
+    filteredBookings = filteredBookings.filter((b) =>
+      dayjs(b.date).isSameOrAfter(fromDate)
+    );
+  }
+  if (dateRange.to) {
+    const toDate = dayjs(dateRange.to).endOf("day");
+    filteredBookings = filteredBookings.filter((b) =>
+      dayjs(b.date).isSameOrBefore(toDate)
+    );
+  }
+
+  // Sort groups
+  let sortedBookings = [...filteredBookings];
+  // Object.keys(grouped).forEach((status) => {
+  // let sortedBookings = [...grouped[status]];
+
+  if (sortBy === "date-asc") {
+    sortedBookings.sort((a, b) => {
+      // First compare dates
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      const dateDiff = dateA.getTime() - dateB.getTime();
+
+      if (dateDiff !== 0) return dateDiff;
+
+      // If dates are same, compare times
+      // Convert time strings (e.g., "14:30") to comparable format
+      const timeA = a.timeSlot.from.split(":").map(Number);
+      const timeB = b.timeSlot.from.split(":").map(Number);
+
+      // Compare hours first, then minutes
+      const hourDiff = timeA[0] - timeB[0];
+      if (hourDiff !== 0) return hourDiff;
+
+      return timeA[1] - timeB[1]; // Compare minutes
+    });
+  } else if (sortBy === "date-desc") {
+    sortedBookings.sort((a, b) => {
+      // First compare dates (reversed for descending)
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      const dateDiff = dateB.getTime() - dateA.getTime();
+
+      if (dateDiff !== 0) return dateDiff;
+
+      // If dates are same, compare times (reversed for descending)
+      const timeA = a.timeSlot.from.split(":").map(Number);
+      const timeB = b.timeSlot.from.split(":").map(Number);
+
+      // Compare hours first, then minutes (reversed)
+      const hourDiff = timeB[0] - timeA[0];
+      if (hourDiff !== 0) return hourDiff;
+
+      return timeB[1] - timeA[1]; // Compare minutes (reversed)
+    });
+  } else if (sortBy === "name-asc") {
+    sortedBookings.sort((a, b) =>
+      (a.provider?.name || "").localeCompare(b.provider?.name || "")
+    );
+  } else if (sortBy === "name-desc") {
+    sortedBookings.sort((a, b) =>
+      (b.provider?.name || "").localeCompare(a.provider?.name || "")
+    );
+  } else if (sortBy === "service-asc") {
+    sortedBookings.sort((a, b) =>
+      (a.serviceName || "").localeCompare(b.serviceName || "")
+    );
+  } else if (sortBy === "service-desc") {
+    sortedBookings.sort((a, b) =>
+      (b.serviceName || "").localeCompare(a.serviceName || "")
+    );
+  }
+  // sortedGroups[status] = sortedBookings;
+  //     console.log(
+  //   "name-asc sorted:",
+  //   sortedBookings.map((b) => b.provider?.name || "Unknown")
+  // );
+  // });
+
+  // Group by status
+  // Group by status using the sorted array
+  const grouped = sortedBookings.reduce((acc, b) => {
+    const latest =
+      b.statusHistory?.[b.statusHistory.length - 1]?.status || "pending";
+    acc[latest] = acc[latest] || [];
+    acc[latest].push(b);
+    return acc;
+  }, {});
+
+  // Handle outside clicks
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (filterRef.current && !filterRef.current.contains(event.target)) {
+        setShowFilter(false);
+      }
+      if (sortRef.current && !sortRef.current.contains(event.target)) {
+        setShowSort(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   return (
-    <div className="min-h-screen py-16 px-4 bg-[var(--background-light)]">
-      <div className="w-full mx-auto bg-white shadow-md rounded-xl p-6 max-w-4xl">
-        <h2 className="text-3xl font-bold text-center text-[var(--primary)] mb-6">
+    <div className="min-h-screen py-16 px-4 bg-gradient-to-br from-[var(--primary-light)] to-[var(--white)]">
+      {/* Top Header */}
+      <div className="flex flex-wrap items-center justify-between px-12">
+        <h2 className="py-3 text-2xl sm:text-3xl md:text-4xl font-extrabold text-[var(--primary)]">
           My Bookings
         </h2>
 
+        <div className="flex gap-2 items-center justify-center">
+          {/* Search */}
+          <div className="relative w-3/4 xs:w-28 sm:w-32 md:w-44 lg:w-52">
+            <FaSearch className="absolute left-3 top-2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10 pr-2 py-1.5 rounded-full border border-gray-300 shadow text-sm w-full outline-none focus:ring-2 focus:ring-[var(--primary)]"
+            />
+          </div>
 
-        
+          {/* Filter */}
+          <div className="relative">
+            <button
+              onClick={() => setShowFilter(!showFilter)}
+              className="flex items-center gap-2 px-3 py-2 rounded-full border border-gray-300 shadow text-sm bg-white hover:bg-gray-50"
+            >
+              <FaFilter />
+              <span className="hidden sm:inline">Filter</span>
+            </button>
 
-        <div className="flex flex-wrap justify-center gap-2 mb-6">
+            {showFilter && (
+              <div
+                ref={filterRef}
+                className="absolute z-50 right-0 mt-2 w-[300px] bg-white border shadow-xl rounded-xl p-4"
+              >
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-lg font-semibold">Filter</h3>
+                  <button
+                    onClick={() => setShowFilter(false)}
+                    className="text-gray-500 hover:text-red-600 cursor-pointer"
+                  >
+                    <FaTimes />
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  {/* Booking Status Filter */}
+                  <div className="mb-2 border p-2 rounded">
+                    <button
+                      onClick={() => setShowStatusList(!showStatusList)}
+                      className="w-full flex justify-between items-center text-sm font-semibold text-[var(--primary)] mb-1"
+                    >
+                      <span>Booking Status</span>
+                      <FaChevronDown
+                        className={`transition-transform ${
+                          showStatusList ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+
+                    {showStatusList && (
+                      <div className="flex flex-wrap gap-2 max-h-36 overflow-y-auto pr-1 border rounded bg-gray-50 p-2">
+                        {/* All Statuses Checkbox */}
+                        <label className="flex items-center gap-2 px-2 py-1 rounded hover:bg-[var(--primary-light)] cursor-pointer w-full">
+                          <input
+                            type="checkbox"
+                            checked={
+                              selectedStatuses.length === allStatuses.length
+                            }
+                            onChange={(e) => {
+                              const isChecked = e.target.checked;
+                              setSelectedStatuses(
+                                isChecked ? [...allStatuses] : []
+                              );
+                            }}
+                            className="accent-[var(--primary)]"
+                          />
+                          <span className="text-sm">All</span>
+                        </label>
+
+                        {allStatuses.map((status) => (
+                          <label
+                            key={status}
+                            className="flex items-center gap-2 px-2 py-1 rounded hover:bg-[var(--primary-light)] cursor-pointer w-full"
+                          >
+                            <input
+                              type="checkbox"
+                              value={status}
+                              checked={selectedStatuses.includes(status)}
+                              onChange={(e) => {
+                                const isChecked = e.target.checked;
+                                setSelectedStatuses((prev) =>
+                                  isChecked
+                                    ? [...prev, status]
+                                    : prev.filter((s) => s !== status)
+                                );
+                              }}
+                              className="accent-[var(--primary)]"
+                            />
+                            <span className="text-sm capitalize">
+                              {status.replace("-", " ")}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Payment Status Filter */}
+                  <div className="mb-4 border p-2 rounded">
+                    <button
+                      onClick={() =>
+                        setShowPaymentStatusList(!showPaymentStatusList)
+                      }
+                      className="w-full flex justify-between items-center text-sm font-semibold text-[var(--primary)] mb-1"
+                    >
+                      <span>Payment Status</span>
+                      <FaChevronDown
+                        className={`transition-transform ${
+                          showPaymentStatusList ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+
+                    {showPaymentStatusList && (
+                      <div className="flex flex-wrap gap-2 max-h-36 overflow-y-auto pr-1 border rounded bg-gray-50 p-2">
+                        {/* All Payment Statuses Checkbox */}
+                        <label className="flex items-center gap-2 px-2 py-1 rounded hover:bg-[var(--primary-light)] cursor-pointer w-full">
+                          <input
+                            type="checkbox"
+                            checked={
+                              selectedPaymentStatuses.length ===
+                              ["paid", "partial", "pending"].length
+                            }
+                            onChange={(e) => {
+                              const isChecked = e.target.checked;
+                              setSelectedPaymentStatuses(
+                                isChecked ? ["paid", "partial", "pending"] : []
+                              );
+                            }}
+                            className="accent-[var(--primary)]"
+                          />
+                          <span className="text-sm">All</span>
+                        </label>
+
+                        {["paid", "partial", "pending"].map((status) => (
+                          <label
+                            key={status}
+                            className="flex items-center gap-2 px-2 py-1 rounded hover:bg-[var(--primary-light)] cursor-pointer w-full"
+                          >
+                            <input
+                              type="checkbox"
+                              value={status}
+                              checked={selectedPaymentStatuses.includes(status)}
+                              onChange={(e) => {
+                                const isChecked = e.target.checked;
+                                setSelectedPaymentStatuses((prev) =>
+                                  isChecked
+                                    ? [...prev, status]
+                                    : prev.filter((s) => s !== status)
+                                );
+                              }}
+                              className="accent-[var(--primary)]"
+                            />
+                            <span className="text-sm capitalize">
+                              {status.replace("-", " ")}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Date Range Filter */}
+                  <div className="mb-4 border p-2 rounded">
+                    <label className="block text-sm font-medium mb-2 text-[var(--primary)]">
+                      Date Range
+                    </label>
+                    <div className="space-y-2">
+                      <input
+                        type="date"
+                        value={dateRange.from}
+                        onChange={(e) =>
+                          setDateRange((prev) => ({
+                            ...prev,
+                            from: e.target.value,
+                          }))
+                        }
+                        className="w-full border px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+                        placeholder="From"
+                      />
+                      <input
+                        type="date"
+                        value={dateRange.to}
+                        onChange={(e) =>
+                          setDateRange((prev) => ({
+                            ...prev,
+                            to: e.target.value,
+                          }))
+                        }
+                        className="w-full border px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+                        placeholder="To"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Clear All */}
+                  <div className="flex justify-between mt-3">
+                    <button
+                      onClick={() => {
+                        setSelectedStatuses([]);
+                        setDateRange({ from: "", to: "" });
+                      }}
+                      className="text-sm text-[var(--gray)] hover:underline hover:scale-105 transition-transform duration-100 ease-linear"
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Sort */}
+          <div className="relative">
+            <button
+              onClick={() => setShowSort(!showSort)}
+              className="flex items-center gap-2 px-3 py-2 rounded-full border border-gray-300 shadow text-sm bg-white hover:bg-gray-50"
+            >
+              <img src="/icons/sort.png" alt="Filter" className="w-5 h-4" />
+              <span className="hidden sm:inline">Sort</span>
+            </button>
+
+            {showSort && (
+              <div
+                ref={sortRef}
+                className="absolute z-50 right-0 mt-2 w-[260px] bg-white border shadow-xl rounded-xl p-4"
+              >
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-lg font-semibold">Sort</h3>
+                  <button
+                    onClick={() => setShowSort(false)}
+                    className="text-gray-500 hover:text-red-600 cursor-pointer"
+                  >
+                    <FaTimes />
+                  </button>
+                </div>
+
+                <div className="space-y-2 text-sm text-[var(--primary)]">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="sort"
+                      value=""
+                      checked={sortBy === ""}
+                      onChange={() => setSortBy("")}
+                      className="accent-[var(--ternary)]"
+                    />
+                    Default
+                  </label>
+
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="sort"
+                      value="date-asc"
+                      checked={sortBy === "date-asc"}
+                      onChange={() => setSortBy("date-asc")}
+                      className="accent-[var(--ternary)]"
+                    />
+                    Date & Time: Earliest → Latest
+                  </label>
+
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="sort"
+                      value="date-desc"
+                      checked={sortBy === "date-desc"}
+                      onChange={() => setSortBy("date-desc")}
+                      className="accent-[var(--ternary)]"
+                    />
+                    Date & Time: Latest → Earliest
+                  </label>
+
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="sort"
+                      value="name-asc"
+                      checked={sortBy === "name-asc"}
+                      onChange={() => setSortBy("name-asc")}
+                      className="accent-[var(--ternary)]"
+                    />
+                    Provider Name: A → Z
+                  </label>
+
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="sort"
+                      value="name-desc"
+                      checked={sortBy === "name-desc"}
+                      onChange={() => setSortBy("name-desc")}
+                      className="accent-[var(--ternary)]"
+                    />
+                    Provider Name: Z → A
+                  </label>
+
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="sort"
+                      value="service-asc"
+                      checked={sortBy === "service-asc"}
+                      onChange={() => setSortBy("service-asc")}
+                      className="accent-[var(--ternary)]"
+                    />
+                    Service Name: A → Z
+                  </label>
+
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="sort"
+                      value="service-desc"
+                      checked={sortBy === "service-desc"}
+                      onChange={() => setSortBy("service-desc")}
+                      className="accent-[var(--ternary)]"
+                    />
+                    Service Name: Z → A
+                  </label>
+                </div>
+
+                <div className="flex justify-between mt-3">
+                  <button
+                    onClick={() => setSortBy("")}
+                    className="text-sm text-[var(--gray)] hover:underline hover:scale-105 transition-transform duration-100 ease-linear"
+                  >
+                    Clear All
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="w-full mx-auto px-6 max-w-7xl">
+        {/* <div className="flex flex-wrap justify-center gap-2 mb-6">
           {statusOptions.map((opt) => (
             <button
               key={opt.value}
@@ -384,28 +888,55 @@ export default function CustomerBookings() {
               {opt.label}
             </button>
           ))}
-        </div>
+        </div> */}
 
         {loading ? (
-          <p className="text-center text-gray-500">Loading...</p>
-        ) : error ? (
-          <p className="text-center text-red-700">{error}</p>
-        ) : filteredBookings.length === 0 ? (
-          <p className="text-center text-gray-500">No bookings found</p>
+          <div
+            className="text-center text-xl"
+            style={{ color: "var(--primary)" }}
+          >
+            Loading...
+          </div>
+        ) : sortedBookings.length === 0 ? (
+          <div className="text-center mt-10">
+            <img
+              src="/icons/no-booking.webp"
+              alt="No results"
+              className="w-52 mx-auto mb-2"
+            />
+            <h3 className="text-2xl text-[var(--primary)] font-semibold">
+              Oops! No bookings found
+            </h3>
+            <p className="text-xl text-[var(--gray)] mt-3">
+              Try something else
+            </p>
+          </div>
         ) : (
-          <div className="space-y-6">
-            {/* collapsed version */}
-            {filteredBookings.map((b) => {
-              const status = latestStatus(b.statusHistory);
+          <div className="w-full mx-auto p-6 max-w-7xl">
+            {sortedBookings.map((b, idx) => {
+              // const isStatusOpen = expandedStatuses[status];
+              const status =
+                b.statusHistory?.[b.statusHistory.length - 1]?.status ||
+                "pending";
               const isOpen = openedBookingId === b._id;
-              const toggleOpen = () => {
+              const toggleOpen = () =>
                 setOpenedBookingId((prev) => (prev === b._id ? null : b._id));
-              };
+              // return (
+
+              // <div key={status} className="space-y-6">
+              //   {/* Collapsible cards matching customer booking style */}
+              //   {group.map((b, idx) => {
+              //     const isOpen = openedBookingId === b._id;
+              //     const toggleOpen = () => {
+              //       setOpenedBookingId((prev) =>
+              //         prev === b._id ? null : b._id
+              //       );
+              //     };
 
               return (
                 <div
                   key={b._id}
-                  className="border rounded-xl shadow-lg bg-white transition-all duration-300"
+                  className="border rounded-xl shadow-lg bg-white transition-all duration-300 mb-6"
                 >
                   {/* Collapsed Header */}
                   <div
@@ -801,150 +1332,154 @@ export default function CustomerBookings() {
               );
             })}
           </div>
+
+          // );
+          // })}
+          // </div>
+        )}
+
+        {/* Cancel Modal */}
+        {confirmCancelId && (
+          <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+            <div
+              ref={modalRef}
+              className="bg-white p-6 rounded-lg shadow-md w-[90%] max-w-md text-center"
+            >
+              <h3 className="text-xl font-semibold mb-4 text-[var(--primary)]">
+                Confirm Cancellation
+              </h3>
+              <p className="text-sm text-gray-600 mb-6">
+                Are you sure you want to cancel this booking? This action cannot
+                be undone.
+              </p>
+              <div className="flex justify-center gap-4">
+                <button
+                  className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
+                  onClick={() => setConfirmCancelId(null)}
+                >
+                  Back
+                </button>
+                <button
+                  className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-700"
+                  onClick={() => {
+                    respondToUpdate(confirmCancelId, "cancelled");
+                    setConfirmCancelId(null);
+                  }}
+                >
+                  Cancel Booking
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Split Payment Modal */}
+        {splitModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-md w-[90%] max-w-md">
+              <h3 className="text-xl font-semibold mb-4 text-[var(--primary)]">
+                Split Payment
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                <span className="font-bold">Total Amount:</span> ₹
+                {selectedBooking?.totalAmount}
+              </p>
+
+              <div className="mb-4 flex flex-row gap-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  No. of persons splitting :
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={splitCount}
+                  onChange={handleSplitCountChange}
+                  placeholder="No. of persons"
+                  className="w-32 px-3 py-1 border text-xs border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+                />
+              </div>
+
+              <div className="max-h-60 overflow-y-auto space-y-2 my-4">
+                {splitUsers.map((u, idx) => (
+                  <input
+                    key={idx}
+                    type="email"
+                    className="mt-2 w-full border px-2 py-1 rounded-md text-sm"
+                    placeholder={`Person ${idx + 1} Email`}
+                    value={u.email}
+                    onChange={(e) => handleSplitUserChange(idx, e.target.value)}
+                  />
+                ))}
+              </div>
+              <div className="flex justify-end gap-4">
+                <button
+                  className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
+                  onClick={() => {
+                    setSplitModalOpen(false);
+                    setShareAmount("");
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="bg-gradient-to-b from-[var(--ternary)] to-[var(--secondary)] text-white px-4 py-2 rounded hover:bg-[var(--primary)]"
+                  onClick={handleSplitPay}
+                >
+                  Pay Share
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Feedback Modal */}
+        {showFeedbackModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-xl w-[90%] max-w-md shadow-lg">
+              <h2 className="text-xl font-semibold mb-4 text-center">
+                Rate Your Experience
+              </h2>
+
+              <div className="flex justify-center mb-3">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <span
+                    key={i}
+                    onClick={() => setRating(i)}
+                    className={`cursor-pointer text-2xl ${
+                      i <= rating ? "text-yellow-500" : "text-gray-300"
+                    }`}
+                  >
+                    ★
+                  </span>
+                ))}
+              </div>
+
+              <textarea
+                rows={3}
+                className="w-full border border-gray-300 rounded-md p-2"
+                placeholder="Write a short review..."
+                value={review}
+                onChange={(e) => setReview(e.target.value)}
+              />
+
+              <div className="flex justify-end gap-3 mt-4">
+                <button
+                  className="px-4 py-2 bg-gray-200 rounded-md"
+                  onClick={() => setShowFeedbackModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="px-4 py-2 bg-gradient-to-b from-[var(--ternary)] to-[var(--secondary)] text-white rounded-md"
+                  onClick={handleSubmitFeedback}
+                >
+                  Submit
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
-
-      {/* Cancel Modal */}
-      {confirmCancelId && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div
-            ref={modalRef}
-            className="bg-white p-6 rounded-lg shadow-md w-[90%] max-w-md text-center"
-          >
-            <h3 className="text-xl font-semibold mb-4 text-[var(--primary)]">
-              Confirm Cancellation
-            </h3>
-            <p className="text-sm text-gray-600 mb-6">
-              Are you sure you want to cancel this booking? This action cannot
-              be undone.
-            </p>
-            <div className="flex justify-center gap-4">
-              <button
-                className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
-                onClick={() => setConfirmCancelId(null)}
-              >
-                Back
-              </button>
-              <button
-                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-700"
-                onClick={() => {
-                  respondToUpdate(confirmCancelId, "cancelled");
-                  setConfirmCancelId(null);
-                }}
-              >
-                Cancel Booking
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Split Payment Modal */}
-      {splitModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-md w-[90%] max-w-md">
-            <h3 className="text-xl font-semibold mb-4 text-[var(--primary)]">
-              Split Payment
-            </h3>
-            <p className="text-sm text-gray-600 mb-4">
-              <span className="font-bold">Total Amount:</span> ₹
-              {selectedBooking?.totalAmount}
-            </p>
-
-            <div className="mb-4 flex flex-row gap-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                No. of persons splitting :
-              </label>
-              <input
-                type="number"
-                min="1"
-                value={splitCount}
-                onChange={handleSplitCountChange}
-                placeholder="No. of persons"
-                className="w-32 px-3 py-1 border text-xs border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
-              />
-            </div>
-
-            <div className="max-h-60 overflow-y-auto space-y-2 my-4">
-              {splitUsers.map((u, idx) => (
-                <input
-                  key={idx}
-                  type="email"
-                  className="mt-2 w-full border px-2 py-1 rounded-md text-sm"
-                  placeholder={`Person ${idx + 1} Email`}
-                  value={u.email}
-                  onChange={(e) => handleSplitUserChange(idx, e.target.value)}
-                />
-              ))}
-            </div>
-            <div className="flex justify-end gap-4">
-              <button
-                className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
-                onClick={() => {
-                  setSplitModalOpen(false);
-                  setShareAmount("");
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                className="bg-gradient-to-b from-[var(--ternary)] to-[var(--secondary)] text-white px-4 py-2 rounded hover:bg-[var(--primary)]"
-                onClick={handleSplitPay}
-              >
-                Pay Share
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Feedback Modal */}
-      {showFeedbackModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-xl w-[90%] max-w-md shadow-lg">
-            <h2 className="text-xl font-semibold mb-4 text-center">
-              Rate Your Experience
-            </h2>
-
-            <div className="flex justify-center mb-3">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <span
-                  key={i}
-                  onClick={() => setRating(i)}
-                  className={`cursor-pointer text-2xl ${
-                    i <= rating ? "text-yellow-500" : "text-gray-300"
-                  }`}
-                >
-                  ★
-                </span>
-              ))}
-            </div>
-
-            <textarea
-              rows={3}
-              className="w-full border border-gray-300 rounded-md p-2"
-              placeholder="Write a short review..."
-              value={review}
-              onChange={(e) => setReview(e.target.value)}
-            />
-
-            <div className="flex justify-end gap-3 mt-4">
-              <button
-                className="px-4 py-2 bg-gray-200 rounded-md"
-                onClick={() => setShowFeedbackModal(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className="px-4 py-2 bg-blue-600 text-white rounded-md"
-                onClick={handleSubmitFeedback}
-              >
-                Submit
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -145,19 +145,10 @@ export default function ProviderBookings() {
     );
   }
 
-  // Group by status
-  const grouped = filteredBookings.reduce((acc, b) => {
-    const latest =
-      b.statusHistory?.[b.statusHistory.length - 1]?.status || "pending";
-    acc[latest] = acc[latest] || [];
-    acc[latest].push(b);
-    return acc;
-  }, {});
-
   // Sort groups
-  const sortedGroups = {};
-  Object.keys(grouped).forEach((status) => {
-    let sortedBookings = [...grouped[status]];
+let sortedBookings = [...filteredBookings];
+  // Object.keys(grouped).forEach((status) => {
+    // let sortedBookings = [...grouped[status]];
 
     if (sortBy === "date-asc") {
       sortedBookings.sort((a, b) => {
@@ -216,8 +207,20 @@ export default function ProviderBookings() {
       );
     }
 
-    sortedGroups[status] = sortedBookings;
-  });
+    // sortedGroups[status] = sortedBookings;
+  // }
+// );
+
+    // Group by status using the sorted array
+const grouped = sortedBookings.reduce((acc, b) => {
+  const latest =
+    b.statusHistory?.[b.statusHistory.length - 1]?.status || "pending";
+  acc[latest] = acc[latest] || [];
+  acc[latest].push(b);
+  return acc;
+}, {});
+
+  
 
   // Restored original markCompleted function
   const markCompleted = async (bookingId) => {
@@ -342,7 +345,7 @@ export default function ProviderBookings() {
   return (
     <div className="min-h-screen py-20 px-4 bg-gradient-to-br from-[var(--primary-light)] to-[var(--white)]">
       {/* Top Header */}
-      <div className="flex flex-wrap items-center justify-between px-2 mb-6">
+      <div className="flex flex-wrap items-center justify-between px-6">
         <h2 className="py-3 text-2xl sm:text-3xl md:text-4xl font-extrabold text-[var(--primary)]">
           My Bookings
         </h2>
@@ -387,7 +390,7 @@ export default function ProviderBookings() {
 
                 <div className="space-y-2">
                   {/* Booking Status Filter */}
-                  <div className="mb-4  border p-2 rounded">
+                  <div className="mb-2 border p-2 rounded">
                     <button
                       onClick={() => setShowStatusList(!showStatusList)}
                       className="w-full flex justify-between items-center text-sm font-semibold text-[var(--primary)] mb-1"
@@ -695,7 +698,7 @@ export default function ProviderBookings() {
         >
           Loading...
         </div>
-      ) : Object.keys(sortedGroups).length === 0 ? (
+      ) : sortedBookings.length === 0 ? (
         <div className="text-center mt-10">
           <img
             src="/icons/no-booking.webp"
@@ -708,25 +711,27 @@ export default function ProviderBookings() {
           <p className="text-xl text-[var(--gray)] mt-3">Try something else</p>
         </div>
       ) : (
-        <div className="max-w-7xl mx-auto space-y-6">
-          {Object.entries(sortedGroups).map(([status, group]) => {
-            const isStatusOpen = expandedStatuses[status];
-            return (
-              <div key={status}>
-                <div className="space-y-6">
+      <div className="w-full mx-auto p-6 max-w-7xl">
+         {sortedBookings.map((b, idx) => {
+            // const isStatusOpen = expandedStatuses[status];
+            // return (
+              const status = b.statusHistory?.[b.statusHistory.length - 1]?.status || "pending";
+      const isOpen = openedBookingId === b._id;
+      const toggleOpen = () => setOpenedBookingId((prev) => (prev === b._id ? null : b._id));
+                // <div className="space-y-6" key={status}>
                   {/* Collapsible cards matching customer booking style */}
-                  {group.map((b, idx) => {
+                  {/* {group.map((b, idx) => {
                     const isOpen = openedBookingId === b._id;
                     const toggleOpen = () => {
                       setOpenedBookingId((prev) =>
                         prev === b._id ? null : b._id
                       );
-                    };
+                    }; */}
 
                     return (
                       <div
                         key={b._id}
-                        className="border rounded-xl shadow-lg bg-white transition-all duration-300"
+                        className="border rounded-xl shadow-lg bg-white transition-all duration-300 mb-6"
                       >
                         {/* Collapsed Header */}
                         <div
@@ -1131,10 +1136,10 @@ export default function ProviderBookings() {
                     );
                   })}
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              
+            // );
+          
+        // </div>
       )}
 
       {error && <div className="text-center text-red-500 mt-6">{error}</div>}
