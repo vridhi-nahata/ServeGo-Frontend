@@ -175,7 +175,7 @@ export default function Home() {
               color: "var(--white)",
             }}
             onMouseOver={(e) => {
-              e.currentTarget.style.background = "var(--ternary)";
+              e.currentTarget.style.background = "var(--primary)";
             }}
             onMouseOut={(e) => {
               e.currentTarget.style.background =

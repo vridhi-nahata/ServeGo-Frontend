@@ -72,24 +72,40 @@ function Navbar() {
               Dashboard
             </Link>
           )}
-          <Link
-            to="/"
-            className="hover:text-[color:var(--primary)] font-medium hover:font-extrabold focus:outline-none"
-          >
-            Home
-          </Link>
-          <Link
-            to="/services"
-            className="hover:text-[color:var(--primary)] font-medium hover:font-extrabold focus:outline-none"
-          >
-            Services
-          </Link>
-          <Link
-            to="/aboutus"
-            className="hover:text-[color:var(--primary)] font-medium hover:font-extrabold focus:outline-none"
-          >
-            About Us
-          </Link>
+          {role === "provider" && (
+            <Link
+              to="/provider/provider-booking"
+              className="hover:text-[color:var(--primary)] font-medium hover:font-extrabold focus:outline-none"
+            >
+              Bookings
+            </Link>
+          )}
+
+          {role === "customer" && (
+            <Link
+              to="/"
+              className="hover:text-[color:var(--primary)] font-medium hover:font-extrabold focus:outline-none"
+            >
+              Home
+            </Link>
+          )}
+
+          {role === "customer" && (
+            <Link
+              to="/services"
+              className="hover:text-[color:var(--primary)] font-medium hover:font-extrabold focus:outline-none"
+            >
+              Services
+            </Link>
+          )}
+          {role === "customer" && (
+            <Link
+              to="/my-bookings"
+              className="hover:text-[color:var(--primary)] font-medium hover:font-extrabold focus:outline-none"
+            >
+              Bookings
+            </Link>
+          )}
         </div>
 
         {/* 4. Login / User  */}
@@ -116,27 +132,6 @@ function Navbar() {
                 style={{ background: "var(--white)" }}
               >
                 <ul className="text-sm space-y-1">
-                  {role === "provider" && (
-                    <li>
-                      <Link
-                        to="/provider/provider-booking"
-                        className="block px-3 py-2 hover:bg-[var(--primary-light)] rounded"
-                      >
-                        My Bookings
-                      </Link>
-                    </li>
-                  )}
-                  {role === "customer" && (
-                    <li>
-                      <Link
-                        to="/my-bookings"
-                        className="block px-3 py-2 hover:bg-[var(--primary-light)] rounded"
-                      >
-                        My Bookings
-                      </Link>
-                    </li>
-                  )}
-
                   <li
                     onClick={logout}
                     className="block px-3 py-2 hover:bg-[var(--primary-light)] rounded"
@@ -181,27 +176,43 @@ function Navbar() {
             </Link>
           )}
 
-          <Link
-            to="/"
-            className="font-medium block hover:text-[color:var(--primary)] hover:font-extrabold focus:outline-none"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            Home
-          </Link>
-          <Link
-            to="/services"
-            className="font-medium block hover:text-[color:var(--primary)] hover:font-extrabold focus:outline-none"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            Services
-          </Link>
-          <Link
-            to="/aboutus"
-            className="font-medium block hover:text-[color:var(--primary)] hover:font-extrabold focus:outline-none"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            About Us
-          </Link>
+          {role === "provider" && (
+            <Link
+              to="/provider/provider-booking"
+              className="font-medium block hover:text-[color:var(--primary)] hover:font-extrabold focus:outline-none"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Bookings
+            </Link>
+          )}
+
+          {role === "customer" && (
+            <Link
+              to="/"
+              className="font-medium block hover:text-[color:var(--primary)] hover:font-extrabold focus:outline-none"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Home
+            </Link>
+          )}
+          {role === "customer" && (
+            <Link
+              to="/services"
+              className="font-medium block hover:text-[color:var(--primary)] hover:font-extrabold focus:outline-none"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Services
+            </Link>
+          )}
+          {role === "customer" && (
+            <Link
+              to="/my-bookings"
+              className="font-medium block hover:text-[color:var(--primary)] hover:font-extrabold focus:outline-none"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Bookings
+            </Link>
+          )}
         </div>
       )}
     </nav>

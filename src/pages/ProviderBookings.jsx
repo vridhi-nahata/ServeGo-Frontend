@@ -342,6 +342,25 @@ const grouped = sortedBookings.reduce((acc, b) => {
     return () => clearInterval(interval);
   }, []);
 
+
+
+  // if (!provider) {
+  //   return (
+  //     // <div className="text-center mt-20 text-red-700">Provider not found</div>
+  //     <div className="text-center mt-40">
+  //         <img
+  //           src="/icons/unauthorized-access.webp"
+  //           alt="No results"
+  //           className="w-52 mx-auto"
+  //         />
+  //         <h3 className="text-4xl text-[var(--primary)] font-semibold">
+  //           Access Denied
+  //         </h3>
+  //         <p className="text-xl text-[var(--gray)] mt-3">This page is only available to service providers</p>
+  //       </div>
+  //   );
+  // }
+
   return (
     <div className="min-h-screen py-20 px-4 bg-gradient-to-br from-[var(--primary-light)] to-[var(--white)]">
       {/* Top Header */}
@@ -731,11 +750,11 @@ const grouped = sortedBookings.reduce((acc, b) => {
                     return (
                       <div
                         key={b._id}
-                        className="border rounded-xl shadow-lg bg-white transition-all duration-300 mb-6"
+                        className="border rounded-xl hover:rounded-xl shadow-lg bg-white transition-all duration-300 mb-6"
                       >
                         {/* Collapsed Header */}
                         <div
-                          className="flex justify-between items-center p-4 cursor-pointer hover:bg-gray-50"
+                          className="flex justify-between items-center p-4 cursor-pointer hover:bg-gray-50 hover:rounded-xl"
                           onClick={toggleOpen}
                         >
                           <div className="flex items-center gap-4">
@@ -1012,8 +1031,8 @@ const grouped = sortedBookings.reduce((acc, b) => {
                                   <span>
                                     ₹
                                     {(
-                                      (b.serviceAmount || 0) +
-                                      (b.platformFee || 0) -
+                                      (b.serviceAmount || 0) 
+                                       -
                                       (b.serviceAmount || 0) * 0.15
                                     ).toFixed(2)}
                                   </span>

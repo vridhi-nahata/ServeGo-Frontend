@@ -157,7 +157,7 @@ export default function ProviderCard({
 
         {/* Quick action buttons */}
         <div className="flex items-center justify-evenly mb-4">
-          <button title="Voice Call" className="group">
+          {/* <button title="Voice Call" className="group">
             <img
               src="/icons/voice-call.png"
               alt="Voice Call"
@@ -170,7 +170,7 @@ export default function ProviderCard({
               alt="Video Call"
               className="w-8 h-8 transition-transform duration-200 group-hover:scale-125"
             />
-          </button>
+          </button> */}
           <button
             title="View Profile"
             onClick={onProfileClick}

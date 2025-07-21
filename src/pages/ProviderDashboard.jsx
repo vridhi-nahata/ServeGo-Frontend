@@ -33,13 +33,26 @@ dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 
 const COLORS = [
-  "#10b981",
-  "#f59e0b",
-  "#ef4444",
-  "#3b82f6",
-  "#8b5cf6",
-  "#6b7280",
+  // "#050329", // deep midnight blue
+  "#081f5c", // dark navy
+  "#7096d1", // medium slate-blue
+  "#9ca3af", // muted indigo-gray
+  "#b6c7e0", // pale periwinkle
+  "#203157",
+  "#283f73",
+  "#314f91",
+  "#597ecf",
 ];
+
+const STATUS_COLORS = {
+  pending: "#facc15", // Tailwind yellow-400
+  confirmed: "#22c55e", // Tailwind green-500
+  rejected: "#ef4444", // Tailwind red-500
+  "update-time": "#3b82f6", // Tailwind blue-500
+  "in-progress": "#fb923c", // Tailwind orange-400
+  completed: "#a855f7", // Tailwind purple-500
+  cancelled: "#9ca3af", // Tailwind gray-400
+};
 
 const fmt = (d, g) => {
   const date = dayjs(d);
@@ -90,16 +103,61 @@ function ProviderAnalytics({ bookings, setBookings }) {
   }, [bookings, from, to]);
 
   const kpis = useMemo(() => {
-    console.log("Computing KPIs with filtered data:", filtered);
-    const completed = filtered.filter((b) =>
-      b.statusHistory?.some((s) => s.status === "completed")
+    /* --- collect completed bookings that are actually PAID --- */
+    const paid = filtered.filter((b) =>
+      b.statusHistory?.some((s) => b.paymentStatus === "paid")
     );
-    const revenue = completed.reduce((s, b) => s + (b.totalAmount || 0), 0);
+
+    const completed = filtered.filter(
+      (b) => b.statusHistory?.at(-1)?.status === "completed"
+    );
+
+    /* 1.  Gross amount the provider collected (from customer) */
+    const grossReceived = paid.reduce(
+      (sum, b) => sum + (b.totalAmount || 0),
+      0
+    );
+
+    /* 2.  Cash payments received */
+    const cashReceived = paid
+      .filter((b) => b.paymentMethod === "cash")
+      .reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+
+    /* 3.  Net earnings to provider
+         = totalAmount − platformFee − 15 % of serviceAmount
+  */
+    const netEarned = paid.reduce((sum, b) => {
+      const commission = (b.serviceAmount || 0) * 0.15;
+      const net = (b.totalAmount || 0) - (b.platformFee || 0) - commission;
+      return sum + net;
+    }, 0);
+
+    /* 4.  Provider → Admin
+     */
+    const payToAdmin = paid.reduce((sum, b) => {
+      const commission = (b.serviceAmount || 0) * 0.15;
+      return sum + (b.platformFee || 0) + commission;
+    }, 0);
+
     const rated = filtered.filter((b) => b.customerFeedback?.rating);
     const avg = rated.length
-      ? rated.reduce((s, b) => s + b.customerFeedback.rating, 0) / rated.length
-      : 0;
-    return { revenue, completed: completed.length, avg: avg.toFixed(1) };
+      ? (
+          rated.reduce((s, b) => s + b.customerFeedback.rating, 0) /
+          rated.length
+        ).toFixed(1)
+      : "0.0";
+
+    return {
+      revenue: grossReceived,
+      cash: cashReceived,
+      net: paid.reduce((s, b) => {
+        const commission = (b.serviceAmount || 0) * 0.15;
+        return s + (b.totalAmount || 0) - (b.platformFee || 0) - commission;
+      }, 0),
+      payToAdmin,
+      completed: completed.length,
+      avg,
+    };
   }, [filtered]);
 
   const statusData = useMemo(() => {
@@ -109,14 +167,18 @@ function ProviderAnalytics({ bookings, setBookings }) {
       const latest = b.statusHistory?.at(-1)?.status || "pending";
       counts[latest] = (counts[latest] || 0) + 1;
     });
-    return Object.entries(counts).map(([name, value]) => ({ name, value }));
+    return Object.entries(counts).map(([name, value]) => ({
+      name,
+      value,
+      fill: STATUS_COLORS[name] || "#cccccc",
+    }));
   }, [filtered]);
 
   const serviceRevenueData = useMemo(() => {
     console.log("Computing serviceRevenueData with filtered data:", filtered);
     const map = {};
     filtered
-      .filter((b) => b.statusHistory?.some((s) => s.status === "completed"))
+      .filter((b) => b.paymentStatus === "paid")
       .forEach((b) => {
         map[b.serviceName] = (map[b.serviceName] || 0) + (b.totalAmount || 0);
       });
@@ -140,7 +202,7 @@ function ProviderAnalytics({ bookings, setBookings }) {
     console.log("Computing trendData with filtered data:", filtered);
     const map = {};
     filtered
-      .filter((b) => b.statusHistory?.some((s) => s.status === "completed"))
+      .filter((b) => b.paymentStatus === "paid")
       .forEach((b) => {
         const key = fmt(b.createdAt, granularity);
         map[key] = (map[key] || 0) + (b.totalAmount || 0);
@@ -266,9 +328,9 @@ function ProviderAnalytics({ bookings, setBookings }) {
   }, [bookings]);
 
   return (
-    <div className="min-h-screen py-20 bg-gradient-to-br from-[var(--primary-light)] to-white p-6">
+    <div className="min-h-screen py-20 px-12 bg-gradient-to-br from-[var(--primary-light)] to-white p-6">
       <div className="flex flex-wrap justify-between gap-4">
-        <h1 className="text-3xl font-bold text-[var(--primary)] mb-2">
+        <h1 className="text-4xl font-bold text-[var(--primary)] mb-2">
           Dashboard
         </h1>
 
@@ -276,7 +338,7 @@ function ProviderAnalytics({ bookings, setBookings }) {
           <div className="flex flex-col">
             <label
               htmlFor="from"
-              className="text-sm text-[var(--primary)] mb-1"
+              className="text-sm font-semibold text-[var(--primary)] mb-1"
             >
               From
             </label>
@@ -290,7 +352,10 @@ function ProviderAnalytics({ bookings, setBookings }) {
           </div>
 
           <div className="flex flex-col">
-            <label htmlFor="to" className="text-sm text-[var(--primary)] mb-1">
+            <label
+              htmlFor="to"
+              className="text-sm font-semibold text-[var(--primary)] mb-1"
+            >
               To
             </label>
             <input
@@ -312,15 +377,35 @@ function ProviderAnalytics({ bookings, setBookings }) {
         />
         <KpiCard
           icon={<FaClipboardCheck />}
-          label="Completed"
+          label="Completed Bookings"
           value={kpis.completed}
         />
-        <KpiCard
+        {/* <KpiCard
           icon={<FaDollarSign />}
           label="Revenue"
           value={`₹${kpis.revenue.toLocaleString()}`}
-        />
+        /> */}
         <KpiCard icon={<FaStar />} label="Avg Rating" value={kpis.avg} />
+        <KpiCard
+          icon={<FaDollarSign />}
+          label="Total Received"
+          value={`₹${kpis.revenue.toLocaleString()}`}
+        />
+        <KpiCard
+          icon={<FaDollarSign />}
+          label="Cash Received"
+          value={`₹${kpis.cash.toLocaleString()}`}
+        />
+        <KpiCard
+          icon={<FaDollarSign />}
+          label="Net Earnings"
+          value={`₹${kpis.net.toLocaleString()}`}
+        />
+        <KpiCard
+          icon={<FaDollarSign />}
+          label="Pay to Admin"
+          value={`₹${kpis.payToAdmin.toLocaleString()}`}
+        />{" "}
       </div>
 
       <div className="my-6">
@@ -348,22 +433,22 @@ function ProviderAnalytics({ bookings, setBookings }) {
                     </p>
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-3">
                     <button
                       onClick={() => handleStatus(b._id, "confirmed")}
-                      className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700"
+                      className="w-full sm:w-28 py-2 bg-gradient-to-b font-semibold from-emerald-400 to-emerald-700 text-white rounded hover:scale-105"
                     >
                       Accept
                     </button>
                     <button
                       onClick={() => handleStatus(b._id, "rejected")}
-                      className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700"
+                      className="w-full sm:w-28 py-2 bg-gradient-to-b font-semibold from-red-400 to-red-700 text-white rounded hover:scale-105"
                     >
                       Reject
                     </button>
                     <button
                       onClick={() => handleReschedule(b._id)}
-                      className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                      className="w-full sm:w-28 py-2 bg-gradient-to-b font-semibold from-blue-400 to-blue-700 text-white rounded hover:scale-105"
                     >
                       Reschedule
                     </button>
@@ -420,9 +505,9 @@ function ProviderAnalytics({ bookings, setBookings }) {
       </div>
 
       <div className="my-6">
-        <ChartBox title="Upcoming Bookings">
+        <ChartBox title="Scheduled Bookings (Next 7 days)">
           {upcomingBookings.length === 0 ? (
-            <p className="text-gray-500 text-center">No upcoming bookings</p>
+            <p className="text-gray-500 text-center">No scheduled bookings for next 7 days</p>
           ) : (
             <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
               {upcomingBookings.map((b, i) => (
@@ -460,8 +545,8 @@ function ProviderAnalytics({ bookings, setBookings }) {
               />
               <Bar
                 dataKey="count"
-                fill="#3b82f6"
-                activeBar={{ fill: "#3b82f6", strokeWidth: 0, stroke: "none" }}
+                fill="#081f5c"
+                activeBar={{ fill: "#081f5c", strokeWidth: 0, stroke: "none" }}
               />
             </BarChart>
           </ResponsiveContainer>
@@ -480,8 +565,8 @@ function ProviderAnalytics({ bookings, setBookings }) {
                 label={false}
                 isAnimationActive={true}
               >
-                {statusData.map((_, i) => (
-                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                {statusData.map((entry) => (
+                  <Cell key={entry.name} fill={entry.fill} />
                 ))}
               </Pie>
               <Tooltip />
@@ -534,8 +619,8 @@ function ProviderAnalytics({ bookings, setBookings }) {
               />
               <Bar
                 dataKey="revenue"
-                fill="#10b981"
-                activeBar={{ fill: "#10b981", stroke: "none", strokeWidth: 0 }}
+                fill="#7096d1"
+                activeBar={{ fill: "#7096d1", stroke: "none", strokeWidth: 0 }}
               />
             </BarChart>
           </ResponsiveContainer>
@@ -605,7 +690,7 @@ function ProviderAnalytics({ bookings, setBookings }) {
       <div className="mt-6">
         <ChartBox title="Customer Reviews">
           {reviews.length === 0 ? (
-            <p className="text-gray-500 text-center">No reviews yet.</p>
+            <p className="text-gray-500 text-center">No reviews yet</p>
           ) : (
             <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
               {reviews.map((r, i) => (

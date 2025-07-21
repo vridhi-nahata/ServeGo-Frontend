@@ -7,7 +7,6 @@ import ResetPassword from './pages/ResetPassword'
 import Services from './pages/Services'
 import ServiceDetail from './pages/ServiceDetail'
 import ProviderProfile from "./pages/ProviderProfile";
-import AboutUs from './pages/AboutUs'
 import { ToastContainer, toast } from 'react-toastify';
 import ProviderBookings from './pages/ProviderBookings';
 import ProviderDashboard from './pages/ProviderDashboard';
@@ -30,7 +29,6 @@ function App() {
         <Route path="/provider/provider-booking" element={<ProviderBookings />} />
         <Route path="/provider/provider-dashboard" element={<ProviderDashboard />} />
         <Route path="/my-bookings" element={<MyBookings />} />
-        <Route path="/aboutus" element={<AboutUs />} />
       </Routes>
       </div>
     </>

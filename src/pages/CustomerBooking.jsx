@@ -301,7 +301,7 @@ export default function CustomerBookings() {
               },
               { withCredentials: true }
             );
-            toast.success("Payment Successful!");
+            // toast.success("Payment Successful!");
             getBookings();
           } catch (error) {
             console.error("Payment verification error:", error);
@@ -936,11 +936,11 @@ export default function CustomerBookings() {
               return (
                 <div
                   key={b._id}
-                  className="border rounded-xl shadow-lg bg-white transition-all duration-300 mb-6"
+                  className="border rounded-xl hover:rounded-xl shadow-lg bg-white transition-all duration-300 mb-6"
                 >
                   {/* Collapsed Header */}
                   <div
-                    className="flex justify-between items-center p-4 cursor-pointer hover:bg-gray-50"
+                    className="flex justify-between items-center p-4 cursor-pointer hover:bg-gray-50 hover:rounded-xl"
                     onClick={toggleOpen}
                   >
                     <div className="flex items-center gap-4">
@@ -1173,14 +1173,14 @@ export default function CustomerBookings() {
                       ) &&
                         b.paymentStatus !== "paid" && (
                           <div className="mt-6 w-full">
-                            <div className="flex flex-col justify-between flex-wrap sm:flex-row gap-4">
+                            <div className="flex flex-col justify-between sm:flex-row gap-4">
                               {/* Pay Online Button */}
                               <button
                                 onClick={() => handlePayOnline(b)}
                                 disabled={
                                   paymentActionStatus[b._id] === "loading"
                                 }
-                                className={`flex items-center justify-center gap-2 px-3 md:px-8 lg:px-16 py-3 font-semibold rounded shadow-lg transition duration-300 
+                                className={`flex items-center justify-center gap-2 px-3 w-full sm:w-1/3 py-3 font-semibold rounded shadow-lg transition duration-300 
     ${
       paymentActionStatus[b._id] === "loading"
         ? "bg-gray-400 cursor-not-allowed"
@@ -1205,7 +1205,7 @@ export default function CustomerBookings() {
                                   handleCashOption(b);
                                 }}
                                 disabled={paymentActionStatus[b._id] === "cash"}
-                                className="flex items-center justify-center gap-2 px-3 md:px-8 lg:px-16 py-3 bg-gradient-to-b from-emerald-400 to-emerald-700 text-white font-semibold rounded hover:scale-105 shadow-lg transition duration-300 disabled:opacity-60"
+                                className="flex items-center justify-center gap-2 px-3 w-full sm:w-1/3 py-3 bg-gradient-to-b from-emerald-400 to-emerald-700 text-white font-semibold rounded hover:scale-105 shadow-lg transition duration-300 disabled:opacity-60"
                               >
                                 💵{" "}
                                 {paymentActionStatus[b._id] === "cash"
@@ -1222,7 +1222,7 @@ export default function CustomerBookings() {
                                   }));
                                   openSplitModal(b);
                                 }}
-                                className="flex items-center justify-center gap-2 px-3 md:px-8 lg:px-12 py-3 bg-gradient-to-b from-purple-400 to-purple-700 text-white font-semibold rounded hover:scale-105 shadow-lg transition duration-300"
+                                className="flex items-center justify-center gap-2 px-3 w-full sm:w-1/3 py-3 bg-gradient-to-b from-purple-400 to-purple-700 text-white font-semibold rounded hover:scale-105 shadow-lg transition duration-300"
                               >
                                 👥 Split Payment
                               </button>

@@ -67,7 +67,18 @@ export default function ProviderProfile() {
 
   if (!provider) {
     return (
-      <div className="text-center mt-20 text-red-500">Provider not found</div>
+      <div className="text-center mt-20 text-red-700">Provider not found</div>
+      // <div className="text-center mt-40">
+      //     <img
+      //       src="/icons/unauthorized-access.webp"
+      //       alt="No results"
+      //       className="w-52 mx-auto"
+      //     />
+      //     <h3 className="text-4xl text-[var(--primary)] font-semibold">
+      //       Access Denied
+      //     </h3>
+      //     <p className="text-xl text-[var(--gray)] mt-3">This page is only available to service providers</p>
+      //   </div>
     );
   }
 
@@ -98,7 +109,7 @@ export default function ProviderProfile() {
             {/* Role */}
             <p className="text-[var(--gray)] text-md">Service Provider</p>
 
-            {/* Verification Badge */}
+            {/* Verification Badge
             <span
               className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium w-fit ${
                 provider.isAccountVerified
@@ -107,11 +118,11 @@ export default function ProviderProfile() {
               }`}
             >
               {provider.isAccountVerified ? "Verified" : "Not Verified"}
-            </span>
+            </span> */}
 
             {/* Action Buttons */}
             <div className="flex justify-center sm:justify-start gap-6 pt-5">
-              <button title="Voice Call" className="group">
+              {/* <button title="Voice Call" className="group">
                 <img
                   src="/icons/voice-call.png"
                   alt="Voice Call"
@@ -124,7 +135,7 @@ export default function ProviderProfile() {
                   alt="Video Call"
                   className="w-9 h-9 transition-transform duration-200 group-hover:scale-125"
                 />
-              </button>
+              </button> */}
               <button
                 title="Book Now"
                 onClick={() => setShowBookingForm(true)}
@@ -141,7 +152,7 @@ export default function ProviderProfile() {
         </div>
 
         {/* Details */}
-        <div className="mt-6 grid gap-4 grid-cols-1 sm:grid-cols-2 text-[var(--secondary)] text-sm">
+        <div className="mt-6 gap-4 flex flex-col text-[var(--secondary)] text-sm">
           <div>
             <strong>Availability:</strong>{" "}
             <span className="block ml-3 text-var[--secondary]">
@@ -177,7 +188,7 @@ export default function ProviderProfile() {
           </p>
 
           {/* Services Offered */}
-          <div className="sm:col-span-2 mt-4">
+          <div className="sm:col-span-2">
             <strong>Services Offered With Experience:</strong>
             <ul className="list-disc pl-6 mt-1 text-[var(--secondary)] space-y-2">
               {Object.entries(
@@ -226,7 +237,6 @@ export default function ProviderProfile() {
             </ul>
           </div>
         </div>
-        <hr className="my-8 border-gray-300" />
 
         {/* Documents section */}
         {/* <div>
@@ -283,7 +293,10 @@ export default function ProviderProfile() {
 
         {/* Rating overview*/}
         {reviews.length > 0 && (
+          
           <div className="mt-8">
+            <hr className="my-8 border-gray-300" />
+
             <h3 className="text-2xl font-bold text-[var(--primary)] mb-6">
               Ratings Overview
             </h3>
@@ -359,11 +372,12 @@ export default function ProviderProfile() {
             </div>
           </div>
         )}
-        <hr className="my-8 border-gray-300" />
+       
 
         {/* Customer Reviews */}
         {reviews.length > 0 && (
           <div className="mt-8 h-120 overflow-y-auto">
+             <hr className="my-8 border-gray-300" />
             <h3 className="text-2xl font-bold text-[var(--primary)] mb-6">
               Customer Reviews
             </h3>

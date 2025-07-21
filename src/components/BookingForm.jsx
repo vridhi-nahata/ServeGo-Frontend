@@ -382,9 +382,9 @@ export default function BookingForm({
               </button>
 
               {showBreakdown && (
-                <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-xl border border-green-200 mt-2 space-y-1 animate-fade-in">
-                  <div className="text-green-700 text-sm font-medium">
-                    <span className="block font-bold text-lg text-green-800 mb-1">
+                <div className="bg-[var(--primary-light)] p-4 rounded-xl border border-green-200 mt-2 space-y-1 animate-fade-in">
+                  <div className="text-[var(--secondary)] text-sm font-medium">
+                    <span className="block font-bold text-lg text-[var(--primary)] mb-1">
                       Price Breakdown
                     </span>
 
@@ -415,7 +415,7 @@ export default function BookingForm({
                       <span>₹{platformFee}</span>
                     </div>
 
-                    <div className="flex justify-between font-bold text-green-900 border-t border-green-300 pt-2 mt-2">
+                    <div className="flex justify-between font-bold text-[var(--primary)] border-t border-[var(--secondary)] pt-2 mt-2">
                       <span>Total</span>
                       <span>₹{totalAmount}</span>
                     </div>

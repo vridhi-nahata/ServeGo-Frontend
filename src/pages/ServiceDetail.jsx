@@ -72,7 +72,7 @@ export default function ServiceDetail() {
             <img
               src={serviceObj?.image}
               alt={serviceObj?.name}
-              className="w-full h-full object-cover rounded-xl"
+              className="w-full h-full object-contain rounded-xl"
             />
           </a>
         </div>
