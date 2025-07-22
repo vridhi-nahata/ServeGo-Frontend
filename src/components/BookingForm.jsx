@@ -382,7 +382,7 @@ export default function BookingForm({
               </button>
 
               {showBreakdown && (
-                <div className="bg-[var(--primary-light)] p-4 rounded-xl border border-green-200 mt-2 space-y-1 animate-fade-in">
+                <div className="bg-[var(--primary-light)] p-4 rounded-xl border border-[var(--primary)] mt-2 space-y-1 animate-fade-in">
                   <div className="text-[var(--secondary)] text-sm font-medium">
                     <span className="block font-bold text-lg text-[var(--primary)] mb-1">
                       Price Breakdown

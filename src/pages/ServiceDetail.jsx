@@ -116,6 +116,8 @@ export default function ServiceDetail() {
                   <ProviderCard
                     provider={{ ...provider, rating: avgRating }}
                     serviceName={serviceName}
+                    showExperience={true}
+                    showRating={true}
                     isWishlisted={userData?.wishlist?.includes(provider._id)}
                     onProfileClick={() => navigate(`/provider/${provider._id}`)}
                     onBook={() => setSelectedProvider(provider)}

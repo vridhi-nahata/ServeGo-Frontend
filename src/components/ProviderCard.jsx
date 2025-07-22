@@ -11,6 +11,8 @@ export default function ProviderCard({
   serviceName,
   isWishlisted: initialWishlisted,
   onProfileClick,
+  showExperience = true,
+  showRating=true,
 }) {
   const navigate = useNavigate();
   const [authMessage, setAuthMessage] = useState("");
@@ -107,6 +109,7 @@ export default function ProviderCard({
       )}
 
       <div className="p-5 flex-1 flex flex-col">
+        {showRating && (
         <div className="flex items-center justify-between mb-2">
           <h3 className="font-bold text-lg text-[var(--primary)]">
             {provider.name}
@@ -116,8 +119,10 @@ export default function ProviderCard({
             {provider.averageRating !== "N/A" ? provider.averageRating : "0.0"}
           </p>
         </div>
+        )}
 
         <div className="flex flex-col gap-1 text-sm text-[var(--secondary)] mb-4 ">
+          {showExperience && (
           <span>
             <strong>Experience : </strong>
             {typeof provider.experiencePerService?.[serviceName] === "number"
@@ -128,6 +133,7 @@ export default function ProviderCard({
                 }`
               : "N/A"}
           </span>
+           )}
 
           {/* Availability */}
           <span>

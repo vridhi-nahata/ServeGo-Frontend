@@ -13,6 +13,7 @@ import "swiper/css/pagination";
 import {
   FaSearch,
   FaUserShield,
+  FaFilter,
   FaRupeeSign,
   FaMapMarkerAlt,
   FaCalendarAlt,
@@ -21,84 +22,148 @@ import {
   FaUserCheck,
   FaCogs,
   FaRegCommentDots,
+  FaBusinessTime,
   FaChevronLeft,
   FaChevronRight,
   FaClipboardList,
   FaHandHoldingUsd,
   FaPhoneAlt,
   FaGift,
+  FaKey,
+  FaCheckDouble,
+  FaHistory,
+  FaUsers,
 } from "react-icons/fa";
 
+// const WHY_CHOOSE = [
+//   {
+//     title: "Verified Providers",
+//     desc: "All service providers undergo thorough background checks and profile verification for your safety and peace of mind.",
+//     icon: (
+//       <FaUserShield className="text-3xl" style={{ color: "var(--primary)" }} />
+//     ),
+//   },
+//   {
+//     title: "In-App Communication",
+//     desc: "Voice call, or video call with providers through the app. Get consultation, clarify details, and get quotes.",
+//     icon: (
+//       <FaPhoneAlt className="text-3xl" style={{ color: "var(--primary)" }} />
+//     ),
+//   },
+//   {
+//     title: "Transparent Pricing",
+//     desc: "See upfront pricing. No hidden charges—what you see is what you pay.",
+//     icon: (
+//       <FaRupeeSign className="text-3xl" style={{ color: "var(--primary)" }} />
+//     ),
+//   },
+//   {
+//     title: "Real-Time Tracking",
+//     desc: "Live location tracking of your service provider from booking to completion. Stay informed every step of the way.",
+//     icon: (
+//       <FaMapMarkerAlt
+//         className="text-3xl"
+//         style={{ color: "var(--primary)" }}
+//       />
+//     ),
+//   },
+//   {
+//     title: "Flexible Scheduling",
+//     desc: "Book services instantly or schedule for later. Choose the time that works best for your busy lifestyle.",
+//     icon: (
+//       <FaCalendarAlt className="text-3xl" style={{ color: "var(--primary)" }} />
+//     ),
+//   },
+//   {
+//     title: "Loyalty Rewards",
+//     desc: "Earn points and discounts based on your usage milestones.",
+//     icon: <FaGift className="text-3xl" style={{ color: "var(--primary)" }} />,
+//   },
+//   {
+//     title: "Subscription Plans",
+//     desc: "Monthly packages with priority booking and discounted rates for frequent users.",
+//     icon: (
+//       <FaClipboardList
+//         className="text-3xl"
+//         style={{ color: "var(--primary)" }}
+//       />
+//     ),
+//   },
+//   {
+//     title: "Split payments",
+//     desc: "Divide payment between multiple people if service is for many users.",
+//     icon: (
+//       <FaHandHoldingUsd
+//         className="text-3xl"
+//         style={{ color: "var(--primary)" }}
+//       />
+//     ),
+//   },
+//   {
+//     title: "Fast Support",
+//     desc: "Our team is available 24/7 for your help and support.",
+//     icon: (
+//       <FaHeadset className="text-3xl" style={{ color: "var(--primary)" }} />
+//     ),
+//   },
+// ];
+
+// new features
 const WHY_CHOOSE = [
   {
-    title: "Verified Providers",
-    desc: "All service providers undergo thorough background checks and profile verification for your safety and peace of mind.",
-    icon: (
-      <FaUserShield className="text-3xl" style={{ color: "var(--primary)" }} />
-    ),
+    title: "Service Marketplace",
+    desc: "Find diverse services like Cleaning, Carpentry, Painting, Salon, Pest Control, Tutoring, etc. All categorized for easy discovery.",
+    icon: <FaSearch className="text-3xl" style={{ color: "var(--primary)" }} />,
   },
   {
-    title: "In-App Communication",
-    desc: "Voice call, or video call with providers through the app. Get consultation, clarify details, and get quotes.",
-    icon: (
-      <FaPhoneAlt className="text-3xl" style={{ color: "var(--primary)" }} />
-    ),
+    title: "Search, Filter & Sort",
+    desc: "All services and bookings are searchable, filterable and sortable.",
+    icon: <FaFilter className="text-3xl" style={{ color: "var(--primary)" }} />,
+  },
+  {
+    title: "User Engagement Features",
+    desc: "Choose providers, rate/review them, and add them to your favorites.",
+    icon: <FaUsers className="text-3xl" style={{ color: "var(--primary)" }} />,
+  }, 
+  {
+    title: "Real-time Availability",
+    desc: "Customers can see live updates of provider available and booked time slots.",
+    icon: <FaBusinessTime className="text-3xl" style={{ color: "var(--primary)" }} />,
+  }, 
+  {
+    title: "Flexible Scheduling",
+    desc: "Book instantly or schedule services as per your availability with real-time provider availability calendars.",
+    icon: <FaCalendarAlt className="text-3xl" style={{ color: "var(--primary)" }} />,
   },
   {
     title: "Transparent Pricing",
-    desc: "See upfront pricing. No hidden charges—what you see is what you pay.",
-    icon: (
-      <FaRupeeSign className="text-3xl" style={{ color: "var(--primary)" }} />
-    ),
+    desc: "Detailed cost breakdown. No hidden charges—what you see is what you pay.",
+    icon: <FaRupeeSign className="text-3xl" style={{ color: "var(--primary)" }} />,
   },
   {
-    title: "Real-Time Tracking",
-    desc: "Live location tracking of your service provider from booking to completion. Stay informed every step of the way.",
-    icon: (
-      <FaMapMarkerAlt
-        className="text-3xl"
-        style={{ color: "var(--primary)" }}
-      />
-    ),
+    title: "OTP-Based Service Start",
+    desc: "Service starts only after OTP verification, confirming the provider's arrival at the customer's location.",
+    icon: <FaKey className="text-3xl" style={{ color: "var(--primary)" }} />,
   },
   {
-    title: "Flexible Scheduling",
-    desc: "Book services instantly or schedule for later. Choose the time that works best for your busy lifestyle.",
-    icon: (
-      <FaCalendarAlt className="text-3xl" style={{ color: "var(--primary)" }} />
-    ),
+    title: "Dual Completion Confirmation",
+    desc: "Service is only marked as completed when both customer and provider confirm it.",
+    icon: <FaCheckDouble className="text-3xl" style={{ color: "var(--primary)" }} />,
   },
   {
-    title: "Loyalty Rewards",
-    desc: "Earn points and discounts based on your usage milestones.",
-    icon: <FaGift className="text-3xl" style={{ color: "var(--primary)" }} />,
+    title: "Payment Flexibility",
+    desc: "Pay securely via UPI, cards, wallets, or opt for cash as per your preference.",
+    icon: <FaRupeeSign className="text-3xl" style={{ color: "var(--primary)" }} />,
   },
   {
-    title: "Subscription Plans",
-    desc: "Monthly packages with priority booking and discounted rates for frequent users.",
-    icon: (
-      <FaClipboardList
-        className="text-3xl"
-        style={{ color: "var(--primary)" }}
-      />
-    ),
+    title: "Split Payments",
+    desc: "Equally split service costs among multiple users with ease - ideal for shared bookings.",
+    icon: <FaHandHoldingUsd className="text-3xl" style={{ color: "var(--primary)" }} />,
   },
   {
-    title: "Split payments",
-    desc: "Divide payment between multiple people if service is for many users.",
-    icon: (
-      <FaHandHoldingUsd
-        className="text-3xl"
-        style={{ color: "var(--primary)" }}
-      />
-    ),
-  },
-  {
-    title: "Fast Support",
-    desc: "Our team is available 24/7 for your help and support.",
-    icon: (
-      <FaHeadset className="text-3xl" style={{ color: "var(--primary)" }} />
-    ),
+    title: "Booking History Tracking",
+    desc: "Track all bookings with status updates.",
+    icon: <FaHistory className="text-3xl" style={{ color: "var(--primary)" }} />,
   },
 ];
 
@@ -175,7 +240,7 @@ export default function Home() {
               color: "var(--white)",
             }}
             onMouseOver={(e) => {
-              e.currentTarget.style.background = "var(--primary)";
+              e.currentTarget.style.background = "var(--secondary)";
             }}
             onMouseOut={(e) => {
               e.currentTarget.style.background =
@@ -186,26 +251,6 @@ export default function Home() {
               <FaSearch /> Explore Services
             </span>
           </Link>
-          {/* <Link
-            to="/login"
-            className="font-bold px-10 py-4 rounded-full shadow-lg transition text-lg"
-            style={{
-              background:
-                "linear-gradient(to right, var(--accent), var(--secondary))",
-              color: "var(--white)",
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.background = "var(--ternary)";
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.background =
-                "linear-gradient(to right, var(--accent), var(--secondary))";
-            }}
-          >
-            <span className="inline-flex items-center gap-2">
-              <FaUserCheck /> Become a Provider
-            </span>
-          </Link> */}
         </div>
       </section>
 
@@ -223,7 +268,7 @@ export default function Home() {
             className="px-6 py-2 rounded-full font-bold bg-gradient-to-r from-[var(--accent)] to-[var(--secondary)] text-white shadow hover:scale-105 transition"
             onClick={() => navigate("/services")}
             onMouseOver={(e) => {
-              e.currentTarget.style.background = "var(--primary)";
+              e.currentTarget.style.background = "var(--secondary)";
             }}
             onMouseOut={(e) => {
               e.currentTarget.style.background =
@@ -332,21 +377,20 @@ export default function Home() {
             setSelectedSubcategory(null);
           }}
           footer={null}
-title={
-  selectedCategory ? (
-    <div className="flex items-center gap-2">
-      <img
-        src={CATEGORY_ICONS[selectedCategory.category]}
-        alt={selectedCategory.category}
-        className="w-8 h-8 object-contain"
-      />
-      <span className="text-lg font-bold text-[var(--primary)]">
-        {selectedCategory.category}
-      </span>
-    </div>
-  ) : null
-}
-
+          title={
+            selectedCategory ? (
+              <div className="flex items-center gap-2">
+                <img
+                  src={CATEGORY_ICONS[selectedCategory.category]}
+                  alt={selectedCategory.category}
+                  className="w-8 h-8 object-contain"
+                />
+                <span className="text-lg font-bold text-[var(--primary)]">
+                  {selectedCategory.category}
+                </span>
+              </div>
+            ) : null
+          }
         >
           {!selectedSubcategory ? (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -373,31 +417,29 @@ title={
           ) : (
             <div>
               <div className="flex justify-between">
-              <div className="flex">
-                <img
-                  src={
-                    selectedSubcategory.subcategoryIcon ||
-                    selectedSubcategory.services[0]?.image
-                  }
-                  alt={selectedSubcategory.subcategory}
-                  className="w-8 h-6 object-contain"
-                />
-<h4 className="font-semibold mb-4 text-[var(--primary)]">
-                {selectedSubcategory.subcategory}
-              </h4>
+                <div className="flex">
+                  <img
+                    src={
+                      selectedSubcategory.subcategoryIcon ||
+                      selectedSubcategory.services[0]?.image
+                    }
+                    alt={selectedSubcategory.subcategory}
+                    className="w-8 h-6 object-contain"
+                  />
+                  <h4 className="font-semibold mb-4 text-[var(--primary)]">
+                    {selectedSubcategory.subcategory}
+                  </h4>
+                </div>
+
+                <button
+                  className="mb-3 pl-1 text-sm text-[var(--primary)] hover:underline"
+                  onClick={() => setSelectedSubcategory(null)}
+                >
+                  <i className="fas fa-arrow-left text-xs"></i>
+                  Back
+                </button>
               </div>
 
-              
-
-              <button
-                className="mb-3 pl-1 text-sm text-[var(--primary)] hover:underline"
-                onClick={() => setSelectedSubcategory(null)}
-              >
-                <i className="fas fa-arrow-left text-xs"></i>
-               Back
-              </button>
-              </div>
-              
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {selectedSubcategory.services.map((service) => (
                   <div
@@ -470,9 +512,9 @@ title={
               className="mx-auto text-4xl mb-4"
               style={{ color: "var(--secondary)" }}
             />
-            <h3 className="font-semibold text-lg mb-2">2. Select Service</h3>
+            <h3 className="font-semibold text-lg mb-2">2. Choose Service</h3>
             <p className="text-sm" style={{ color: "var(--gray)" }}>
-              Choose the type of service you want to book.
+              Choose the service you want to book.
             </p>
           </div>
           <div className="hover:scale-105 transition-transform duration-300">
@@ -482,8 +524,7 @@ title={
             />
             <h3 className="font-semibold text-lg mb-2">3. Choose Provider</h3>
             <p className="text-sm" style={{ color: "var(--gray)" }}>
-              Pick your preferred provider, date, and time — based on reviews
-              and pricing.
+              Pick your provider, date, time and address.
             </p>
           </div>
           <div className="hover:scale-105 transition-transform duration-300">
@@ -493,7 +534,7 @@ title={
             />
             <h3 className="font-semibold text-lg mb-2">4. Book & Pay</h3>
             <p className="text-sm" style={{ color: "var(--gray)" }}>
-              Pay securely via UPI, wallet, or card and confirm your booking.
+              Book the service and pay after the provider confirmation.
             </p>
           </div>
           <div className="hover:scale-105 transition-transform duration-300">

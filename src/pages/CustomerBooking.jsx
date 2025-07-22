@@ -192,7 +192,7 @@ export default function CustomerBookings() {
         { withCredentials: true }
       );
 
-      toast.success("Payment links sent to users!");
+      // toast.success("Payment links sent to users!");
       setSplitModalOpen(false);
       setSplitUsers([]);
     } catch (err) {
@@ -345,7 +345,7 @@ export default function CustomerBookings() {
         {},
         { withCredentials: true }
       );
-      toast.info("Waiting for provider to confirm cash");
+      // toast.info("Waiting for provider to confirm cash");
       getBookings();
     } catch (err) {
       toast.error("Failed to initiate cash payment");
@@ -373,7 +373,7 @@ export default function CustomerBookings() {
         review,
       });
 
-      toast.success("Feedback submitted!");
+      toast.success("Feedback submitted and booking marked as completed!");
       setShowFeedbackModal(false);
       setRating(0);
       setReview("");
@@ -1038,12 +1038,12 @@ export default function CustomerBookings() {
 
                         <div className="bg-white rounded-lg p-4 border-2 border-[var(--secondary)] text-sm text-gray-700">
                           <p>
-                            <strong className="text-gray-800">Notes:</strong>{" "}
-                            {b.notes || "No additional notes"}
-                          </p>
-                          <p>
                             <strong className="text-gray-800">Address:</strong>{" "}
                             {b.address || "No address specified"}
+                          </p>
+                          <p>
+                            <strong className="text-gray-800">Notes:</strong>{" "}
+                            {b.notes || "No additional notes"}
                           </p>
                         </div>
                       </div>
@@ -1316,7 +1316,7 @@ export default function CustomerBookings() {
                           }}
                           className="flex items-center justify-center bg-gradient-to-b from-[var(--ternary)] to-[var(--secondary)] text-white gap-2 px-6 py-3 w-full font-semibold rounded hover:scale-105 shadow-lg transition duration-300"
                         >
-                          Mark as Complete
+                          Mark Completed
                         </button>
                       )}
 

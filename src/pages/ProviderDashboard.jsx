@@ -20,6 +20,7 @@ import {
   FaDollarSign,
   FaClipboardCheck,
   FaStar,
+  FaCheck,
 } from "react-icons/fa";
 import { FiChevronDown } from "react-icons/fi";
 
@@ -138,7 +139,7 @@ function ProviderAnalytics({ bookings, setBookings }) {
       const commission = (b.serviceAmount || 0) * 0.15;
       return sum + (b.platformFee || 0) + commission;
     }, 0);
-
+    const paidBookingsCount = paid.length;
     const rated = filtered.filter((b) => b.customerFeedback?.rating);
     const avg = rated.length
       ? (
@@ -157,6 +158,7 @@ function ProviderAnalytics({ bookings, setBookings }) {
       payToAdmin,
       completed: completed.length,
       avg,
+      paidBookingsCount,
     };
   }, [filtered]);
 
@@ -314,26 +316,58 @@ function ProviderAnalytics({ bookings, setBookings }) {
     }
   };
 
+  // const upcomingBookings = useMemo(() => {
+  //   console.log("Computing upcomingBookings with bookings data:", bookings);
+  //   const now = dayjs();
+  //   const next7Days = now.add(7, "day");
+
+  //   return bookings
+  //     .filter((b) => b.statusHistory?.some((s) => s.status === "confirmed"))
+  //     .filter((b) => {
+  //       const bookingDate = dayjs(b.date);
+  //       return bookingDate.isAfter(now) && bookingDate.isBefore(next7Days);
+  //     });
+  // }, [bookings]);
+
+  //   const upcomingBookings = useMemo(() => {
+  //   console.log("Computing upcomingBookings with bookings data:", bookings);
+  //   const now = dayjs(); // Current date and time
+  //   const next7Days = now.add(7, "day"); // Date and time 7 days from now
+
+  //   return bookings
+  //     .filter((b) => b.statusHistory?.some((s) => s.status === "confirmed")) // Filter bookings that are confirmed
+  //     .filter((b) => {
+  //       const bookingDate = dayjs(b.date); // Convert booking date to dayjs object
+  //       return bookingDate.isAfter(now, "minute") && bookingDate.isBefore(next7Days, "minute"); // Check if booking date is within the next 7 days, starting from now
+  //     });
+  // }, [bookings]);
+
   const upcomingBookings = useMemo(() => {
     console.log("Computing upcomingBookings with bookings data:", bookings);
-    const now = dayjs();
-    const next7Days = now.add(7, "day");
+    const now = dayjs(); // Current date and time
+    const next7Days = now.add(7, "day"); // Date and time 7 days from now
 
     return bookings
-      .filter((b) => b.statusHistory?.some((s) => s.status === "confirmed"))
+      .filter((b) => b.statusHistory?.some((s) => s.status === "confirmed")) // Filter bookings that are confirmed
       .filter((b) => {
-        const bookingDate = dayjs(b.date);
-        return bookingDate.isAfter(now) && bookingDate.isBefore(next7Days);
+        const bookingDate = dayjs(b.date); // Convert booking date to dayjs object
+        console.log(
+          `Booking Date: ${bookingDate.format()}, Now: ${now.format()}, Next 7 Days: ${next7Days.format()}`
+        );
+        return (
+          bookingDate.isAfter(now, "minute") &&
+          bookingDate.isBefore(next7Days, "minute")
+        );
       });
   }, [bookings]);
 
   return (
     <div className="min-h-screen py-20 px-12 bg-gradient-to-br from-[var(--primary-light)] to-white p-6">
       <div className="flex flex-wrap justify-between gap-4">
-        <h1 className="text-4xl font-bold text-[var(--primary)] mb-2">
+        <h1 className="text-4xl font-bold text-[var(--primary)] mb-6">
           Dashboard
         </h1>
-
+        {/* 
         <div className="flex items-center gap-4 mb-4 text-xs">
           <div className="flex flex-col">
             <label
@@ -366,7 +400,7 @@ function ProviderAnalytics({ bookings, setBookings }) {
               className="border w-32 border-gray-300 rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700"
             />
           </div>
-        </div>
+        </div> */}
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -380,12 +414,12 @@ function ProviderAnalytics({ bookings, setBookings }) {
           label="Completed Bookings"
           value={kpis.completed}
         />
-        {/* <KpiCard
-          icon={<FaDollarSign />}
-          label="Revenue"
-          value={`₹${kpis.revenue.toLocaleString()}`}
-        /> */}
         <KpiCard icon={<FaStar />} label="Avg Rating" value={kpis.avg} />
+        <KpiCard
+          icon={<FaCheck />}
+          label="Paid Bookings"
+          value={kpis.paidBookingsCount}
+        />
         <KpiCard
           icon={<FaDollarSign />}
           label="Total Received"
@@ -507,7 +541,9 @@ function ProviderAnalytics({ bookings, setBookings }) {
       <div className="my-6">
         <ChartBox title="Scheduled Bookings (Next 7 days)">
           {upcomingBookings.length === 0 ? (
-            <p className="text-gray-500 text-center">No scheduled bookings for next 7 days</p>
+            <p className="text-gray-500 text-center">
+              No scheduled bookings for next 7 days
+            </p>
           ) : (
             <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
               {upcomingBookings.map((b, i) => (

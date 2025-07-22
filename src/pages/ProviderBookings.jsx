@@ -276,7 +276,7 @@ const grouped = sortedBookings.reduce((acc, b) => {
         {},
         { withCredentials: true }
       );
-      toast.success("Cash payment confirmed!");
+      // toast.success("Cash payment confirmed!");
       await fetchBookings(); // refetch the provider bookings
     } catch (err) {
       toast.error(
@@ -368,6 +368,7 @@ const grouped = sortedBookings.reduce((acc, b) => {
         <h2 className="py-3 text-2xl sm:text-3xl md:text-4xl font-extrabold text-[var(--primary)]">
           My Bookings
         </h2>
+        
 
         <div className="flex gap-2 items-center justify-center">
           {/* Search */}

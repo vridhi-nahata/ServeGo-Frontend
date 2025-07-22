@@ -457,17 +457,17 @@ export default function ProviderProfile() {
           }}
           showCalendar={showCalendar}
           setShowCalendar={setShowCalendar}
-          onSubmit={async ({ date, timeSlot, address, notes }) => {
+          onSubmit={async (payload) => {
             try {
-              const bookingData = {
-                provider: provider._id,
-                serviceName: provider.servicesOffered?.[0] || "Service",
-                date,
-                timeSlot,
-                address,
-                notes: notes || "",
-              };
-
+              // const bookingData = {
+              //   provider: provider._id,
+              //   serviceName: provider.servicesOffered?.[0] || "Service",
+              //   date,
+              //   timeSlot,
+              //   address,
+              //   notes: notes || "",
+              // };
+              const bookingData = payload;
               const res = await axios.post(
                 "http://localhost:5000/api/bookings",
                 bookingData,

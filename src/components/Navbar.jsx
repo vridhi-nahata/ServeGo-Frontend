@@ -106,6 +106,14 @@ function Navbar() {
               Bookings
             </Link>
           )}
+          {role === "customer" && (
+            <Link
+              to="/wishlist"
+              className="hover:text-[color:var(--primary)] font-medium hover:font-extrabold focus:outline-none"
+            >
+              Favourites
+            </Link>
+          )}
         </div>
 
         {/* 4. Login / User  */}
@@ -211,6 +219,15 @@ function Navbar() {
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Bookings
+            </Link>
+          )}
+          {role === "customer" && (
+            <Link
+              to="/wishlist"
+              className="font-medium block hover:text-[color:var(--primary)] hover:font-extrabold focus:outline-none"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Favourites
             </Link>
           )}
         </div>

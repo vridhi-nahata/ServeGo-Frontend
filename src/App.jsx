@@ -11,6 +11,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import ProviderBookings from './pages/ProviderBookings';
 import ProviderDashboard from './pages/ProviderDashboard';
 import MyBookings from './pages/CustomerBooking';
+import WishlistPage from './pages/WishListPage';
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
         <Route path="/provider/provider-booking" element={<ProviderBookings />} />
         <Route path="/provider/provider-dashboard" element={<ProviderDashboard />} />
         <Route path="/my-bookings" element={<MyBookings />} />
+        <Route path="/wishlist" element={<WishlistPage />} />
       </Routes>
       </div>
     </>
