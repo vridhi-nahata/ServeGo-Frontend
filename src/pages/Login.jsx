@@ -102,7 +102,6 @@ function Login() {
 
       // Detect if it's an image or not
       const isImage = file.type.startsWith("image/");
-      // const endpoint = "https://api.cloudinary.com/v1_1/dznigwrbk/image/upload";
       const endpoint = isImage
         ? "https://api.cloudinary.com/v1_1/dznigwrbk/image/upload"
         : "https://api.cloudinary.com/v1_1/dznigwrbk/raw/upload";
@@ -249,71 +248,69 @@ function Login() {
           setFormError(data.message);
         }
       } else {
-      // Login flow
-      const { data } = await axios.post(
-        `${backendUrl}/api/auth/login`,
-        {
-          email,
-          password,
-        },
-        { withCredentials: true }
-      );
+        // Login flow
+        const { data } = await axios.post(
+          `${backendUrl}/api/auth/login`,
+          {
+            email,
+            password,
+          },
+          { withCredentials: true }
+        );
 
-      if (data.success) {
-        setIsLoggedIn(true);
-        setFormSuccess(data.message);
+        if (data.success) {
+          setIsLoggedIn(true);
+          setFormSuccess(data.message);
 
-        // Add a small delay to ensure cookies are set
-        await new Promise(resolve => setTimeout(resolve, 100));
+          // Add a small delay to ensure cookies are set
+          await new Promise((resolve) => setTimeout(resolve, 100));
 
-        try {
-          // Fetch user data after login with proper credentials
-          const userRes = await axios.get(`${backendUrl}/api/user/data`, { 
-            withCredentials: true,
-            timeout: 10000 // 10 second timeout
-          });
+          try {
+            // Fetch user data after login with proper credentials
+            const userRes = await axios.get(`${backendUrl}/api/user/data`, {
+              withCredentials: true,
+              timeout: 10000, // 10 second timeout
+            });
 
-          console.log("Full response:", userRes.data); // Debug log
+            console.log("Full response:", userRes.data); // Debug log
 
-          if (userRes.data.success && userRes.data.userData) {
-            console.log("User data received:", userRes.data.userData); // Debug log
-            setUserData(userRes.data.userData);
-            
-            // Get the user's role from the fetched data
-            const userRole = userRes.data.userData.role;
+            if (userRes.data.success && userRes.data.userData) {
+              console.log("User data received:", userRes.data.userData); // Debug log
+              setUserData(userRes.data.userData);
 
-            // Route the user based on their role
-            if (userRole === "provider") {
-              navigate("/provider/provider-dashboard");
-            } else if (userRole === "customer") {
-              navigate("/");
+              // Get the user's role from the fetched data
+              const userRole = userRes.data.userData.role;
+
+              // Route the user based on their role
+              if (userRole === "provider") {
+                navigate("/provider/provider-dashboard");
+              } else if (userRole === "customer") {
+                navigate("/");
+              } else {
+                navigate("/");
+              }
             } else {
+              console.error("Failed to fetch user data:", userRes.data);
+              // If user data fetch fails, still redirect to home
               navigate("/");
             }
-          } else {
-            console.error("Failed to fetch user data:", userRes.data);
-            // If user data fetch fails, still redirect to home
+          } catch (fetchError) {
+            console.error("Error fetching user data:", fetchError);
+            console.error("Full error:", fetchError.response?.data);
             navigate("/");
           }
-        } catch (fetchError) {
-          console.error("Error fetching user data:", fetchError);
-          console.error("Full error:", fetchError.response?.data);
-          // If there's an error fetching user data, still allow login
-          navigate("/");
+        } else {
+          setFormError(data.message);
         }
-      } else {
-        setFormError(data.message);
       }
+    } catch (error) {
+      setFormError(
+        error.response?.data?.message ||
+          error.message ||
+          "Something went wrong."
+      );
     }
-  } catch (error) {
-    setFormError(
-      error.response?.data?.message ||
-        error.message ||
-        "Something went wrong."
-    );
-  }
-};
-
+  };
 
   const categoryOptions = Array.from(
     new Set(flatServices.map((s) => s.category))

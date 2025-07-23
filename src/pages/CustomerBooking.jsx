@@ -192,7 +192,6 @@ export default function CustomerBookings() {
         { withCredentials: true }
       );
 
-      // toast.success("Payment links sent to users!");
       setSplitModalOpen(false);
       setSplitUsers([]);
     } catch (err) {
@@ -238,11 +237,6 @@ export default function CustomerBookings() {
   const latestStatus = (history) =>
     history?.[history.length - 1]?.status || "pending";
 
-  // const filteredBookings =
-  //   filter === "all"
-  //     ? bookings
-  //     : bookings.filter((b) => latestStatus(b.statusHistory) === filter);
-
   const isTooCloseToBooking = (b) => {
     const bookingDateTime = dayjs(
       `${dayjs(b.date).format("YYYY-MM-DD")} ${b.timeSlot.from}`,
@@ -266,7 +260,6 @@ export default function CustomerBookings() {
   // Payment by razorpay
   const handlePayOnline = async (booking) => {
     try {
-      // Don't multiply by 100 here - let backend handle it
       const { data: order } = await axios.post(
         `${backendUrl}/api/payments/create-order`,
         {
@@ -301,7 +294,6 @@ export default function CustomerBookings() {
               },
               { withCredentials: true }
             );
-            // toast.success("Payment Successful!");
             getBookings();
           } catch (error) {
             console.error("Payment verification error:", error);
@@ -345,7 +337,6 @@ export default function CustomerBookings() {
         {},
         { withCredentials: true }
       );
-      // toast.info("Waiting for provider to confirm cash");
       getBookings();
     } catch (err) {
       toast.error("Failed to initiate cash payment");
@@ -373,7 +364,6 @@ export default function CustomerBookings() {
         review,
       });
 
-      // toast.success("Feedback submitted and booking marked as completed!");
       setShowFeedbackModal(false);
       setRating(0);
       setReview("");
@@ -431,8 +421,6 @@ export default function CustomerBookings() {
 
   // Sort groups
   let sortedBookings = [...filteredBookings];
-  // Object.keys(grouped).forEach((status) => {
-  // let sortedBookings = [...grouped[status]];
 
   if (sortBy === "date-asc") {
     sortedBookings.sort((a, b) => {
@@ -490,14 +478,7 @@ export default function CustomerBookings() {
       (b.serviceName || "").localeCompare(a.serviceName || "")
     );
   }
-  // sortedGroups[status] = sortedBookings;
-  //     console.log(
-  //   "name-asc sorted:",
-  //   sortedBookings.map((b) => b.provider?.name || "Unknown")
-  // );
-  // });
 
-  // Group by status
   // Group by status using the sorted array
   const grouped = sortedBookings.reduce((acc, b) => {
     const latest =
@@ -874,22 +855,6 @@ export default function CustomerBookings() {
       </div>
 
       <div className="w-full mx-auto px-6 max-w-7xl">
-        {/* <div className="flex flex-wrap justify-center gap-2 mb-6">
-          {statusOptions.map((opt) => (
-            <button
-              key={opt.value}
-              className={`px-4 py-1 rounded-full border text-sm font-medium ${
-                filter === opt.value
-                  ? "bg-[var(--primary)] text-[var(--white)]"
-                  : "bg-[var(--primary-light)] text-[var(--primary)] hover:bg-[var(--accent)] hover:text-white"
-              }`}
-              onClick={() => setFilter(opt.value)}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div> */}
-
         {loading ? (
           <div
             className="text-center text-xl"
@@ -914,24 +879,12 @@ export default function CustomerBookings() {
         ) : (
           <div className="w-full mx-auto p-6 max-w-7xl">
             {sortedBookings.map((b, idx) => {
-              // const isStatusOpen = expandedStatuses[status];
               const status =
                 b.statusHistory?.[b.statusHistory.length - 1]?.status ||
                 "pending";
               const isOpen = openedBookingId === b._id;
               const toggleOpen = () =>
                 setOpenedBookingId((prev) => (prev === b._id ? null : b._id));
-              // return (
-
-              // <div key={status} className="space-y-6">
-              //   {/* Collapsible cards matching customer booking style */}
-              //   {group.map((b, idx) => {
-              //     const isOpen = openedBookingId === b._id;
-              //     const toggleOpen = () => {
-              //       setOpenedBookingId((prev) =>
-              //         prev === b._id ? null : b._id
-              //       );
-              //     };
 
               return (
                 <div
@@ -1332,10 +1285,6 @@ export default function CustomerBookings() {
               );
             })}
           </div>
-
-          // );
-          // })}
-          // </div>
         )}
 
         {/* Cancel Modal */}

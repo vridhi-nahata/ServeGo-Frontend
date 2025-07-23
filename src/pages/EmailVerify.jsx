@@ -145,9 +145,9 @@ function EmailVerify() {
                   boxShadow: "none",
                 }}
                 ref={(e) => (inputRefs.current[index] = e)}
-                onChange={(e) => handleInput(e, index)} // Handle input change
-                onKeyDown={(e) => handleKeyDown(e, index)} // Handle backspace key
-                onPaste={handlePaste} // Handle paste event
+                onChange={(e) => handleInput(e, index)}
+                onKeyDown={(e) => handleKeyDown(e, index)}
+                onPaste={handlePaste}
               />
             ))}
         </div>

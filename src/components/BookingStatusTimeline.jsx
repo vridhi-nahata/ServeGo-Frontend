@@ -83,9 +83,9 @@ const BookingStatusTimeline = ({ statusHistory = [] }) => {
               {/* Icon */}
               <div className="relative z-10">
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-white shadow-md transition-all duration-200 ${config.color} ${
-                    isLast ? "ring-4 ring-blue-100 scale-110" : ""
-                  }`}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-white shadow-md transition-all duration-200 ${
+                    config.color
+                  } ${isLast ? "ring-4 ring-blue-100 scale-110" : ""}`}
                 >
                   <span className="text-lg">{config.icon}</span>
                 </div>
@@ -141,9 +141,9 @@ const BookingStatusTimeline = ({ statusHistory = [] }) => {
               {/* Icon */}
               <div className="relative z-10">
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-white shadow-md transition-all duration-200 ${config.color} ${
-                    isLast ? "ring-4 ring-blue-100 scale-110" : ""
-                  }`}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-white shadow-md transition-all duration-200 ${
+                    config.color
+                  } ${isLast ? "ring-4 ring-blue-100 scale-110" : ""}`}
                 >
                   <span className="text-lg">{config.icon}</span>
                 </div>

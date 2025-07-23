@@ -5,8 +5,6 @@ import {
   Pie,
   Cell,
   ResponsiveContainer,
-  AreaChart,
-  Area,
   BarChart,
   Bar,
   XAxis,
@@ -34,7 +32,6 @@ dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 
 const COLORS = [
-  // "#050329", // deep midnight blue
   "#081f5c", // dark navy
   "#7096d1", // medium slate-blue
   "#9ca3af", // muted indigo-gray
@@ -113,18 +110,18 @@ function ProviderAnalytics({ bookings, setBookings }) {
       (b) => b.statusHistory?.at(-1)?.status === "completed"
     );
 
-    /* 1.  Gross amount the provider collected (from customer) */
+    /*  Gross amount the provider collected (from customer) */
     const grossReceived = paid.reduce(
       (sum, b) => sum + (b.totalAmount || 0),
       0
     );
 
-    /* 2.  Cash payments received */
+    /*  Cash payments received */
     const cashReceived = paid
       .filter((b) => b.paymentMethod === "cash")
       .reduce((sum, b) => sum + (b.totalAmount || 0), 0);
 
-    /* 3.  Net earnings to provider
+    /*  Net earnings to provider
          = totalAmount − platformFee − 15 % of serviceAmount
   */
     const netEarned = paid.reduce((sum, b) => {
@@ -133,7 +130,7 @@ function ProviderAnalytics({ bookings, setBookings }) {
       return sum + net;
     }, 0);
 
-    /* 4.  Provider → Admin
+    /*  Provider → Admin
      */
     const payToAdmin = paid.reduce((sum, b) => {
       const commission = (b.serviceAmount || 0) * 0.15;
@@ -315,32 +312,6 @@ function ProviderAnalytics({ bookings, setBookings }) {
       console.error("Failed to reschedule booking:", err);
     }
   };
-
-  // const upcomingBookings = useMemo(() => {
-  //   console.log("Computing upcomingBookings with bookings data:", bookings);
-  //   const now = dayjs();
-  //   const next7Days = now.add(7, "day");
-
-  //   return bookings
-  //     .filter((b) => b.statusHistory?.some((s) => s.status === "confirmed"))
-  //     .filter((b) => {
-  //       const bookingDate = dayjs(b.date);
-  //       return bookingDate.isAfter(now) && bookingDate.isBefore(next7Days);
-  //     });
-  // }, [bookings]);
-
-  //   const upcomingBookings = useMemo(() => {
-  //   console.log("Computing upcomingBookings with bookings data:", bookings);
-  //   const now = dayjs(); // Current date and time
-  //   const next7Days = now.add(7, "day"); // Date and time 7 days from now
-
-  //   return bookings
-  //     .filter((b) => b.statusHistory?.some((s) => s.status === "confirmed")) // Filter bookings that are confirmed
-  //     .filter((b) => {
-  //       const bookingDate = dayjs(b.date); // Convert booking date to dayjs object
-  //       return bookingDate.isAfter(now, "minute") && bookingDate.isBefore(next7Days, "minute"); // Check if booking date is within the next 7 days, starting from now
-  //     });
-  // }, [bookings]);
 
   const upcomingBookings = useMemo(() => {
     console.log("Computing upcomingBookings with bookings data:", bookings);

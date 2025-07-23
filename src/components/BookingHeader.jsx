@@ -7,7 +7,7 @@ import {
   FaChevronUp,
 } from "react-icons/fa";
 import { MdClear } from "react-icons/md";
-import dayjs from "dayjs"; // ✅ FIXED
+import dayjs from "dayjs";
 
 export default function BookingHeader({
   search,
@@ -86,7 +86,9 @@ export default function BookingHeader({
       );
     } else if (sortBy === "upcoming") {
       filteredBookings.sort(
-        (a, b) => new Date(a.date + "T" + a.timeSlot.from) - new Date(b.date + "T" + b.timeSlot.from)
+        (a, b) =>
+          new Date(a.date + "T" + a.timeSlot.from) -
+          new Date(b.date + "T" + b.timeSlot.from)
       );
     }
 

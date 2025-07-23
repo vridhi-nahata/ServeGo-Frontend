@@ -6,7 +6,7 @@ export default {
     extend: {
       screens: {
         xxs: '375px',
-        xs: '480px', // Extra small devices (eg. phones, 350px and up)
+        xs: '480px', 
       },
       fontFamily: {
         nosifer: ['Nosifer', 'sans-serif'],

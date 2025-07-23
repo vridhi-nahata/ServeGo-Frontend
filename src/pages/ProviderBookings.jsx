@@ -109,9 +109,9 @@ export default function ProviderBookings() {
     filteredBookings = filteredBookings.filter(
       (b) =>
         b.customer?.name?.toLowerCase().includes(search.toLowerCase()) ||
-      b.provider?.name?.toLowerCase().includes(search.toLowerCase()) ||
+        b.provider?.name?.toLowerCase().includes(search.toLowerCase()) ||
         b.serviceName?.toLowerCase().includes(search.toLowerCase()) ||
-        b.address?.toLowerCase().includes(search.toLowerCase()) 
+        b.address?.toLowerCase().includes(search.toLowerCase())
     );
   }
 
@@ -146,81 +146,73 @@ export default function ProviderBookings() {
   }
 
   // Sort groups
-let sortedBookings = [...filteredBookings];
-  // Object.keys(grouped).forEach((status) => {
-    // let sortedBookings = [...grouped[status]];
+  let sortedBookings = [...filteredBookings];
 
-    if (sortBy === "date-asc") {
-      sortedBookings.sort((a, b) => {
-        // First compare dates
-        const dateA = new Date(a.date);
-        const dateB = new Date(b.date);
-        const dateDiff = dateA.getTime() - dateB.getTime();
+  if (sortBy === "date-asc") {
+    sortedBookings.sort((a, b) => {
+      // First compare dates
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      const dateDiff = dateA.getTime() - dateB.getTime();
 
-        if (dateDiff !== 0) return dateDiff;
+      if (dateDiff !== 0) return dateDiff;
 
-        // If dates are same, compare times
-        // Convert time strings (e.g., "14:30") to comparable format
-        const timeA = a.timeSlot.from.split(":").map(Number);
-        const timeB = b.timeSlot.from.split(":").map(Number);
+      // If dates are same, compare times
+      // Convert time strings (e.g., "14:30") to comparable format
+      const timeA = a.timeSlot.from.split(":").map(Number);
+      const timeB = b.timeSlot.from.split(":").map(Number);
 
-        // Compare hours first, then minutes
-        const hourDiff = timeA[0] - timeB[0];
-        if (hourDiff !== 0) return hourDiff;
+      // Compare hours first, then minutes
+      const hourDiff = timeA[0] - timeB[0];
+      if (hourDiff !== 0) return hourDiff;
 
-        return timeA[1] - timeB[1]; // Compare minutes
-      });
-    } else if (sortBy === "date-desc") {
-      sortedBookings.sort((a, b) => {
-        // First compare dates (reversed for descending)
-        const dateA = new Date(a.date);
-        const dateB = new Date(b.date);
-        const dateDiff = dateB.getTime() - dateA.getTime();
+      return timeA[1] - timeB[1]; // Compare minutes
+    });
+  } else if (sortBy === "date-desc") {
+    sortedBookings.sort((a, b) => {
+      // First compare dates (reversed for descending)
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      const dateDiff = dateB.getTime() - dateA.getTime();
 
-        if (dateDiff !== 0) return dateDiff;
+      if (dateDiff !== 0) return dateDiff;
 
-        // If dates are same, compare times (reversed for descending)
-        const timeA = a.timeSlot.from.split(":").map(Number);
-        const timeB = b.timeSlot.from.split(":").map(Number);
+      // If dates are same, compare times (reversed for descending)
+      const timeA = a.timeSlot.from.split(":").map(Number);
+      const timeB = b.timeSlot.from.split(":").map(Number);
 
-        // Compare hours first, then minutes (reversed)
-        const hourDiff = timeB[0] - timeA[0];
-        if (hourDiff !== 0) return hourDiff;
+      // Compare hours first, then minutes (reversed)
+      const hourDiff = timeB[0] - timeA[0];
+      if (hourDiff !== 0) return hourDiff;
 
-        return timeB[1] - timeA[1]; // Compare minutes (reversed)
-      });
-    } else if (sortBy === "name-asc") {
-      sortedBookings.sort((a, b) =>
-        (a.customer?.name || "").localeCompare(b.customer?.name || "")
-      );
-    } else if (sortBy === "name-desc") {
-      sortedBookings.sort((a, b) =>
-        (b.customer?.name || "").localeCompare(a.customer?.name || "")
-      );
-    } else if (sortBy === "service-asc") {
-      sortedBookings.sort((a, b) =>
-        (a.serviceName || "").localeCompare(b.serviceName || "")
-      );
-    } else if (sortBy === "service-desc") {
-      sortedBookings.sort((a, b) =>
-        (b.serviceName || "").localeCompare(a.serviceName || "")
-      );
-    }
+      return timeB[1] - timeA[1]; // Compare minutes (reversed)
+    });
+  } else if (sortBy === "name-asc") {
+    sortedBookings.sort((a, b) =>
+      (a.customer?.name || "").localeCompare(b.customer?.name || "")
+    );
+  } else if (sortBy === "name-desc") {
+    sortedBookings.sort((a, b) =>
+      (b.customer?.name || "").localeCompare(a.customer?.name || "")
+    );
+  } else if (sortBy === "service-asc") {
+    sortedBookings.sort((a, b) =>
+      (a.serviceName || "").localeCompare(b.serviceName || "")
+    );
+  } else if (sortBy === "service-desc") {
+    sortedBookings.sort((a, b) =>
+      (b.serviceName || "").localeCompare(a.serviceName || "")
+    );
+  }
 
-    // sortedGroups[status] = sortedBookings;
-  // }
-// );
-
-    // Group by status using the sorted array
-const grouped = sortedBookings.reduce((acc, b) => {
-  const latest =
-    b.statusHistory?.[b.statusHistory.length - 1]?.status || "pending";
-  acc[latest] = acc[latest] || [];
-  acc[latest].push(b);
-  return acc;
-}, {});
-
-  
+  // Group by status using the sorted array
+  const grouped = sortedBookings.reduce((acc, b) => {
+    const latest =
+      b.statusHistory?.[b.statusHistory.length - 1]?.status || "pending";
+    acc[latest] = acc[latest] || [];
+    acc[latest].push(b);
+    return acc;
+  }, {});
 
   // Restored original markCompleted function
   const markCompleted = async (bookingId) => {
@@ -276,7 +268,6 @@ const grouped = sortedBookings.reduce((acc, b) => {
         {},
         { withCredentials: true }
       );
-      // toast.success("Cash payment confirmed!");
       await fetchBookings(); // refetch the provider bookings
     } catch (err) {
       toast.error(
@@ -342,25 +333,6 @@ const grouped = sortedBookings.reduce((acc, b) => {
     return () => clearInterval(interval);
   }, []);
 
-
-
-  // if (!provider) {
-  //   return (
-  //     // <div className="text-center mt-20 text-red-700">Provider not found</div>
-  //     <div className="text-center mt-40">
-  //         <img
-  //           src="/icons/unauthorized-access.webp"
-  //           alt="No results"
-  //           className="w-52 mx-auto"
-  //         />
-  //         <h3 className="text-4xl text-[var(--primary)] font-semibold">
-  //           Access Denied
-  //         </h3>
-  //         <p className="text-xl text-[var(--gray)] mt-3">This page is only available to service providers</p>
-  //       </div>
-  //   );
-  // }
-
   return (
     <div className="min-h-screen py-20 px-4 bg-gradient-to-br from-[var(--primary-light)] to-[var(--white)]">
       {/* Top Header */}
@@ -368,7 +340,6 @@ const grouped = sortedBookings.reduce((acc, b) => {
         <h2 className="py-3 text-2xl sm:text-3xl md:text-4xl font-extrabold text-[var(--primary)]">
           My Bookings
         </h2>
-        
 
         <div className="flex gap-2 items-center justify-center">
           {/* Search */}
@@ -731,435 +702,415 @@ const grouped = sortedBookings.reduce((acc, b) => {
           <p className="text-xl text-[var(--gray)] mt-3">Try something else</p>
         </div>
       ) : (
-      <div className="w-full mx-auto p-6 max-w-7xl">
-         {sortedBookings.map((b, idx) => {
+        <div className="w-full mx-auto p-6 max-w-7xl">
+          {sortedBookings.map((b, idx) => {
             // const isStatusOpen = expandedStatuses[status];
             // return (
-              const status = b.statusHistory?.[b.statusHistory.length - 1]?.status || "pending";
-      const isOpen = openedBookingId === b._id;
-      const toggleOpen = () => setOpenedBookingId((prev) => (prev === b._id ? null : b._id));
-                // <div className="space-y-6" key={status}>
-                  {/* Collapsible cards matching customer booking style */}
-                  {/* {group.map((b, idx) => {
+            const status =
+              b.statusHistory?.[b.statusHistory.length - 1]?.status ||
+              "pending";
+            const isOpen = openedBookingId === b._id;
+            const toggleOpen = () =>
+              setOpenedBookingId((prev) => (prev === b._id ? null : b._id));
+            // <div className="space-y-6" key={status}>
+            {
+              /* Collapsible cards matching customer booking style */
+            }
+            {
+              /* {group.map((b, idx) => {
                     const isOpen = openedBookingId === b._id;
                     const toggleOpen = () => {
                       setOpenedBookingId((prev) =>
                         prev === b._id ? null : b._id
                       );
-                    }; */}
+                    }; */
+            }
 
-                    return (
-                      <div
-                        key={b._id}
-                        className="border rounded-xl hover:rounded-xl shadow-lg bg-white transition-all duration-300 mb-6"
-                      >
-                        {/* Collapsed Header */}
+            return (
+              <div
+                key={b._id}
+                className="border rounded-xl hover:rounded-xl shadow-lg bg-white transition-all duration-300 mb-6"
+              >
+                {/* Collapsed Header */}
+                <div
+                  className="flex justify-between items-center p-4 cursor-pointer hover:bg-gray-50 hover:rounded-xl"
+                  onClick={toggleOpen}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-4 mb-3">
+                      {b.customer?.avatarUrl ? (
+                        <img
+                          src={b.customer.avatarUrl}
+                          alt={b.customer?.name || "User"}
+                          className="w-16 h-16 rounded-full border shadow object-cover hover:scale-110"
+                        />
+                      ) : (
                         <div
-                          className="flex justify-between items-center p-4 cursor-pointer hover:bg-gray-50 hover:rounded-xl"
-                          onClick={toggleOpen}
+                          className="w-16 h-16 flex items-center justify-center rounded-full font-bold shadow"
+                          style={{
+                            backgroundColor: "var(--primary-light)",
+                            color: "var(--primary)",
+                          }}
                         >
-                          <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-4 mb-3">
-                              {b.customer?.avatarUrl ? (
-                                <img
-                                  src={b.customer.avatarUrl}
-                                  alt={b.customer?.name || "User"}
-                                  className="w-16 h-16 rounded-full border shadow object-cover hover:scale-110"
-                                />
-                              ) : (
-                                <div
-                                  className="w-16 h-16 flex items-center justify-center rounded-full font-bold shadow"
-                                  style={{
-                                    backgroundColor: "var(--primary-light)",
-                                    color: "var(--primary)",
-                                  }}
-                                >
-                                  {b.customer?.name?.[0]?.toUpperCase() || "U"}
-                                </div>
-                              )}
-                            </div>
+                          {b.customer?.name?.[0]?.toUpperCase() || "U"}
+                        </div>
+                      )}
+                    </div>
 
-                            <div>
-                              <div className="font-bold text-[var(--primary)]">
-                                {b.customer?.name || "Unknown User"}
-                              </div>
+                    <div>
+                      <div className="font-bold text-[var(--primary)]">
+                        {b.customer?.name || "Unknown User"}
+                      </div>
 
-                              <div className="text-sm text-gray-500 flex flex-col">
-                                <div>{b.serviceName}</div>
+                      <div className="text-sm text-gray-500 flex flex-col">
+                        <div>{b.serviceName}</div>
 
-                                <div className="flex items-left gap-2 mt-1 flex-col md:flex-row">
-                                  <div className="flex items-center gap-1">
-                                    <FaCalendarAlt className="text-[var(--secondary)]" />
-                                    <span>
-                                      {dayjs(b.date).format("DD MMM YYYY")}
-                                    </span>
-                                  </div>
-
-                                  <div className="flex items-center gap-1">
-                                    <FaClock className="text-[var(--secondary)]" />
-                                    <span>
-                                      {b.timeSlot.from} - {b.timeSlot.to}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
+                        <div className="flex items-left gap-2 mt-1 flex-col md:flex-row">
+                          <div className="flex items-center gap-1">
+                            <FaCalendarAlt className="text-[var(--secondary)]" />
+                            <span>{dayjs(b.date).format("DD MMM YYYY")}</span>
                           </div>
 
-                          <div className="flex items-center gap-2">
-                            <span
-                              className={`text-xs font-semibold px-2 py-1 rounded-full ${statusColor[status]}`}
-                            >
-                              {status.replace("-", " ")}
+                          <div className="flex items-center gap-1">
+                            <FaClock className="text-[var(--secondary)]" />
+                            <span>
+                              {b.timeSlot.from} - {b.timeSlot.to}
                             </span>
-                            <i
-                              className={`fas fa-chevron-${
-                                isOpen ? "up" : "down"
-                              } text-gray-500 transition-transform`}
-                            ></i>
                           </div>
                         </div>
+                      </div>
+                    </div>
+                  </div>
 
-                        {/* Expanded Details */}
-                        {isOpen && (
-                          <div className="px-6 pb-6 pt-2 space-y-4">
-                            {/* Booking Details */}
-                            <div className="bg-gradient-to-r from-[var(--primary-light)] to-[var(--secondary)] border-l-4 border-[var(--secondary)] rounded-lg p-4 shadow-sm">
-                              <h4 className="font-semibold text-[var(--secondary)] mb-3">
-                                Booking Details
-                              </h4>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`text-xs font-semibold px-2 py-1 rounded-full ${statusColor[status]}`}
+                    >
+                      {status.replace("-", " ")}
+                    </span>
+                    <i
+                      className={`fas fa-chevron-${
+                        isOpen ? "up" : "down"
+                      } text-gray-500 transition-transform`}
+                    ></i>
+                  </div>
+                </div>
 
-                              <div className="bg-white rounded-lg p-4 border-2 border-[var(--secondary)] text-sm text-gray-700 space-y-2">
-                                <p>
-                                  <strong className="text-gray-800">
-                                    Address:
-                                  </strong>{" "}
-                                  {b.address || "No address specified"}
-                                </p>
-                                <p>
-                                  <strong className="text-gray-800">
-                                    Notes:
-                                  </strong>{" "}
-                                  {b.notes || "No additional notes"}
-                                </p>
-                              </div>
-                              <div>
-                                {status === "pending" && (
-                                  <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                                    <button
-                                      className="flex items-center justify-center gap-2 w-full sm:w-1/3 py-3 bg-gradient-to-b from-emerald-400 to-emerald-700 text-white font-semibold rounded hover:scale-105 shadow-lg transition duration-300"
-                                      disabled={
-                                        actionLoading === b._id + "confirmed"
-                                      }
-                                      onClick={() =>
-                                        handleStatus(b._id, "confirmed")
-                                      }
-                                    >
-                                      <FaCheck /> Accept
-                                    </button>
-                                    <button
-                                      className="flex items-center justify-center gap-2 w-full sm:w-1/3 py-3 bg-gradient-to-b from-red-400 to-red-700 text-white font-semibold rounded hover:scale-105 shadow-lg transition duration-300"
-                                      disabled={
-                                        actionLoading === b._id + "rejected"
-                                      }
-                                      onClick={() =>
-                                        handleStatus(b._id, "rejected")
-                                      }
-                                    >
-                                      <FaTimes /> Reject
-                                    </button>
-                                    <button
-                                      className="flex items-center justify-center gap-2 w-full sm:w-1/3 py-3 bg-gradient-to-b from-blue-400 to-blue-700 text-white font-semibold rounded hover:scale-105 shadow-lg transition duration-300"
-                                      onClick={() => setShowTimeUpdate(b._id)}
-                                    >
-                                      <FaClock /> Reschedule
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
+                {/* Expanded Details */}
+                {isOpen && (
+                  <div className="px-6 pb-6 pt-2 space-y-4">
+                    {/* Booking Details */}
+                    <div className="bg-gradient-to-r from-[var(--primary-light)] to-[var(--secondary)] border-l-4 border-[var(--secondary)] rounded-lg p-4 shadow-sm">
+                      <h4 className="font-semibold text-[var(--secondary)] mb-3">
+                        Booking Details
+                      </h4>
 
-                            {/* Reschedule section */}
-                            {status === "update-time" && (
-                              <div className="bg-gradient-to-r from-[var(--primary-light)] to-[var(--secondary)] border-l-4 border-[var(--secondary)] rounded-lg p-4 shadow-sm">
-                                <div className="flex items-center gap-2 mb-3">
-                                  <FaSyncAlt className="text-[var(--secondary)]" />
-                                  <h4 className="font-semibold text-[var(--secondary)]">
-                                    Awaiting Customer Response
-                                  </h4>
-                                </div>
-                                <div className="bg-white rounded-lg p-4 border-2 border-[var(--secondary)]">
-                                  <div className="text-sm text-gray-600">
-                                    Time update request has been sent to the
-                                    customer
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Time update form */}
-                            {showTimeUpdate === b._id && (
-                              <div className="bg-gradient-to-r from-[var(--primary-light)] to-[var(--secondary)] border-l-4 border-[var(--secondary)] rounded-lg p-4 shadow-sm">
-                                <h4 className="font-semibold text-[var(--secondary)] mb-3">
-                                  Reschedule Time
-                                </h4>
-                                <div className="bg-white rounded-lg p-4 border-2 border-[var(--secondary)]">
-                                  <div className="flex gap-3 mb-2 items-center">
-                                    <input
-                                      type="time"
-                                      value={newFrom}
-                                      onChange={(e) => {
-                                        setNewFrom(e.target.value);
-                                        setTimeError(""); // Clear error on change
-                                      }}
-                                      className="border px-6 py-3 rounded text-sm"
-                                    />
-                                    <span> to </span>
-                                    <input
-                                      type="time"
-                                      value={newTo}
-                                      onChange={(e) => {
-                                        setNewTo(e.target.value);
-                                        setTimeError(""); // Clear error on change
-                                      }}
-                                      className="border px-6 py-2 rounded text-sm"
-                                    />
-                                  </div>
-
-                                  {timeError && (
-                                    <div className="flex flex-row gap-2 text-red-500 mb-2">
-                                      <i className="fas fa-exclamation-circle"></i>
-                                      <p className="text-xs">{timeError}</p>
-                                    </div>
-                                  )}
-                                </div>
-
-                                <div className="flex flex-col sm:flex-row gap-4 mt-4">
-                                  <button
-                                    className="bg-gradient-to-b from-[var(--ternary)] to-[var(--secondary)] text-white w-full sm:w-1/2 text-md font-semibold px-6 py-3 rounded hover:scale-105 transition-all transform shadow-md"
-                                    disabled={
-                                      actionLoading === b._id + "update-time"
-                                    }
-                                    onClick={() => {
-                                      if (!newFrom || !newTo) {
-                                        setTimeError(
-                                          "Both 'from' and 'to' times are required."
-                                        );
-                                        return;
-                                      }
-                                      setTimeError(""); // Clear error if valid
-                                      handleStatus(b._id, "update-time", {
-                                        from: newFrom,
-                                        to: newTo,
-                                      });
-                                    }}
-                                  >
-                                    Send Updated Time
-                                  </button>
-
-                                  <button
-                                    className="bg-gradient-to-b from-gray-400 to-gray-600 text-white text-md font-semibold w-full sm:w-1/2 px-6 py-3 rounded hover:scale-105 transition-all transform shadow-md"
-                                    onClick={() => {
-                                      setShowTimeUpdate(null);
-                                      setTimeError("");
-                                    }}
-                                  >
-                                    Cancel
-                                  </button>
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Payment details */}
-                            <div className="bg-gradient-to-r from-[var(--primary-light)] to-[var(--secondary)] border-l-4 border-[var(--secondary)] rounded-lg p-4 shadow-sm">
-                              <div className="flex items-center gap-2 mb-3">
-                                <h4 className="font-semibold text-[var(--secondary)]">
-                                  Payment Details
-                                </h4>
-                              </div>
-
-                              <div className="bg-white rounded-lg p-4 border-2 border-[var(--secondary)] text-sm space-y-3">
-                                {/* Service Amount Breakdown */}
-
-                                {/* Unit */}
-                                {b.unit && b.unit !== "fixed" && (
-                                  <div className="flex justify-between">
-                                    <span>No. of {b.unit}:</span>
-
-                                    <span className="font-medium text-gray-700">
-                                      {b.units}
-                                    </span>
-                                  </div>
-                                )}
-
-                                {/* Service Amount */}
-                                <div className="flex justify-between">
-                                  <span>Service Amount:</span>
-
-                                  <span className="font-medium text-gray-700">
-                                    ₹{b.serviceAmount || 0}
-                                  </span>
-                                </div>
-
-                                {/* Platform Fee */}
-                                <div className="flex justify-between">
-                                  <span>Platform Fee:</span>
-                                  <span className="font-medium text-gray-700">
-                                    ₹{b.platformFee || 0}
-                                  </span>
-                                </div>
-
-                                {/* Total Amount */}
-                                <div className="flex justify-between font-bold border-t border-gray-300 pt-2 text-base">
-                                  <span>Total Amount:</span>
-                                  <span>
-                                    ₹{(b.totalAmount || 0).toFixed(2)}
-                                  </span>
-                                </div>
-
-                                {/* Commission Charge */}
-                                <div className="flex justify-between">
-                                  <span>Commission Charge (15%):</span>
-                                  <span className="font-medium text-gray-700">
-                                    ₹
-                                    {((b.serviceAmount || 0) * 0.15).toFixed(2)}
-                                  </span>
-                                </div>
-
-                                {/* Net Amount */}
-                                <div className="flex justify-between font-bold text-[var(--secondary)] border-t border-[var(--secondary)] pt-2 text-base">
-                                  <span>Net Amount:</span>
-                                  <span>
-                                    ₹
-                                    {(
-                                      (b.serviceAmount || 0) 
-                                       -
-                                      (b.serviceAmount || 0) * 0.15
-                                    ).toFixed(2)}
-                                  </span>
-                                </div>
-                              </div>
-
-                              {/* Payment Status */}
-                              {b.paymentStatus && (
-                                <div className="mt-4">
-                                  <div
-                                    className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border-2 ${
-                                      b.paymentStatus === "paid"
-                                        ? "bg-green-100 text-green-800 border-green-300"
-                                        : b.paymentStatus === "partial"
-                                        ? "bg-yellow-100 text-yellow-800 border-yellow-300"
-                                        : "bg-red-100 text-red-800 border-red-300"
-                                    }`}
-                                  >
-                                    {b.paymentStatus === "paid"
-                                      ? "Payment Complete"
-                                      : b.paymentStatus === "partial"
-                                      ? "Partially Paid"
-                                      : "Payment Pending"}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-
-                            {/* OTP Section */}
-                            {b.otp && !b.otpVerified && (
-                              <div className="bg-gradient-to-r from-[var(--primary-light)] to-[var(--secondary)] border-l-4 border-[var(--secondary)] rounded-lg p-4 shadow-sm">
-                                <h4 className="font-semibold text-[var(--secondary)] mb-3">
-                                  OTP Verification
-                                </h4>
-                                <div className="bg-white rounded-lg p-4 border-2 border-[var(--secondary)]">
-                                  <form
-                                    onSubmit={async (e) => {
-                                      e.preventDefault();
-                                      setOtpError((prev) => ({
-                                        ...prev,
-                                        [b._id]: "",
-                                      }));
-                                      try {
-                                        await axios.post(
-                                          `http://localhost:5000/api/bookings/verify-otp/${b._id}`,
-                                          { otp: otpInputs[b._id] },
-                                          { withCredentials: true }
-                                        );
-
-                                        await fetchBookings();
-                                      } catch (error) {
-                                        const msg =
-                                          error.response?.data?.message ||
-                                          "OTP verification failed";
-                                        setOtpError((prev) => ({
-                                          ...prev,
-                                          [b._id]: msg,
-                                        }));
-                                      }
-                                    }}
-                                  >
-                                    <div className="flex gap-2 items-center">
-                                      <input
-                                        type="text"
-                                        value={otpInputs[b._id] || ""}
-                                        onChange={(e) =>
-                                          setOtpInputs((prev) => ({
-                                            ...prev,
-                                            [b._id]: e.target.value,
-                                          }))
-                                        }
-                                        placeholder="Enter OTP"
-                                        className="border px-6 py-3 rounded flex-1 text-sm"
-                                      />
-                                      <button className="px-6 py-3 bg-gradient-to-r from-[var(--ternary)] to-[var(--secondary)] hover:scale-105 text-sm text-white rounded transition-all transform shadow-md">
-                                        Verify OTP
-                                      </button>
-                                    </div>
-
-                                    {otpError[b._id] && (
-                                      <div className="flex gap-2 text-sm text-red-700 mt-3">
-                                        <i className="fas fa-exclamation-circle mt-1"></i>
-                                        {otpError[b._id]}
-                                      </div>
-                                    )}
-                                  </form>
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Cash Received button */}
-                            {b.paymentStatus === "cash_initiated" && (
-                              <button
-                                onClick={() => handleConfirmCash(b._id)}
-                                className="flex items-center justify-center gap-2 px-6 py-3 w-full bg-gradient-to-b from-[var(--ternary)] to-[var(--secondary)] text-white font-semibold rounded hover:scale-105 shadow-lg transition duration-300"
-                              >
-                                Confirm Cash Received
-                              </button>
-                            )}
-
-                            {/* Mark complete button */}
-                            {b.otpVerified && !b.completedByProvider && (
-                              <button
-                                onClick={() => markCompleted(b._id)}
-                                className="flex items-center justify-center gap-2 px-6 py-3 w-full bg-gradient-to-r from-[var(--ternary)] to-[var(--secondary)] text-white hover:scale-105 font-semibold rounded transform hover:shadow-xl transition duration-300"
-                              >
-                                Mark Completed
-                              </button>
-                            )}
-
-                            {/* Timeline */}
-                            <div className="pt-2">
-                              <BookingStatusTimeline
-                                statusHistory={b.statusHistory}
-                              />
-                            </div>
+                      <div className="bg-white rounded-lg p-4 border-2 border-[var(--secondary)] text-sm text-gray-700 space-y-2">
+                        <p>
+                          <strong className="text-gray-800">Address:</strong>{" "}
+                          {b.address || "No address specified"}
+                        </p>
+                        <p>
+                          <strong className="text-gray-800">Notes:</strong>{" "}
+                          {b.notes || "No additional notes"}
+                        </p>
+                      </div>
+                      <div>
+                        {status === "pending" && (
+                          <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                            <button
+                              className="flex items-center justify-center gap-2 w-full sm:w-1/3 py-3 bg-gradient-to-b from-emerald-400 to-emerald-700 text-white font-semibold rounded hover:scale-105 shadow-lg transition duration-300"
+                              disabled={actionLoading === b._id + "confirmed"}
+                              onClick={() => handleStatus(b._id, "confirmed")}
+                            >
+                              <FaCheck /> Accept
+                            </button>
+                            <button
+                              className="flex items-center justify-center gap-2 w-full sm:w-1/3 py-3 bg-gradient-to-b from-red-400 to-red-700 text-white font-semibold rounded hover:scale-105 shadow-lg transition duration-300"
+                              disabled={actionLoading === b._id + "rejected"}
+                              onClick={() => handleStatus(b._id, "rejected")}
+                            >
+                              <FaTimes /> Reject
+                            </button>
+                            <button
+                              className="flex items-center justify-center gap-2 w-full sm:w-1/3 py-3 bg-gradient-to-b from-blue-400 to-blue-700 text-white font-semibold rounded hover:scale-105 shadow-lg transition duration-300"
+                              onClick={() => setShowTimeUpdate(b._id)}
+                            >
+                              <FaClock /> Reschedule
+                            </button>
                           </div>
                         )}
                       </div>
-                    );
-                  })}
-                </div>
-              
-            // );
-          
-        // </div>
+                    </div>
+
+                    {/* Reschedule section */}
+                    {status === "update-time" && (
+                      <div className="bg-gradient-to-r from-[var(--primary-light)] to-[var(--secondary)] border-l-4 border-[var(--secondary)] rounded-lg p-4 shadow-sm">
+                        <div className="flex items-center gap-2 mb-3">
+                          <FaSyncAlt className="text-[var(--secondary)]" />
+                          <h4 className="font-semibold text-[var(--secondary)]">
+                            Awaiting Customer Response
+                          </h4>
+                        </div>
+                        <div className="bg-white rounded-lg p-4 border-2 border-[var(--secondary)]">
+                          <div className="text-sm text-gray-600">
+                            Time update request has been sent to the customer
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Time update form */}
+                    {showTimeUpdate === b._id && (
+                      <div className="bg-gradient-to-r from-[var(--primary-light)] to-[var(--secondary)] border-l-4 border-[var(--secondary)] rounded-lg p-4 shadow-sm">
+                        <h4 className="font-semibold text-[var(--secondary)] mb-3">
+                          Reschedule Time
+                        </h4>
+                        <div className="bg-white rounded-lg p-4 border-2 border-[var(--secondary)]">
+                          <div className="flex gap-3 mb-2 items-center">
+                            <input
+                              type="time"
+                              value={newFrom}
+                              onChange={(e) => {
+                                setNewFrom(e.target.value);
+                                setTimeError(""); // Clear error on change
+                              }}
+                              className="border px-6 py-3 rounded text-sm"
+                            />
+                            <span> to </span>
+                            <input
+                              type="time"
+                              value={newTo}
+                              onChange={(e) => {
+                                setNewTo(e.target.value);
+                                setTimeError(""); // Clear error on change
+                              }}
+                              className="border px-6 py-2 rounded text-sm"
+                            />
+                          </div>
+
+                          {timeError && (
+                            <div className="flex flex-row gap-2 text-red-500 mb-2">
+                              <i className="fas fa-exclamation-circle"></i>
+                              <p className="text-xs">{timeError}</p>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row gap-4 mt-4">
+                          <button
+                            className="bg-gradient-to-b from-[var(--ternary)] to-[var(--secondary)] text-white w-full sm:w-1/2 text-md font-semibold px-6 py-3 rounded hover:scale-105 transition-all transform shadow-md"
+                            disabled={actionLoading === b._id + "update-time"}
+                            onClick={() => {
+                              if (!newFrom || !newTo) {
+                                setTimeError(
+                                  "Both 'from' and 'to' times are required."
+                                );
+                                return;
+                              }
+                              setTimeError(""); // Clear error if valid
+                              handleStatus(b._id, "update-time", {
+                                from: newFrom,
+                                to: newTo,
+                              });
+                            }}
+                          >
+                            Send Updated Time
+                          </button>
+
+                          <button
+                            className="bg-gradient-to-b from-gray-400 to-gray-600 text-white text-md font-semibold w-full sm:w-1/2 px-6 py-3 rounded hover:scale-105 transition-all transform shadow-md"
+                            onClick={() => {
+                              setShowTimeUpdate(null);
+                              setTimeError("");
+                            }}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Payment details */}
+                    <div className="bg-gradient-to-r from-[var(--primary-light)] to-[var(--secondary)] border-l-4 border-[var(--secondary)] rounded-lg p-4 shadow-sm">
+                      <div className="flex items-center gap-2 mb-3">
+                        <h4 className="font-semibold text-[var(--secondary)]">
+                          Payment Details
+                        </h4>
+                      </div>
+
+                      <div className="bg-white rounded-lg p-4 border-2 border-[var(--secondary)] text-sm space-y-3">
+                        {/* Service Amount Breakdown */}
+
+                        {/* Unit */}
+                        {b.unit && b.unit !== "fixed" && (
+                          <div className="flex justify-between">
+                            <span>No. of {b.unit}:</span>
+
+                            <span className="font-medium text-gray-700">
+                              {b.units}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Service Amount */}
+                        <div className="flex justify-between">
+                          <span>Service Amount:</span>
+
+                          <span className="font-medium text-gray-700">
+                            ₹{b.serviceAmount || 0}
+                          </span>
+                        </div>
+
+                        {/* Platform Fee */}
+                        <div className="flex justify-between">
+                          <span>Platform Fee:</span>
+                          <span className="font-medium text-gray-700">
+                            ₹{b.platformFee || 0}
+                          </span>
+                        </div>
+
+                        {/* Total Amount */}
+                        <div className="flex justify-between font-bold border-t border-gray-300 pt-2 text-base">
+                          <span>Total Amount:</span>
+                          <span>₹{(b.totalAmount || 0).toFixed(2)}</span>
+                        </div>
+
+                        {/* Commission Charge */}
+                        <div className="flex justify-between">
+                          <span>Commission Charge (15%):</span>
+                          <span className="font-medium text-gray-700">
+                            ₹{((b.serviceAmount || 0) * 0.15).toFixed(2)}
+                          </span>
+                        </div>
+
+                        {/* Net Amount */}
+                        <div className="flex justify-between font-bold text-[var(--secondary)] border-t border-[var(--secondary)] pt-2 text-base">
+                          <span>Net Amount:</span>
+                          <span>
+                            ₹
+                            {(
+                              (b.serviceAmount || 0) -
+                              (b.serviceAmount || 0) * 0.15
+                            ).toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Payment Status */}
+                      {b.paymentStatus && (
+                        <div className="mt-4">
+                          <div
+                            className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border-2 ${
+                              b.paymentStatus === "paid"
+                                ? "bg-green-100 text-green-800 border-green-300"
+                                : b.paymentStatus === "partial"
+                                ? "bg-yellow-100 text-yellow-800 border-yellow-300"
+                                : "bg-red-100 text-red-800 border-red-300"
+                            }`}
+                          >
+                            {b.paymentStatus === "paid"
+                              ? "Payment Complete"
+                              : b.paymentStatus === "partial"
+                              ? "Partially Paid"
+                              : "Payment Pending"}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* OTP Section */}
+                    {b.otp && !b.otpVerified && (
+                      <div className="bg-gradient-to-r from-[var(--primary-light)] to-[var(--secondary)] border-l-4 border-[var(--secondary)] rounded-lg p-4 shadow-sm">
+                        <h4 className="font-semibold text-[var(--secondary)] mb-3">
+                          OTP Verification
+                        </h4>
+                        <div className="bg-white rounded-lg p-4 border-2 border-[var(--secondary)]">
+                          <form
+                            onSubmit={async (e) => {
+                              e.preventDefault();
+                              setOtpError((prev) => ({
+                                ...prev,
+                                [b._id]: "",
+                              }));
+                              try {
+                                await axios.post(
+                                  `http://localhost:5000/api/bookings/verify-otp/${b._id}`,
+                                  { otp: otpInputs[b._id] },
+                                  { withCredentials: true }
+                                );
+
+                                await fetchBookings();
+                              } catch (error) {
+                                const msg =
+                                  error.response?.data?.message ||
+                                  "OTP verification failed";
+                                setOtpError((prev) => ({
+                                  ...prev,
+                                  [b._id]: msg,
+                                }));
+                              }
+                            }}
+                          >
+                            <div className="flex gap-2 items-center">
+                              <input
+                                type="text"
+                                value={otpInputs[b._id] || ""}
+                                onChange={(e) =>
+                                  setOtpInputs((prev) => ({
+                                    ...prev,
+                                    [b._id]: e.target.value,
+                                  }))
+                                }
+                                placeholder="Enter OTP"
+                                className="border px-6 py-3 rounded flex-1 text-sm"
+                              />
+                              <button className="px-6 py-3 bg-gradient-to-r from-[var(--ternary)] to-[var(--secondary)] hover:scale-105 text-sm text-white rounded transition-all transform shadow-md">
+                                Verify OTP
+                              </button>
+                            </div>
+
+                            {otpError[b._id] && (
+                              <div className="flex gap-2 text-sm text-red-700 mt-3">
+                                <i className="fas fa-exclamation-circle mt-1"></i>
+                                {otpError[b._id]}
+                              </div>
+                            )}
+                          </form>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Cash Received button */}
+                    {b.paymentStatus === "cash_initiated" && (
+                      <button
+                        onClick={() => handleConfirmCash(b._id)}
+                        className="flex items-center justify-center gap-2 px-6 py-3 w-full bg-gradient-to-b from-[var(--ternary)] to-[var(--secondary)] text-white font-semibold rounded hover:scale-105 shadow-lg transition duration-300"
+                      >
+                        Confirm Cash Received
+                      </button>
+                    )}
+
+                    {/* Mark complete button */}
+                    {b.otpVerified && !b.completedByProvider && (
+                      <button
+                        onClick={() => markCompleted(b._id)}
+                        className="flex items-center justify-center gap-2 px-6 py-3 w-full bg-gradient-to-r from-[var(--ternary)] to-[var(--secondary)] text-white hover:scale-105 font-semibold rounded transform hover:shadow-xl transition duration-300"
+                      >
+                        Mark Completed
+                      </button>
+                    )}
+
+                    {/* Timeline */}
+                    <div className="pt-2">
+                      <BookingStatusTimeline statusHistory={b.statusHistory} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       )}
 
       {error && <div className="text-center text-red-500 mt-6">{error}</div>}

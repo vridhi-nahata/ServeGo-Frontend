@@ -35,80 +35,6 @@ import {
   FaUsers,
 } from "react-icons/fa";
 
-// const WHY_CHOOSE = [
-//   {
-//     title: "Verified Providers",
-//     desc: "All service providers undergo thorough background checks and profile verification for your safety and peace of mind.",
-//     icon: (
-//       <FaUserShield className="text-3xl" style={{ color: "var(--primary)" }} />
-//     ),
-//   },
-//   {
-//     title: "In-App Communication",
-//     desc: "Voice call, or video call with providers through the app. Get consultation, clarify details, and get quotes.",
-//     icon: (
-//       <FaPhoneAlt className="text-3xl" style={{ color: "var(--primary)" }} />
-//     ),
-//   },
-//   {
-//     title: "Transparent Pricing",
-//     desc: "See upfront pricing. No hidden charges—what you see is what you pay.",
-//     icon: (
-//       <FaRupeeSign className="text-3xl" style={{ color: "var(--primary)" }} />
-//     ),
-//   },
-//   {
-//     title: "Real-Time Tracking",
-//     desc: "Live location tracking of your service provider from booking to completion. Stay informed every step of the way.",
-//     icon: (
-//       <FaMapMarkerAlt
-//         className="text-3xl"
-//         style={{ color: "var(--primary)" }}
-//       />
-//     ),
-//   },
-//   {
-//     title: "Flexible Scheduling",
-//     desc: "Book services instantly or schedule for later. Choose the time that works best for your busy lifestyle.",
-//     icon: (
-//       <FaCalendarAlt className="text-3xl" style={{ color: "var(--primary)" }} />
-//     ),
-//   },
-//   {
-//     title: "Loyalty Rewards",
-//     desc: "Earn points and discounts based on your usage milestones.",
-//     icon: <FaGift className="text-3xl" style={{ color: "var(--primary)" }} />,
-//   },
-//   {
-//     title: "Subscription Plans",
-//     desc: "Monthly packages with priority booking and discounted rates for frequent users.",
-//     icon: (
-//       <FaClipboardList
-//         className="text-3xl"
-//         style={{ color: "var(--primary)" }}
-//       />
-//     ),
-//   },
-//   {
-//     title: "Split payments",
-//     desc: "Divide payment between multiple people if service is for many users.",
-//     icon: (
-//       <FaHandHoldingUsd
-//         className="text-3xl"
-//         style={{ color: "var(--primary)" }}
-//       />
-//     ),
-//   },
-//   {
-//     title: "Fast Support",
-//     desc: "Our team is available 24/7 for your help and support.",
-//     icon: (
-//       <FaHeadset className="text-3xl" style={{ color: "var(--primary)" }} />
-//     ),
-//   },
-// ];
-
-// new features
 const WHY_CHOOSE = [
   {
     title: "Service Marketplace",
@@ -124,21 +50,30 @@ const WHY_CHOOSE = [
     title: "User Engagement Features",
     desc: "Choose providers, rate/review them, and add them to your favorites.",
     icon: <FaUsers className="text-3xl" style={{ color: "var(--primary)" }} />,
-  }, 
+  },
   {
     title: "Real-time Availability",
     desc: "Customers can see live updates of provider available and booked time slots.",
-    icon: <FaBusinessTime className="text-3xl" style={{ color: "var(--primary)" }} />,
-  }, 
+    icon: (
+      <FaBusinessTime
+        className="text-3xl"
+        style={{ color: "var(--primary)" }}
+      />
+    ),
+  },
   {
     title: "Flexible Scheduling",
     desc: "Book instantly or schedule services as per your availability with real-time provider availability calendars.",
-    icon: <FaCalendarAlt className="text-3xl" style={{ color: "var(--primary)" }} />,
+    icon: (
+      <FaCalendarAlt className="text-3xl" style={{ color: "var(--primary)" }} />
+    ),
   },
   {
     title: "Transparent Pricing",
     desc: "Detailed cost breakdown. No hidden charges—what you see is what you pay.",
-    icon: <FaRupeeSign className="text-3xl" style={{ color: "var(--primary)" }} />,
+    icon: (
+      <FaRupeeSign className="text-3xl" style={{ color: "var(--primary)" }} />
+    ),
   },
   {
     title: "OTP-Based Service Start",
@@ -148,28 +83,38 @@ const WHY_CHOOSE = [
   {
     title: "Dual Completion Confirmation",
     desc: "Service is only marked as completed when both customer and provider confirm it.",
-    icon: <FaCheckDouble className="text-3xl" style={{ color: "var(--primary)" }} />,
+    icon: (
+      <FaCheckDouble className="text-3xl" style={{ color: "var(--primary)" }} />
+    ),
   },
   {
     title: "Payment Flexibility",
     desc: "Pay securely via UPI, cards, wallets, or opt for cash as per your preference.",
-    icon: <FaRupeeSign className="text-3xl" style={{ color: "var(--primary)" }} />,
+    icon: (
+      <FaRupeeSign className="text-3xl" style={{ color: "var(--primary)" }} />
+    ),
   },
   {
     title: "Split Payments",
     desc: "Equally split service costs among multiple users with ease - ideal for shared bookings.",
-    icon: <FaHandHoldingUsd className="text-3xl" style={{ color: "var(--primary)" }} />,
+    icon: (
+      <FaHandHoldingUsd
+        className="text-3xl"
+        style={{ color: "var(--primary)" }}
+      />
+    ),
   },
   {
     title: "Booking History Tracking",
     desc: "Track all bookings with status updates.",
-    icon: <FaHistory className="text-3xl" style={{ color: "var(--primary)" }} />,
+    icon: (
+      <FaHistory className="text-3xl" style={{ color: "var(--primary)" }} />
+    ),
   },
 ];
 
 export default function Home() {
   const navigate = useNavigate();
-  // const [page, setPage] = useState(0);
   const prevRef = useRef(null);
   const nextRef = useRef(null);
   const [swiperInstance, setSwiperInstance] = useState(null);
