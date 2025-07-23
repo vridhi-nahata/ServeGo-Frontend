@@ -457,7 +457,7 @@ function ProviderAnalytics({ bookings, setBookings }) {
               .map((b) => (
                 <div
                   key={b._id}
-                  className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 bg-white rounded shadow"
+                  className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 bg-white rounded hover:shadow"
                 >
                   <div className="flex-1">
                     <p className="font-semibold">{b.serviceName}</p>

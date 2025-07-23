@@ -373,7 +373,7 @@ export default function CustomerBookings() {
         review,
       });
 
-      toast.success("Feedback submitted and booking marked as completed!");
+      // toast.success("Feedback submitted and booking marked as completed!");
       setShowFeedbackModal(false);
       setRating(0);
       setReview("");

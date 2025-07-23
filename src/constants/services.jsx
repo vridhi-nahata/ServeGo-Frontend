@@ -625,7 +625,7 @@ export const SERVICES = [
           name: "Hairstyle - Basic",
           price: "₹700",
           image: "/services/beauty-and-grooming/womens-hair-services/hairstyle-basic.jpg",
-          description: "Simple bun or pinned-up style for daily wear.",
+          description: "Simple bun or pinned-up style.",
         },
         {
           name: "Hairstyle - Advanced",

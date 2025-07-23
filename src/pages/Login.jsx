@@ -671,7 +671,7 @@ function Login() {
                 </option>
                 <option value="customer">Customer</option>
                 <option value="provider">Provider</option>
-                <option value="admin">Admin</option>
+                {/* <option value="admin">Admin</option> */}
               </select>
             </div>
           )}
